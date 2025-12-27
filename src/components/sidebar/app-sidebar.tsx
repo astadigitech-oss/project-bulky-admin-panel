@@ -12,10 +12,14 @@ import {
 } from "../ui/sidebar";
 import {
   ChartNoAxesCombined,
+  Headset,
   Megaphone,
   Package,
+  Scale,
   Settings2,
+  ShoppingBasket,
   Tags,
+  Users,
 } from "lucide-react";
 import { NavMain } from "./nav-main";
 import Link from "next/link";
@@ -43,6 +47,27 @@ const data = {
           url: "/dashboard/overview",
         },
       ],
+    },
+    {
+      title: "Pemesanan",
+      url: "/orders",
+      icon: ShoppingBasket,
+      items: [
+        {
+          title: "List",
+          url: "/orders",
+        },
+        {
+          title: "Ulasan",
+          url: "/orders/reviews",
+        },
+      ],
+    },
+    {
+      title: "Pelanggan",
+      url: "/customers",
+      icon: Users,
+      items: [],
     },
     {
       title: "Produk",
@@ -86,6 +111,12 @@ const data = {
       ],
     },
     {
+      title: "Media",
+      url: "/media",
+      icon: Package,
+      items: [],
+    },
+    {
       title: "Pemasaran",
       url: "/marketing",
       icon: Megaphone,
@@ -103,8 +134,50 @@ const data = {
           url: "/marketing/promo",
         },
         {
-          title: "Form Grosir",
+          title: "Formulir Grosir",
           url: "/marketing/wholsaler",
+        },
+      ],
+    },
+    {
+      title: "Bantuan",
+      url: "/help",
+      icon: Headset,
+      items: [
+        {
+          title: "Informasi Pengambilan",
+          url: "#",
+        },
+        {
+          title: "Cara Membeli",
+          url: "#",
+        },
+        {
+          title: "Cara Pembayaran",
+          url: "#",
+        },
+        {
+          title: "Pertanyaan Berulang",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Kebijakan",
+      url: "/terms",
+      icon: Scale,
+      items: [
+        {
+          title: "Syarat & Ketentuan",
+          url: "#",
+        },
+        {
+          title: "Kebijakan Privasi",
+          url: "#",
+        },
+        {
+          title: "Penaifan",
+          url: "#",
         },
       ],
     },
@@ -114,27 +187,20 @@ const data = {
       icon: Settings2,
       items: [
         {
-          title: "PPN",
+          // TODO: Informasi Pengambilan, Kontak, warehouses, force update, mode maintenance
+          title: "Umum",
+          url: "#",
+        },
+        {
+          title: "Staff",
+          url: "#",
+        },
+        {
+          title: "Pajak",
           url: "#",
         },
         {
           title: "Metode Pembayaran",
-          url: "#",
-        },
-        {
-          title: "Informasi Pengambilan",
-          url: "#",
-        },
-        {
-          title: "Syarat & Ketentuan",
-          url: "#",
-        },
-        {
-          title: "Disclaimer",
-          url: "#",
-        },
-        {
-          title: "Kontak",
           url: "#",
         },
       ],
