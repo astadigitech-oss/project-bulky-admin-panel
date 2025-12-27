@@ -62,6 +62,7 @@ export const MainContainer = ({
                             ) : (
                               breadcrumb.label
                             )}
+                            <span className="sr-only">breadcrumb</span>
                           </BreadcrumbItem>
                           <BreadcrumbSeparator />
                         </Fragment>
