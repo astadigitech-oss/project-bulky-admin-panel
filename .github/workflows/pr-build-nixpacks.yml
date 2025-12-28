@@ -1,0 +1,20 @@
+name: PR Build & Test Nixpacks
+
+on:
+  pull_request:
+    branches:
+      - canary
+
+jobs:
+  build:
+    name: Build verification with Nixpacks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build container using Nixpacks (no push)
+        uses: iloveitaly/github-action-nixpacks@main
+        with:
+          push: false
