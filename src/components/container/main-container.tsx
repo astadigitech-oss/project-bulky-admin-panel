@@ -1,9 +1,9 @@
 "use client";
 
 import React, { Fragment } from "react";
-import { SidebarInset, SidebarTrigger } from "./ui/sidebar";
-import { Separator } from "./ui/separator";
-import { ScrollArea } from "./ui/scroll-area";
+import { SidebarInset, SidebarTrigger } from "../ui/sidebar";
+import { Separator } from "../ui/separator";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,16 +11,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "./ui/breadcrumb";
-import { Button } from "./ui/button";
-import { Bell } from "lucide-react";
-import dynamic from "next/dynamic";
-import { Skeleton } from "./ui/skeleton";
-
-const ToggleTheme = dynamic(() => import("./toggle-theme"), {
-  ssr: false,
-  loading: () => <Skeleton className="size-8 rounded-full" />,
-});
+} from "../ui/breadcrumb";
+import { Action } from "./action";
 
 export const MainContainer = ({
   breadcrumbs,
@@ -38,7 +30,7 @@ export const MainContainer = ({
             <>
               <Separator
                 orientation="vertical"
-                className="mr-1 data-[orientation=vertical]:h-4"
+                className="mr-1 data-[orientation=vertical]:h-4 bg-gray-400"
               />
               <Breadcrumb>
                 {breadcrumbs.length === 1 && (
@@ -78,16 +70,7 @@ export const MainContainer = ({
             </>
           )}
         </div>
-        <div className="ml-auto px-4 flex items-center gap-3">
-          <ToggleTheme />
-          <Button
-            size={"icon"}
-            variant={"outline"}
-            className="rounded-full shadow-sm"
-          >
-            <Bell />
-          </Button>
-        </div>
+        <Action />
       </header>
       <ScrollArea>
         <div className="px-4 pb-4">{children}</div>

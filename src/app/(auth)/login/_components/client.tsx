@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -26,7 +25,7 @@ export const ClientLogin = () => {
       email: "",
       password: "",
     },
-    mode: "onBlur",
+    mode: "onSubmit",
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
@@ -50,6 +49,7 @@ export const ClientLogin = () => {
                 aria-invalid={fieldState.invalid}
                 placeholder="m@example.com"
                 autoComplete="on"
+                autoFocus
                 required
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

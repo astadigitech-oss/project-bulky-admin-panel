@@ -14,11 +14,12 @@ import {
   ChartNoAxesCombined,
   Headset,
   Megaphone,
+  Newspaper,
   Package,
   Scale,
   Settings2,
   ShoppingBasket,
-  Tags,
+  TvMinimalPlay,
   Users,
 } from "lucide-react";
 import { NavMain } from "./nav-main";
@@ -40,7 +41,7 @@ const data = {
       items: [
         {
           title: "Dasbor Transaksi",
-          url: "/dashboard/transactions",
+          url: "/dashboard/transaction",
         },
         {
           title: "Ringkasan Dasbor",
@@ -49,13 +50,13 @@ const data = {
       ],
     },
     {
-      title: "Pemesanan",
+      title: "Pesanan",
       url: "/orders",
       icon: ShoppingBasket,
       items: [
         {
           title: "List",
-          url: "/orders",
+          url: "/orders/list",
         },
         {
           title: "Ulasan",
@@ -73,48 +74,40 @@ const data = {
       title: "Produk",
       url: "/products",
       icon: Package,
-      items: [],
-    },
-    {
-      title: "Atribut Produk",
-      url: "/attributes",
-      icon: Tags,
       items: [
         {
+          title: "List",
+          url: "/products/list",
+        },
+        {
           title: "Merek",
-          url: "/attributes/brands",
+          url: "/products/brands",
         },
         {
           title: "Kategori",
-          url: "/attributes/categories",
+          url: "/products/categories",
         },
         {
           title: "Sumber",
-          url: "/attributes/sources",
+          url: "/products/sources",
         },
         {
           title: "Status",
-          url: "/attributes/statuses",
+          url: "/products/statuses",
         },
         {
-          title: "Tipe Banner",
-          url: "/attributes/banner",
+          title: "Banner Jenis Produk",
+          url: "/products/banners",
         },
         {
           title: "Kondisi Produk",
-          url: "/attributes/conditions/product",
+          url: "/products/conditions/product",
         },
         {
           title: "Kondisi Paket",
-          url: "/attributes/conditions/package",
+          url: "/products/conditions/package",
         },
       ],
-    },
-    {
-      title: "Media",
-      url: "/media",
-      icon: Package,
-      items: [],
     },
     {
       title: "Pemasaran",
@@ -126,58 +119,96 @@ const data = {
           url: "/marketing/discounts",
         },
         {
-          title: "Hero Section",
-          url: "/marketing/hero",
-        },
-        {
           title: "Banner Promosi",
-          url: "/marketing/promo",
+          url: "/marketing/banners",
         },
         {
           title: "Formulir Grosir",
-          url: "/marketing/wholsaler",
+          url: "/marketing/wholesaler",
+        },
+      ],
+    },
+  ],
+  navInfo: [
+    {
+      title: "Berita",
+      url: "/blogs",
+      icon: Newspaper,
+      items: [
+        {
+          title: "List",
+          url: "/blogs/list",
+        },
+        {
+          title: "Kategori",
+          url: "/blogs/categories",
+        },
+        {
+          title: "Tag",
+          url: "/blogs/tags",
         },
       ],
     },
     {
+      title: "Video",
+      url: "/videos",
+      icon: TvMinimalPlay,
+      items: [
+        {
+          title: "List",
+          url: "/videos/list",
+        },
+        {
+          title: "Kategori",
+          url: "/videos/categories",
+        },
+        {
+          title: "Tag",
+          url: "/videos/tags",
+        },
+      ],
+    },
+  ],
+  navPreferences: [
+    {
       title: "Bantuan",
-      url: "/help",
+      url: "/helps",
       icon: Headset,
       items: [
         {
           title: "Informasi Pengambilan",
-          url: "#",
+          url: "/helps/pickup-info",
         },
         {
-          title: "Cara Membeli",
-          url: "#",
+          title: "Cara Pembelian",
+          url: "/helps/how-to-buy",
         },
         {
           title: "Cara Pembayaran",
-          url: "#",
+          url: "/helps/payment-guide",
         },
         {
-          title: "Pertanyaan Berulang",
-          url: "#",
+          title: "FAQ",
+          url: "/helps/faqs",
         },
       ],
     },
     {
       title: "Kebijakan",
-      url: "/terms",
+      url: "/policies",
       icon: Scale,
       items: [
         {
           title: "Syarat & Ketentuan",
-          url: "#",
+          url: "/policies/terms",
         },
         {
           title: "Kebijakan Privasi",
-          url: "#",
+          url: "/policies/privacy",
         },
         {
           title: "Penaifan",
-          url: "#",
+          url: "/policies/disclaimer",
         },
       ],
     },
@@ -189,19 +220,23 @@ const data = {
         {
           // TODO: Informasi Pengambilan, Kontak, warehouses, force update, mode maintenance
           title: "Umum",
-          url: "#",
+          url: "/settings/general",
         },
         {
           title: "Staff",
-          url: "#",
+          url: "/settings/staff",
         },
         {
           title: "Pajak",
-          url: "#",
+          url: "/settings/tax",
         },
         {
           title: "Metode Pembayaran",
-          url: "#",
+          url: "/settings/payment",
+        },
+        {
+          title: "Hero Section",
+          url: "/settings/hero",
         },
       ],
     },
@@ -219,22 +254,20 @@ export const AppSidebar = ({
             <SidebarMenuButton
               size="lg"
               className="h-auto dark:hover:bg-gray-700 hover:bg-gray-200"
-              asChild
-            >
-              <Link href="#" className="flex flex-col items-start">
-                <LogoNoSSR />
-                <p className="text-sm -mt-2 font-medium dark:group-hover:text-gray-200">
-                  Back Office
-                </p>
-              </Link>
-            </SidebarMenuButton>
+              render={
+                <Link href="/" className="flex flex-col items-start">
+                  <LogoNoSSR />
+                  <p className="text-sm -mt-2 font-medium dark:group-hover:text-gray-200">
+                    Back Office
+                  </p>
+                </Link>
+              }
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {/*<NavProjects projects={data.projects} />
-            <NavSecondary items={data.navSecondary} className="mt-auto" />*/}
+        <NavMain nav={data} />
       </SidebarContent>
       <SidebarFooter>{/*<NavUser user={data.user} />*/}</SidebarFooter>
     </Sidebar>
