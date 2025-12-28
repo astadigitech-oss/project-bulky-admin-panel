@@ -11,7 +11,7 @@ const ToggleTheme = () => {
   return (
     <Button
       variant={"outline"}
-      className="rounded-full"
+      className="rounded-full shadow-sm"
       size={"icon"}
       onClick={() =>
         setTheme(

@@ -1,4 +1,4 @@
-name: PR Build & Test
+name: PR Build & Test (Matrix)
 
 on:
   pull_request:
@@ -13,31 +13,84 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test:
-    name: Build & Test PR
+  build:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - railpack
+          - nixpacks
+          - app
+
+    name: Build target → ${{ matrix.target }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      # =========================
+      # Railpack (build only)
+      # =========================
+      - name: Enable containerd image store
+        if: matrix.target == 'railpack'
+        run: |
+          sudo mkdir -p /etc/docker
+          echo '{ "features": { "containerd-snapshotter": true } }' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+
+      - name: Install Railpack
+        if: matrix.target == 'railpack'
+        run: |
+          curl -sSL https://railpack.com/install.sh | bash
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Build with Railpack (NO PUSH)
+        if: matrix.target == 'railpack'
+        run: |
+          set -e
+          railpack prepare --plan-out /tmp/railpack-plan.json .
+          docker buildx build \
+            --build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend \
+            --load \
+            -f /tmp/railpack-plan.json \
+            .
+
+      # =========================
+      # Nixpacks (build only)
+      # =========================
+      - name: Build with Nixpacks (NO PUSH)
+        if: matrix.target == 'nixpacks'
+        uses: iloveitaly/github-action-nixpacks@main
+        with:
+          push: false
+
+      # =========================
+      # App build & test (bun)
+      # =========================
+      - name: Setup Node.js
+        if: matrix.target == 'app'
         uses: actions/setup-node@v6
         with:
           node-version: 20
 
       - name: Setup Bun
+        if: matrix.target == 'app'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.5
 
       - name: Install dependencies
+        if: matrix.target == 'app'
         run: bun install --frozen-lockfile
 
       - name: Lint
+        if: matrix.target == 'app'
         run: bun lint
 
       - name: Build
+        if: matrix.target == 'app'
         env:
           NODE_ENV: production
         run: bun run build
