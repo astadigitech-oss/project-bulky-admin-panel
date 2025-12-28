@@ -50,11 +50,7 @@ jobs:
         if: matrix.target == 'railpack'
         run: |
           set -e
-          railpack prepare --plan-out /tmp/railpack-plan.json .
-          docker buildx build \
-            --load \
-            -f /tmp/railpack-plan.json \
-            .
+          railpack build --no-push .
 
       # =========================
       # Nixpacks (build only)
