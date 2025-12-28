@@ -7,14 +7,28 @@ on:
 
 jobs:
   build:
-    name: Build verification with Nixpacks
+    name: Build verification with Railpacks
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Build container using Railpacks (no push)
-        uses: iloveitaly/github-action-railpack@main
-        with:
-          push: false
+      - name: Install Railpack
+        run: |
+          curl -sSL https://railpack.com/install.sh | bash
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Build with Railpack (NO PUSH)
+        run: |
+          set -e
+
+          # Generate build plan
+          railpack prepare --plan-out /tmp/railpack-plan.json .
+
+          # Build image locally (NO PUSH)
+          docker buildx build \
+            --build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend \
+            -f /tmp/railpack-plan.json \
+            --load \
+            .
