@@ -23,7 +23,7 @@ export const MainContainer = ({
 }) => {
   return (
     <SidebarInset className="relative overflow-y-scroll h-[calc(100vh-16px-16px)]">
-      <header className="flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-10">
+      <header className="flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-10 border-b dark:border-gray-300/30 shadow">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           {breadcrumbs && breadcrumbs.length > 0 && (
@@ -73,7 +73,7 @@ export const MainContainer = ({
         <Action />
       </header>
       <ScrollArea>
-        <div className="px-4 pb-4">{children}</div>
+        <div className="px-6 pt-4 pb-6">{children}</div>
       </ScrollArea>
     </SidebarInset>
   );

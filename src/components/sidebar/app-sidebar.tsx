@@ -4,7 +4,6 @@ import React from "react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -269,7 +268,6 @@ export const AppSidebar = ({
       <SidebarContent>
         <NavMain nav={data} />
       </SidebarContent>
-      <SidebarFooter>{/*<NavUser user={data.user} />*/}</SidebarFooter>
     </Sidebar>
   );
 };
