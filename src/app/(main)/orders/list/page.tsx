@@ -1,5 +1,6 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { OrderListClient } from "./_components/client";
 
 // const pathname = "orders/list";
 const labelPage = "Pesanan";
@@ -13,7 +14,7 @@ const OrderListPage = async () => {
 
   return (
     <MainContainer breadcrumbs={[{ label: labelPage }]}>
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <OrderListClient />
     </MainContainer>
   );
 };

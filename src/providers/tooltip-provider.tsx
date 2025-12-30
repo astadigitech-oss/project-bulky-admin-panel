@@ -1,14 +1,12 @@
 import {
   Tooltip,
   TooltipContent,
-  TooltipPositioner,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ReactNode } from "react";
+import { ReactElement, ReactNode } from "react";
 
 export const TooltipText = ({
-  children,
   value,
   className,
   classTrigger,
@@ -16,23 +14,29 @@ export const TooltipText = ({
   align,
   side,
   delay,
+  render,
 }: {
   className?: string;
   classTrigger?: string;
   sideOffset?: number;
-  children: ReactNode;
   align?: "center" | "end" | "start";
   side?: "top" | "bottom" | "left" | "right";
   value: ReactNode;
   delay?: number;
+  render?: ReactElement;
 }) => {
   return (
     <TooltipProvider delay={delay}>
       <Tooltip>
-        <TooltipTrigger className={classTrigger}>{children}</TooltipTrigger>
-        <TooltipPositioner align={align} side={side} sideOffset={sideOffset}>
-          <TooltipContent className={className}>{value}</TooltipContent>
-        </TooltipPositioner>
+        <TooltipTrigger className={classTrigger} render={render} />
+        <TooltipContent
+          align={align}
+          side={side}
+          sideOffset={sideOffset}
+          className={className}
+        >
+          {value}
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
