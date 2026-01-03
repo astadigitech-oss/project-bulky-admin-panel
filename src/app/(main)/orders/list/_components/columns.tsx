@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { MoreHorizontal, ReceiptText } from "lucide-react";
+import { MoreHorizontal, ReceiptText, User2, UsersRound } from "lucide-react";
 
 export const column: ColumnDef<any>[] = [
   {
@@ -43,8 +43,22 @@ export const column: ColumnDef<any>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
-      <Badge className="bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+      <Badge className="bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 capitalize">
         {row.original.status}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "payment",
+    header: "Pembayaran",
+    cell: ({ row }) => (
+      <Badge className="bg-gray-500/10 dark:bg-gray-500/20 border-gray-500/20 text-gray-600 dark:text-gray-300">
+        {row.original.payment === "personal" ? (
+          <User2 className="size-3" />
+        ) : (
+          <UsersRound className="size-3" />
+        )}
+        {row.original.payment === "personal" ? "Tunggal" : "Patungan"}
       </Badge>
     ),
   },

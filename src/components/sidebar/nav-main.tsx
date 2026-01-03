@@ -84,7 +84,7 @@ export function NavMain({
                 open={openKey === item.title}
                 onOpenChange={(open) => setOpenKey(open ? item.title : null)}
                 render={
-                  <SidebarMenuItem>
+                  <SidebarMenuItem className="group">
                     <SidebarMenuButton
                       tooltip={item.title}
                       onClick={() =>
@@ -97,7 +97,7 @@ export function NavMain({
 
                     <CollapsibleTrigger
                       render={
-                        <SidebarMenuAction className="data-[state=open]:rotate-90">
+                        <SidebarMenuAction className="group-data-open:rotate-90">
                           <ChevronRight />
                           <span className="sr-only">Toggle</span>
                         </SidebarMenuAction>

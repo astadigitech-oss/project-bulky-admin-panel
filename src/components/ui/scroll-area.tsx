@@ -1,17 +1,18 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
+import * as React from "react";
+import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-function ScrollArea({
-  className,
-  children,
-  ...props
-}: ScrollAreaPrimitive.Root.Props) {
+// Menggunakan React.forwardRef agar bisa menerima ref dari luar
+const ScrollArea = React.forwardRef<
+  HTMLDivElement,
+  ScrollAreaPrimitive.Root.Props
+>(({ className, children, ...props }, ref) => {
   return (
     <ScrollAreaPrimitive.Root
+      ref={ref} // Meneruskan ref ke root elemen
       data-slot="scroll-area"
       className={cn("relative", className)}
       {...props}
@@ -25,22 +26,24 @@ function ScrollArea({
       <ScrollBar />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
-  )
-}
+  );
+});
 
-function ScrollBar({
-  className,
-  orientation = "vertical",
-  ...props
-}: ScrollAreaPrimitive.Scrollbar.Props) {
+ScrollArea.displayName = "ScrollArea";
+
+const ScrollBar = React.forwardRef<
+  HTMLDivElement,
+  ScrollAreaPrimitive.Scrollbar.Props
+>(({ className, orientation = "vertical", ...props }, ref) => {
   return (
     <ScrollAreaPrimitive.Scrollbar
+      ref={ref} // Meneruskan ref jika suatu saat dibutuhkan di ScrollBar
       data-slot="scroll-area-scrollbar"
       data-orientation={orientation}
       orientation={orientation}
       className={cn(
         "data-horizontal:h-2.5 data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent data-vertical:h-full data-vertical:w-2.5 data-vertical:border-l data-vertical:border-l-transparent flex touch-none p-px transition-colors select-none",
-        className
+        className,
       )}
       {...props}
     >
@@ -49,7 +52,9 @@ function ScrollBar({
         className="rounded-full bg-border relative flex-1"
       />
     </ScrollAreaPrimitive.Scrollbar>
-  )
-}
+  );
+});
 
-export { ScrollArea, ScrollBar }
+ScrollBar.displayName = "ScrollBar";
+
+export { ScrollArea, ScrollBar };

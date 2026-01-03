@@ -30,7 +30,7 @@ export const MainContainer = ({
             <>
               <Separator
                 orientation="vertical"
-                className="mr-1 data-[orientation=vertical]:h-4 bg-gray-400"
+                className="mr-1 data-[orientation=vertical]:h-4  bg-gray-400"
               />
               <Breadcrumb>
                 {breadcrumbs.length === 1 && (
