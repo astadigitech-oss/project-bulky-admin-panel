@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import QueryProviders from "@/providers/query-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { ToastProvider } from "@/providers/toast-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
+              <ToastProvider />
               {children}
             </ThemeProvider>
           </NuqsAdapter>

@@ -1,7 +1,7 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
 
-// const pathname = "policies/hero";
+// const pathname = "settings/hero";
 const labelPage = "Hero Section";
 
 export const metadata: Metadata = {

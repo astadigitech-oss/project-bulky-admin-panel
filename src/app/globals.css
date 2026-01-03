@@ -76,7 +76,7 @@
     --sidebar-primary: oklch(0.21 0.034 264.665);
     --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
     --sidebar-accent: oklch(92.4% 0.12 95.746);
-    --sidebar-accent-foreground: oklch(42.1% 0.095 57.708);
+    --sidebar-accent-foreground: oklch(98.7% 0.026 102.212);
     --sidebar-border: oklch(0.928 0.006 264.531);
     --sidebar-ring: oklch(0.707 0.022 261.325);
 }
@@ -110,9 +110,21 @@
     --sidebar-primary: oklch(0.488 0.243 264.376);
     --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
     --sidebar-accent: oklch(85.2% 0.199 91.936);
-    --sidebar-accent-foreground: oklch(28.6% 0.066 53.813);
+    --sidebar-accent-foreground: oklch(98.7% 0.026 102.212);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
 }
 
 @layer base {

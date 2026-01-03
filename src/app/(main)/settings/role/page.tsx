@@ -1,14 +1,14 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
 
-// const pathname = "settings/payment";
-const labelPage = "Metode Pembayaran";
+// const pathname = "settings/role";
+const labelPage = "Staff Role";
 
 export const metadata: Metadata = {
   title: labelPage,
 };
 
-const PaymentMethodPage = async () => {
+const StaffRolePage = async () => {
   // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
@@ -20,4 +20,4 @@ const PaymentMethodPage = async () => {
   );
 };
 
-export default PaymentMethodPage;
+export default StaffRolePage;

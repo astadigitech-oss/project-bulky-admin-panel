@@ -34,11 +34,7 @@ export const Action = () => {
       <Sheet>
         <SheetTrigger
           render={
-            <Button
-              size={"icon"}
-              variant={"outline"}
-              className="rounded-full shadow-sm"
-            >
+            <Button size={"icon"} variant={"outline"} className="rounded-full">
               <Bell />
               <span className="sr-only">Toggle Notification</span>
             </Button>
@@ -53,7 +49,7 @@ export const Action = () => {
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button className="rounded-full shadow-sm" variant={"outline"}>
+            <Button className="rounded-full" variant={"outline"}>
               <UserCircle />
               <span className="text-xs mr-2">Ahmad Fulan</span>
               <ChevronDown />

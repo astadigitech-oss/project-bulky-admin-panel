@@ -1,5 +1,6 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { OrderReviewsClient } from "./_components/client";
 
 // const pathname = "orders/reviews";
 const labelPage = "Ulasan";
@@ -18,7 +19,7 @@ const OrdersReviewsPage = async () => {
         { label: labelPage },
       ]}
     >
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <OrderReviewsClient />
     </MainContainer>
   );
 };

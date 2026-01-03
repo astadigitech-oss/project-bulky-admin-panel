@@ -217,13 +217,17 @@ const data = {
       icon: Settings2,
       items: [
         {
-          // TODO: Informasi Pengambilan, Kontak, warehouses, force update, mode maintenance
+          // TODO: account (v), change password (v), Informasi Pengambilan, Kontak (v), warehouses (v), force update, mode maintenance
           title: "Umum",
           url: "/settings/general",
         },
         {
           title: "Staff",
           url: "/settings/staff",
+        },
+        {
+          title: "Staff Role",
+          url: "/settings/role",
         },
         {
           title: "Pajak",

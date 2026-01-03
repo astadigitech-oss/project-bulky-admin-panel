@@ -24,6 +24,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  "use no memo";
   const table = useReactTable({
     data,
     columns,
@@ -33,7 +34,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="overflow-hidden rounded-md border dark:border-gray-500/50">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-card">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {

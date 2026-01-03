@@ -1,7 +1,8 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { GeneralSettingsClient } from "./_components/client";
 
-// const pathname = "policies/general";
+// const pathname = "settings/general";
 const labelPage = "Umum";
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ const SettingsGeneralPage = async () => {
     <MainContainer
       breadcrumbs={[{ label: "Pengaturan" }, { label: labelPage }]}
     >
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <GeneralSettingsClient />
     </MainContainer>
   );
 };

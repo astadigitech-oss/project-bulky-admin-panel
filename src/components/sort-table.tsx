@@ -37,7 +37,7 @@ export const SortTable = ({
             className={buttonVariants({
               variant: "outline",
               size: "icon",
-              className: "flex-none",
+              className: "flex-none border border-black",
             })}
           >
             <ArrowDownUp className="size-3.5" />

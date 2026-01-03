@@ -1,7 +1,7 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
 
-// const pathname = "policies/tax";
+// const pathname = "settings/tax";
 const labelPage = "Pajak";
 
 export const metadata: Metadata = {

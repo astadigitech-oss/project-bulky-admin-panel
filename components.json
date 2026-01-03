@@ -21,6 +21,7 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@basecn": "https://basecn.dev/r/{name}.json"
+    "@basecn": "https://basecn.dev/r/{name}.json",
+    "@ncdai": "https://chanhdai.com/r/{name}.json"
   }
 }
