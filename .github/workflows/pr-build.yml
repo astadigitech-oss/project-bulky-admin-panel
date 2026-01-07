@@ -48,13 +48,10 @@ jobs:
 
       - name: Build with Railpack (NO PUSH)
         if: matrix.target == 'railpack'
-        env:
-          NODE_ENV: production
         run: |
           set -e
           railpack prepare --plan-out /tmp/railpack-plan.json .
           docker buildx build \
-            --build-arg NODE_ENV=$NODE_ENV \
             --build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend \
             --load \
             -f /tmp/railpack-plan.json \
@@ -68,8 +65,6 @@ jobs:
         uses: iloveitaly/github-action-nixpacks@main
         with:
           push: false
-          env: |
-            NODE_ENV: production
 
       # =========================
       # App build & test (bun)
