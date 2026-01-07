@@ -50,15 +50,11 @@ jobs:
         if: matrix.target == 'railpack'
         env:
           NODE_ENV: production
-          NEXT_PUBLIC_BASE_API_URL: ${{ secrets.NEXT_PUBLIC_BASE_API_URL }}
-          NEXT_PUBLIC_COOKIES_KEY: ${{ secrets.NEXT_PUBLIC_COOKIES_KEY }}
         run: |
           set -e
           railpack prepare --plan-out /tmp/railpack-plan.json .
           docker buildx build \
             --build-arg NODE_ENV=$NODE_ENV \
-            --build-arg NEXT_PUBLIC_BASE_API_URL=$NEXT_PUBLIC_BASE_API_URL \
-            --build-arg NEXT_PUBLIC_COOKIES_KEY=$NEXT_PUBLIC_COOKIES_KEY \
             --build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend \
             --load \
             -f /tmp/railpack-plan.json \
@@ -72,10 +68,8 @@ jobs:
         uses: iloveitaly/github-action-nixpacks@main
         with:
           push: false
-        env:
-          NODE_ENV: production
-          NEXT_PUBLIC_BASE_API_URL: ${{ secrets.NEXT_PUBLIC_BASE_API_URL }}
-          NEXT_PUBLIC_COOKIES_KEY: ${{ secrets.NEXT_PUBLIC_COOKIES_KEY }}
+          env: |
+            NODE_ENV: production
 
       # =========================
       # App build & test (bun)
