@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
-const pathname = "dashboard/transaction";
+const pathname = "dashboard/transactions";
 
 export const metadata: Metadata = {
   title: "Dasbor",
