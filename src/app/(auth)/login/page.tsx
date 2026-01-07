@@ -29,7 +29,7 @@ const LoginPage = async () => {
           <Card>
             <Link href="/" className="aspect-4/1 w-1/3 relative mx-6">
               <Image
-                src={"/assets/images/logo-bulky.png"}
+                src={"/assets/images/logo-bulky.webp"}
                 sizes={sizesImage}
                 alt="bulky logo"
                 className="object-contain"
