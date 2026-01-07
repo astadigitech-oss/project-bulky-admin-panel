@@ -12,21 +12,23 @@ export type MutationVariables<
   IfDefined<TSearchParams, { searchParams: TSearchParams }>;
 
 export type UseMutateConfig<
+  TResponse = any,
   TBody = undefined,
   TParams = undefined,
   TSearchParams = undefined,
 > = {
   endpoint: string;
   method: "post" | "put" | "delete" | "patch" | "get";
+  isPublic?: boolean;
   onSuccess?: (
-    data: AxiosResponse<any>,
+    data: AxiosResponse<TResponse>,
     variables: MutationVariables<TBody, TParams, TSearchParams>,
-    context: unknown
+    context: unknown,
   ) => unknown | Promise<unknown>;
   errorCustom?: (
     error: AxiosError<unknown, any>,
     variables: MutationVariables<TBody, TParams, TSearchParams>,
-    context: unknown
+    context: unknown,
   ) => Promise<unknown> | unknown;
   onError?: {
     /**

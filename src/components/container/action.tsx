@@ -21,6 +21,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
+import { useMe } from "./_api";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const ToggleTheme = dynamic(() => import("../toggle-theme"), {
   ssr: false,
@@ -28,11 +32,24 @@ const ToggleTheme = dynamic(() => import("../toggle-theme"), {
 });
 
 export const Action = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { data, isPending, isSuccess, isError } = useMe();
+  const user = data?.data;
+
+  useEffect(() => {
+    if ((!user && isSuccess) || isError) {
+      if (isError) toast.warning("Kredential kadaluarsa");
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [user, pathname, router, isSuccess, isError]);
+
   return (
     <div className="ml-auto px-4 flex items-center gap-3">
       <ToggleTheme />
       <Sheet>
         <SheetTrigger
+          disabled={isPending}
           render={
             <Button size={"icon"} variant={"outline"} className="rounded-full">
               <Bell />
@@ -48,42 +65,46 @@ export const Action = () => {
       </Sheet>
       <DropdownMenu>
         <DropdownMenuTrigger
+          disabled={isPending}
           render={
             <Button className="rounded-full" variant={"outline"}>
               <UserCircle />
-              <span className="text-xs mr-2">Ahmad Fulan</span>
+              <span className="text-xs mr-2 capitalize">{user?.nama}</span>
               <ChevronDown />
             </Button>
           }
         />
-        <DropdownMenuContent align="end" sideOffset={19} alignOffset={5}>
+        <DropdownMenuContent
+          className={"w-auto"}
+          align="end"
+          sideOffset={19}
+          alignOffset={5}
+        >
           <DropdownMenuGroup>
-            <Item className="flex items-center px-2 py-1.5">
+            <Item className="flex items-center flex-nowrap px-2 py-1.5">
               <Avatar>
                 <AvatarFallback>
-                  {"Ahmad Fulan"
-                    .split(" ")
-                    .map((word) => word[0].toUpperCase())
-                    .join("")}
+                  {user?.nama
+                    ?.split(" ")
+                    .map((word) => word[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               <Item className="flex flex-col gap-px text-sm items-start p-0">
-                <p className="font-semibold">Ahamd Fulan</p>
-                <p className="text-xs font-light">ahmad.fulan@mail.com</p>
+                <p className="font-semibold">{user?.nama}</p>
+                <p className="text-xs font-light">{user?.email}</p>
               </Item>
             </Item>
             <DropdownMenuSeparator />
             <Item className="flex items-center px-2 py-1.5 text-xs gap-2 bg-linear-to-l from-yellow-200 to-yellow-100  dark:from-yellow-200/50 dark:to-yellow-100/10 border-none">
               <UserCog className="size-3" />
-              Admin
+              {user?.role.nama}
             </Item>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className={
-                "text-xs text-red-500 focus:text-red-500 dark:text-red-400 dark:focus:text-red-400 focus:bg-red-500/20"
-              }
-            >
-              <LogOut className="size-3 text-red-500 hover:text-red-500 dark:text-red-400 dark:focus:text-red-400" />
+            <DropdownMenuItem className={"text-xs"} variant="destructive">
+              <LogOut className="size-3" />
               Logout
             </DropdownMenuItem>
           </DropdownMenuGroup>

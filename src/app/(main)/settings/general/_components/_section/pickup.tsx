@@ -4,15 +4,12 @@ import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldError,
-} from "@/components/ui/field";
+import { Field, FieldGroup } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { TimeWheelPicker } from "./_sub-section/time-wheel-picker";
+import { Toggle } from "@/components/ui/toggle";
+import { Warehouse } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /* =======================
    DEFAULT DATA
@@ -63,73 +60,71 @@ function ScheduleRow({
   });
 
   return (
-    <div className="grid grid-cols-[90px_1fr_1fr_auto] gap-3 items-center border border-gray-500 px-3 py-2 rounded-lg">
+    <div className="flex  gap-3 items-center bg-gray-100 dark:bg-gray-800/60 px-3 py-2 rounded-lg">
       {/* Day */}
       <span className="text-sm font-medium">{day}</span>
 
-      {/* Open Time */}
-      <Controller
-        name={`schedules.${index}.openTime`}
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name} className="sr-only">
-              Open Time
-            </FieldLabel>
-            <Input
-              {...field}
-              id={field.name}
-              type="time"
-              disabled={!isOpen}
-              aria-invalid={fieldState.invalid}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
+      <div className="ml-auto flex items-center gap-4">
+        <TimeWheelPicker
+          control={control}
+          baseName={`schedules.${index}`}
+          disabled={!isOpen}
+        />
 
-      {/* Close Time */}
-      <Controller
-        name={`schedules.${index}.closeTime`}
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name} className="sr-only">
-              Close Time
-            </FieldLabel>
-            <Input
-              {...field}
-              id={field.name}
-              type="time"
-              disabled={!isOpen}
-              aria-invalid={fieldState.invalid}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
+        {/* Is Open */}
+        <Controller
+          name={`schedules.${index}.isOpen`}
+          control={control}
+          render={({ field }) => (
+            <Field orientation="horizontal">
+              <Toggle
+                pressed={field.value}
+                onPressedChange={(pressed) => {
+                  field.onChange(pressed);
 
-      {/* Is Open */}
-      <Controller
-        name={`schedules.${index}.isOpen`}
-        control={control}
-        render={({ field }) => (
-          <Field orientation="horizontal">
-            <Checkbox
-              checked={field.value}
-              onCheckedChange={(checked) => {
-                field.onChange(checked);
-
-                if (!checked) {
-                  setValue(`schedules.${index}.openTime`, "");
-                  setValue(`schedules.${index}.closeTime`, "");
-                }
-              }}
-              aria-label={`Toggle ${day}`}
-            />
-          </Field>
-        )}
-      />
+                  setValue(
+                    `schedules.${index}.openTime`,
+                    pressed ? "00.00" : "",
+                  );
+                  setValue(
+                    `schedules.${index}.closeTime`,
+                    pressed ? "00.00" : "",
+                  );
+                }}
+                aria-label={`Toggle ${day}`}
+                variant={"outline"}
+                size={"sm"}
+                className={cn(
+                  "w-20 text-xs transition-all duration-300",
+                  // Efek Neon Emerald saat True (Buka)
+                  field.value
+                    ? [
+                        // THEME EMERALD (TRUE)
+                        // Light Mode
+                        "border-emerald-500 bg-emerald-50/50! text-emerald-600",
+                        // Dark Mode
+                        "dark:border-emerald-500/50 dark:bg-emerald-500/10! dark:text-emerald-400",
+                        // Hover
+                        "hover:bg-emerald-100/50! dark:hover:bg-emerald-500/20! hover:text-emerald-600 hover:dark:text-emerald-400",
+                      ]
+                    : [
+                        // THEME RED (FALSE)
+                        // Light Mode
+                        "border-red-500 bg-red-50/50! text-red-600",
+                        // Dark Mode
+                        "dark:border-red-500/50 dark:bg-red-500/10! dark:text-red-400",
+                        // Hover
+                        "hover:bg-red-100/50! dark:hover:bg-red-500/20! hover:text-red-600 hover:dark:text-red-400",
+                      ],
+                )}
+              >
+                <Warehouse className="size-3.5" />
+                {field.value ? "Buka" : "Tutup"}
+              </Toggle>
+            </Field>
+          )}
+        />
+      </div>
     </div>
   );
 }
@@ -157,7 +152,7 @@ export const PickupClient = () => {
   return (
     <div className="grid lg:grid-cols-2 max-w-3xl mx-auto w-full gap-4">
       <h2 className="font-semibold text-lg lg:text-xl tracking-tight">
-        Informasi Gudang
+        Informasi Pengambilan
       </h2>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
@@ -176,7 +171,9 @@ export const PickupClient = () => {
         </FieldGroup>
 
         <div className="flex justify-end">
-          <Button type="submit">Simpan</Button>
+          <Button type="submit" disabled={!form.formState.isDirty}>
+            Simpan
+          </Button>
         </div>
       </form>
     </div>

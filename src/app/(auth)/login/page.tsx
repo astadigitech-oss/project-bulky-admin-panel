@@ -11,16 +11,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { ClientLogin } from "./_components/client";
 import { Metadata } from "next";
-// import { auth } from "@/lib/action/auth";
-// import { redirect } from "next/navigation";
+import { auth } from "@/lib/action/auth";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Login",
 };
 
 const LoginPage = async () => {
-  // const isAuth = await auth();
-  // if (isAuth) redirect("/?fromUrl=login");
+  const isAuth = await auth();
+  if (isAuth) redirect("/?fromUrl=login");
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 relative">

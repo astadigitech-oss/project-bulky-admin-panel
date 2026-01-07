@@ -93,4 +93,6 @@ jobs:
         if: matrix.target == 'app'
         env:
           NODE_ENV: production
+          NEXT_PUBLIC_BASE_API_URL: ${{ secrets.NEXT_PUBLIC_BASE_API_URL }}
+          NEXT_PUBLIC_COOKIES_KEY: ${{ secrets.NEXT_PUBLIC_COOKIES_KEY }}
         run: bun run build

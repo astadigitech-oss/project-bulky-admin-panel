@@ -1,5 +1,6 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { StaffSettingsClient } from "./_components/client";
 
 // const pathname = "settings/staff";
 const labelPage = "Staff";
@@ -15,7 +16,7 @@ const StaffPage = async () => {
     <MainContainer
       breadcrumbs={[{ label: "Pengaturan" }, { label: labelPage }]}
     >
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <StaffSettingsClient />
     </MainContainer>
   );
 };

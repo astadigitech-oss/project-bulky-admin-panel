@@ -4,6 +4,7 @@ import { useQuery, UseQueryOptions, QueryKey } from "@tanstack/react-query";
 
 import { buildUrl } from "./utils";
 import { QueryParams } from "./types";
+import { cookiesKey } from "@/config";
 
 type UseApiQueryOptions<T> = Omit<
   UseQueryOptions<T, AxiosError, T, QueryKey>,
@@ -27,7 +28,7 @@ export function useApiQuery<T = any>({
   searchParams,
   ...options
 }: UseApiQueryProps<T>) {
-  const token = getCookie("accessToken");
+  const token = getCookie(cookiesKey);
   const urlWithParams = buildUrl(endpoint, searchParams);
 
   return useQuery<T, AxiosError>({

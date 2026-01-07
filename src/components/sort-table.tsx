@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { TooltipText } from "@/providers/tooltip-provider";
+import { cn } from "@/lib/utils";
 
 export const SortTable = ({
   order,
@@ -46,7 +47,7 @@ export const SortTable = ({
       />
       <DropdownMenuContent>
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Sort</DropdownMenuLabel>
+          <DropdownMenuLabel>Urutkan</DropdownMenuLabel>
           {data.map((item) => (
             <DropdownMenuCheckboxItem
               key={item.value}
@@ -63,7 +64,7 @@ export const SortTable = ({
               className="h-7 text-xs group"
               checked={sort === "created"}
             >
-              Created
+              Dibuat
             </DropdownMenuCheckboxItem>
           )}
         </DropdownMenuGroup>
@@ -71,17 +72,27 @@ export const SortTable = ({
         <DropdownMenuGroup>
           <DropdownMenuItem
             onClick={() => setSort({ order: "asc" })}
-            className="h-7 text-xs"
+            className="h-7 text-xs whitespace-nowrap"
           >
-            Order asc
-            {order === "asc" && <ArrowUp className="size-3.5 ml-auto" />}
+            Menaik (A-Z)
+            <ArrowUp
+              className={cn(
+                "size-3.5 ml-auto",
+                order === "asc" ? "opacity-100" : "opacity-0 ",
+              )}
+            />
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setSort({ order: "desc" })}
-            className="h-7 text-xs"
+            className="h-7 text-xs whitespace-nowrap"
           >
-            Order desc
-            {order === "desc" && <ArrowDown className="size-3.5 ml-auto" />}
+            Menurun (Z-A)
+            <ArrowDown
+              className={cn(
+                "size-3.5 ml-auto",
+                order === "desc" ? "opacity-100" : "opacity-0",
+              )}
+            />
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
