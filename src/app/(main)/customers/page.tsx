@@ -1,5 +1,6 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { CustomersClient } from "./_components/client";
 
 // const pathname = "customers";
 
@@ -12,7 +13,7 @@ const CustomersPage = async () => {
 
   return (
     <MainContainer breadcrumbs={[{ label: "Pelanggan" }]}>
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <CustomersClient />
     </MainContainer>
   );
 };

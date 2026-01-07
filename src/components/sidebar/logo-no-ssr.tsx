@@ -14,12 +14,13 @@ const LogoNoSSR = () => {
         src={
           theme === "dark" || (theme === "system" && systemTheme === "dark")
             ? "/assets/images/bulky.svg"
-            : "/assets/images/logo-bulky.png"
+            : "/assets/images/logo-bulky.webp"
         }
-        alt="logo bulky"
+        alt="logo-bulky"
         fill
         className="object-contain"
         sizes={sizesImage}
+        loading="eager"
       />
     </div>
   );

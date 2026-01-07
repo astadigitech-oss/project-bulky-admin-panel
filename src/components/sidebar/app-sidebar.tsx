@@ -217,7 +217,7 @@ const data = {
       icon: Settings2,
       items: [
         {
-          // TODO: account (v), change password (v), Informasi Pengambilan, Kontak (v), warehouses (v), force update, mode maintenance
+          // TODO: account (v), change password (v), Informasi Pengambilan(v), Kontak (v), warehouses (v), force update, mode maintenance
           title: "Umum",
           url: "/settings/general",
         },

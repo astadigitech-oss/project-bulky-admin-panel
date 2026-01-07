@@ -1,3 +1,4 @@
+import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -11,14 +12,16 @@ export const metadata: Metadata = {
 
 const DashboardPage = async (props: { searchParams: SearchParams }) => {
   const searchParams = await props.searchParams;
-  // if (!auth) {
-  //   redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
-  // } else {
-  if (searchParams.fromUrl === "login") {
-    redirect(`/${pathname}?fromUrl=login`);
+  const isAuth = await auth();
+
+  if (!isAuth) {
+    redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  } else {
+    if (searchParams.fromUrl === "login") {
+      redirect(`/${pathname}?fromUrl=login`);
+    }
+    redirect(`/${pathname}`);
   }
-  redirect(`/${pathname}`);
-  // }
 };
 
 export default DashboardPage;

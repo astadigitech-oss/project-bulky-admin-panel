@@ -1,22 +1,18 @@
-import "server-only";
+"use server";
 
 import { cookies } from "next/headers";
-import { baseApiUrl } from "@/config";
+import { apiUrl, cookiesKey } from "@/config";
 
-export const auth = async () => {
+export async function auth() {
   const cookie = await cookies();
-  const token = cookie.get("accessToken")?.value;
+  const token = cookie.get(cookiesKey)?.value;
   try {
-    const res = await fetch(`${baseApiUrl}/checkLogin`, {
+    const res = await fetch(`${apiUrl}/auth/check`, {
       method: "GET",
       headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
     });
 
     if (!res.ok) {
-      if (cookie.has("accessToken")) {
-        cookie.delete("profile");
-        cookie.delete("accessToken");
-      }
       return false;
     }
 
@@ -25,4 +21,4 @@ export const auth = async () => {
     console.log("ERROR_CHECK", error);
     return false;
   }
-};
+}

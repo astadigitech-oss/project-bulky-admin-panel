@@ -5,9 +5,11 @@ import { isRecord } from "./utils";
 
 import { errorResponse } from "./error-response";
 import { UseMutateConfig, MutationVariables } from "./types";
-import { apiUrl } from "@/config";
+import { apiUrl, cookiesKey } from "@/config";
+import { getCookie } from "cookies-next/client";
 
 export const useMutate = <
+  TResponse = any,
   TBody = undefined,
   TParams = undefined,
   TSearchParams = undefined,
@@ -17,9 +19,10 @@ export const useMutate = <
   onSuccess,
   onError,
   errorCustom,
-}: UseMutateConfig<TBody, TParams, TSearchParams>) =>
+  isPublic = false,
+}: UseMutateConfig<TResponse, TBody, TParams, TSearchParams>) =>
   useMutation<
-    AxiosResponse,
+    AxiosResponse<TResponse>,
     AxiosError,
     MutationVariables<TBody, TParams, TSearchParams>
   >({
@@ -43,7 +46,7 @@ export const useMutate = <
         variables.searchParams !== undefined
       ) {
         const query = new URLSearchParams(
-          variables.searchParams as any
+          variables.searchParams as any,
         ).toString();
         url += url.includes("?") ? `&${query}` : `?${query}`;
       }
@@ -53,17 +56,23 @@ export const useMutate = <
           ? variables.body
           : {};
 
+      const axiosConfig = {
+        headers: !isPublic
+          ? { Authorization: `Bearer ${getCookie(cookiesKey)}` }
+          : {},
+      };
+
       switch (method) {
         case "get":
-          return axios.get(url);
+          return axios.get(url, axiosConfig);
         case "post":
-          return axios.post(url, body);
+          return axios.post(url, body, axiosConfig);
         case "put":
-          return axios.put(url, body);
+          return axios.put(url, body, axiosConfig);
         case "delete":
-          return axios.delete(url);
+          return axios.delete(url, axiosConfig);
         default:
-          return axios.patch(url, body);
+          return axios.patch(url, body, axiosConfig);
       }
     },
     onSuccess,
