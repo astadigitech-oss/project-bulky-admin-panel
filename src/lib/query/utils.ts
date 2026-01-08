@@ -37,10 +37,10 @@ export function isRecord(value: any): value is Record<string, any> {
  */
 export const invalidateQuery = async (
   queryClient: QueryClient,
-  keys: string[][]
+  keys: string[][],
 ) => {
   await Promise.all(
-    keys.map((key) => queryClient.invalidateQueries({ queryKey: key }))
+    keys.map((key) => queryClient.invalidateQueries({ queryKey: key })),
   );
   await new Promise((res) => setTimeout(res, 100));
 };

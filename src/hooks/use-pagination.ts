@@ -1,22 +1,8 @@
 "use client";
 
+import { MetaPagination } from "@/lib/types";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useState } from "react";
-export interface MetaPageProps {
-  last: number;
-  from: number;
-  total: number;
-  perPage: number;
-}
-export type PaginationMeta = {
-  firstPage: number;
-  lastPage: number;
-  currentPage: number;
-  from: number;
-  last: number;
-  total: number;
-  perPage: number;
-};
 
 export const usePagination = (
   pageParam: string = "p",
@@ -32,28 +18,26 @@ export const usePagination = (
     parseAsInteger.withDefault(10),
   );
 
-  const [metaPage, setMetaPage] = useState<MetaPageProps>({
-    last: 1,
+  // State untuk menyimpan metadata dari API
+  const [metaPage, setMetaPage] = useState<MetaPagination>({
+    current_page: 1,
+    first_page: 1,
     from: 0,
+    last: 1,
+    last_page: 1,
+    per_page: 10,
     total: 0,
-    perPage: limit,
   });
 
-  const setPagination = (pagination?: PaginationMeta) => {
+  const setPaginationData = (pagination?: MetaPagination) => {
     if (!pagination) return;
 
-    const currentPage = pagination.currentPage ?? 1;
-    const lastPage = pagination.lastPage ?? 1;
-    const perPage = pagination.perPage ?? 10;
+    // Sinkronisasi URL query params dengan data dari API
+    setPage(pagination.current_page);
+    setLimit(pagination.per_page);
 
-    setPage(currentPage > lastPage ? 1 : currentPage);
-    setLimit(perPage);
-    setMetaPage({
-      last: lastPage,
-      from: pagination.from ?? 0,
-      total: pagination.total ?? 0,
-      perPage,
-    });
+    // Update local state metadata
+    setMetaPage(pagination);
   };
 
   return {
@@ -62,7 +46,6 @@ export const usePagination = (
     limit,
     setLimit,
     metaPage,
-    setMetaPage,
-    setPagination,
+    setPaginationData,
   };
 };

@@ -14,6 +14,8 @@ import {
 } from "../ui/breadcrumb";
 import { Action } from "./action";
 
+export type BreadcrumbProps = { label: string; url?: string }[];
+
 export const MainContainer = ({
   breadcrumbs,
   children,

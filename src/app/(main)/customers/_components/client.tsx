@@ -72,8 +72,8 @@ export const CustomersClient = () => {
           ]}
         />
         <Pagination
-          pagination={{ ...metaPage, current: page, limit }}
-          setPagination={setPage}
+          pagination={{ ...metaPage, current_page: page, per_page: limit }}
+          setPage={setPage}
           setLimit={setLimit}
         />
       </div>
