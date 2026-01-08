@@ -10,8 +10,10 @@ export const DashboardTransactionClient = () => {
   });
 
   useEffect(() => {
-    if (fromUrl === "login") toast.success("Login berhasil");
-    setTimeout(() => setQuery({ fromUrl: "" }, { history: "replace" }), 500);
+    if (fromUrl === "login") {
+      toast.success("Anda telah login");
+      setTimeout(() => setQuery({ fromUrl: "" }, { history: "replace" }), 500);
+    }
   }, [fromUrl, setQuery]);
 
   return <div></div>;

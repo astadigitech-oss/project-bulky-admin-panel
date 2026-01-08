@@ -52,7 +52,7 @@ export function NavMain({
       item.items?.some((subItem) => pathname.includes(subItem.url)),
     );
 
-    return active ? active.title : null;
+    return active ? active.title : "Dasbor";
   });
 
   return (
@@ -69,7 +69,7 @@ export function NavMain({
         >
           <SidebarMenu>
             {nav.navMain.map((item) => {
-              const isActive = item.url !== "/" && pathname.includes(item.url);
+              const isActive = pathname.includes(item.url);
 
               if (item.items.length === 0) {
                 return (
@@ -150,7 +150,7 @@ export function NavMain({
         >
           <SidebarMenu>
             {nav.navInfo.map((item) => {
-              const isActive = item.url !== "/" && pathname.includes(item.url);
+              const isActive = pathname.includes(item.url);
 
               if (item.items.length === 0) {
                 return (
@@ -232,7 +232,7 @@ export function NavMain({
         >
           <SidebarMenu>
             {nav.navPreferences.map((item) => {
-              const isActive = item.url !== "/" && pathname.includes(item.url);
+              const isActive = pathname.includes(item.url);
 
               if (item.items.length === 0) {
                 return (

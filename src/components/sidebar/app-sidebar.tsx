@@ -40,7 +40,7 @@ const data = {
       items: [
         {
           title: "Dasbor Transaksi",
-          url: "/dashboard/transaction",
+          url: "/dashboard/transactions",
         },
         {
           title: "Ringkasan Dasbor",

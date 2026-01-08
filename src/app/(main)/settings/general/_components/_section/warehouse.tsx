@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { extractCoordsFromURL } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 
@@ -37,6 +37,7 @@ const formSchema = z.object({
 });
 
 export const WarehouseSettingClient = () => {
+  const idWarehouse = `${useId()}-warehouse`;
   const [type, setType] = useState<"manual" | "auto">("manual");
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -91,13 +92,15 @@ export const WarehouseSettingClient = () => {
   }, [urlField, form]);
 
   return (
-    <div className="grid lg:grid-cols-2 max-w-3xl mx-auto w-full gap-4">
-      <h2 className="font-semibold text-lg lg:text-xl tracking-tight">
-        Informasi Gudang
-      </h2>
+    <div className="grid lg:grid-cols-3 max-w-4xl mx-auto w-full gap-4">
+      <div className="p-4">
+        <h2 className="font-semibold text-lg lg:text-xl tracking-tight flex items-center relative before:content-[''] before:absolute before:-left-3 before:w-1 before:h-5  before:bg-linear-to-b before:from-yellow-400 before:to-yellow-500 before:rounded-full">
+          Informasi Gudang
+        </h2>
+      </div>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-4 border p-2 lg:p-4 rounded-lg dark:bg-gray-900/70 lg:col-span-2"
       >
         <FieldGroup className="grid w-full">
           <Controller
@@ -108,12 +111,12 @@ export const WarehouseSettingClient = () => {
                 data-invalid={fieldState.invalid}
                 className="gap-1 col-span-1"
               >
-                <FieldLabel required htmlFor="name">
+                <FieldLabel required htmlFor={`${idWarehouse}-${field.name}`}>
                   Nama Gudang
                 </FieldLabel>
                 <Input
                   {...field}
-                  id="name"
+                  id={`${idWarehouse}-${field.name}`}
                   aria-invalid={fieldState.invalid}
                   placeholder="e.g. Warehouse depok"
                 />
@@ -132,10 +135,14 @@ export const WarehouseSettingClient = () => {
                 data-invalid={fieldState.invalid}
                 className="gap-1 col-span-1"
               >
-                <FieldLabel required htmlFor="phone">
+                <FieldLabel required htmlFor={`${idWarehouse}-${field.name}`}>
                   No. Telepon
                 </FieldLabel>
-                <PhoneInput id={"phone"} placeholder="88888888" {...field} />
+                <PhoneInput
+                  id={`${idWarehouse}-${field.name}`}
+                  placeholder="88888888"
+                  {...field}
+                />
 
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
@@ -151,13 +158,13 @@ export const WarehouseSettingClient = () => {
             <TabsList>
               <TabsTrigger
                 value="manual"
-                className="text-xs h-7 data-active:text-yellow-400!"
+                className="text-xs h-7 data-active:text-yellow-900! dark:data-active:text-yellow-400!"
               >
                 Manual
               </TabsTrigger>
               <TabsTrigger
                 value="auto"
-                className="text-xs h-7 data-active:text-yellow-400!"
+                className="text-xs h-7 data-active:text-yellow-900! dark:data-active:text-yellow-400!"
               >
                 Google Maps URL
               </TabsTrigger>
@@ -172,12 +179,15 @@ export const WarehouseSettingClient = () => {
                       data-invalid={fieldState.invalid}
                       className="gap-1 col-span-1"
                     >
-                      <FieldLabel required htmlFor="latitude">
+                      <FieldLabel
+                        required
+                        htmlFor={`${idWarehouse}-${field.name}`}
+                      >
                         Latitude
                       </FieldLabel>
                       <Input
                         {...field}
-                        id="latitude"
+                        id={`${idWarehouse}-${field.name}`}
                         type="number"
                         aria-invalid={fieldState.invalid}
                         placeholder="-6.43654970"
@@ -197,12 +207,15 @@ export const WarehouseSettingClient = () => {
                       data-invalid={fieldState.invalid}
                       className="gap-1 col-span-1"
                     >
-                      <FieldLabel required htmlFor="longitude">
+                      <FieldLabel
+                        required
+                        htmlFor={`${idWarehouse}-${field.name}`}
+                      >
                         Longitude
                       </FieldLabel>
                       <Input
                         {...field}
-                        id="longitude"
+                        id={`${idWarehouse}-${field.name}`}
                         type="number"
                         aria-invalid={fieldState.invalid}
                         placeholder="106.84758600"
@@ -226,12 +239,15 @@ export const WarehouseSettingClient = () => {
                       data-invalid={fieldState.invalid}
                       className="gap-1 col-span-1"
                     >
-                      <FieldLabel required htmlFor="url">
+                      <FieldLabel
+                        required
+                        htmlFor={`${idWarehouse}-${field.name}`}
+                      >
                         Google Maps URL
                       </FieldLabel>
                       <Input
                         {...field}
-                        id="url"
+                        id={`${idWarehouse}-${field.name}`}
                         aria-invalid={fieldState.invalid}
                         placeholder="https://www.google.com/maps...."
                       />
@@ -252,12 +268,15 @@ export const WarehouseSettingClient = () => {
                         data-invalid={fieldState.invalid}
                         className="gap-1 col-span-1"
                       >
-                        <FieldLabel required htmlFor="latitude">
+                        <FieldLabel
+                          required
+                          htmlFor={`${idWarehouse}-${field.name}`}
+                        >
                           Latitude
                         </FieldLabel>
                         <Input
                           {...field}
-                          id="latitude"
+                          id={`${idWarehouse}-${field.name}`}
                           type="number"
                           aria-invalid={fieldState.invalid}
                           placeholder="-6.43654970"
@@ -279,12 +298,15 @@ export const WarehouseSettingClient = () => {
                         data-invalid={fieldState.invalid}
                         className="gap-1 col-span-1"
                       >
-                        <FieldLabel required htmlFor="longitude">
+                        <FieldLabel
+                          required
+                          htmlFor={`${idWarehouse}-${field.name}`}
+                        >
                           Longitude
                         </FieldLabel>
                         <Input
                           {...field}
-                          id="longitude"
+                          id={`${idWarehouse}-${field.name}`}
                           type="number"
                           aria-invalid={fieldState.invalid}
                           placeholder="106.84758600"
@@ -310,7 +332,7 @@ export const WarehouseSettingClient = () => {
                 data-invalid={fieldState.invalid}
                 className="gap-1 col-span-1"
               >
-                <FieldLabel required htmlFor="address">
+                <FieldLabel required htmlFor={`${idWarehouse}-${field.name}`}>
                   Alamat
                 </FieldLabel>
                 <Textarea

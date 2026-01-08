@@ -14,10 +14,11 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLogin } from "../_api";
 import { useEffect, useId, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { deleteCookie, hasCookie } from "cookies-next/client";
-import { parseAsString, useQueryState } from "nuqs";
 import { cookiesKey } from "@/config";
+import { LogInIcon } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 const formSchema = z.object({
   email: z.email().min(1, "Email is required"),
@@ -28,9 +29,7 @@ export const ClientLogin = () => {
   const router = useRouter();
   const elementId = useId();
   const [isNavigating, startTransition] = useTransition();
-  const [redirect] = useQueryState("redirect", parseAsString.withDefault(""));
-
-  console.log(redirect, decodeURIComponent(redirect));
+  const redirect = useSearchParams().get("redirect") ?? "";
 
   const { mutate: login, isPending: isLoggingIn } = useLogin();
 
@@ -119,6 +118,11 @@ export const ClientLogin = () => {
         />
         <Field>
           <Button disabled={isPending} type="submit">
+            {isPending || isNavigating ? (
+              <Spinner className="size-3.5" />
+            ) : (
+              <LogInIcon className="size-3.5" />
+            )}
             {renderButtonContent()}
           </Button>
         </Field>

@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "./table";
+import { Spinner } from "./spinner";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -23,7 +24,8 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-}: DataTableProps<TData, TValue>) {
+  isInitialLoading,
+}: DataTableProps<TData, TValue> & { isInitialLoading?: boolean }) {
   "use no memo";
   const table = useReactTable({
     data,
@@ -69,12 +71,24 @@ export function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-24 text-center text-xs"
-              >
-                No results.
-              </TableCell>
+              {isInitialLoading ? (
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-xs"
+                >
+                  <div className="flex items-center mx-auto gap-2 w-fit">
+                    <Spinner />
+                    <p>Memuat...</p>
+                  </div>
+                </TableCell>
+              ) : (
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-xs"
+                >
+                  Tidak ada data.
+                </TableCell>
+              )}
             </TableRow>
           )}
         </TableBody>

@@ -9,8 +9,12 @@ import {
 } from "@/components/ui/field";
 import { InputPassword } from "@/components/ui/input-password";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { MouseEvent, useId } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import { useChangePassword } from "../../_api";
+import { RotateCcw, Send } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 const formSchema = z.object({
   current_password: z.string().min(1, "Password lama diperlukan"),
@@ -25,6 +29,8 @@ const formSchema = z.object({
 });
 
 export const ChangePasswordClient = () => {
+  const idPassword = `${useId()}-password`;
+  const { mutate: changePassword, isPending: isUpdating } = useChangePassword();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -32,36 +38,48 @@ export const ChangePasswordClient = () => {
       new_password: "",
       confirm_password: "",
     },
-    mode: "onSubmit",
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+    if (values.new_password !== values.confirm_password) {
+      form.setError("confirm_password", { message: "Password tidak cocok" });
+      return;
+    }
+    changePassword({ body: values }, { onSuccess: () => form.reset() });
   };
+
+  const handleReset = (e: MouseEvent) => {
+    e.preventDefault();
+    form.reset();
+  };
+
   return (
-    <div className="grid lg:grid-cols-2 max-w-3xl mx-auto w-full gap-4">
-      <h2 className="font-semibold text-lg lg:text-xl tracking-tight">
-        Ganti Password
-      </h2>
+    <div className="grid lg:grid-cols-3 max-w-4xl mx-auto w-full gap-4">
+      <div className="p-4">
+        <h2 className="font-semibold text-lg lg:text-xl tracking-tight flex items-center relative before:content-[''] before:absolute before:-left-3 before:w-1 before:h-5  before:bg-linear-to-b before:from-yellow-400 before:to-yellow-500 before:rounded-full">
+          Ganti Password
+        </h2>
+      </div>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-4 border p-2 lg:p-4 rounded-lg dark:bg-gray-900/70 lg:col-span-2"
       >
         <FieldGroup className="grid md:grid-cols-6 gap-4">
           <Controller
             name="current_password"
             control={form.control}
+            disabled={isUpdating}
             render={({ field, fieldState }) => (
               <Field
                 data-invalid={fieldState.invalid}
                 className="gap-1 col-span-full"
               >
-                <FieldLabel required htmlFor="current_password">
+                <FieldLabel required htmlFor={`${idPassword}-${field.name}`}>
                   Password Lama
                 </FieldLabel>
                 <InputPassword
                   {...field}
-                  id="current_password"
+                  id={`${idPassword}-${field.name}`}
                   aria-invalid={fieldState.invalid}
                 />
 
@@ -75,17 +93,18 @@ export const ChangePasswordClient = () => {
           <Controller
             name="new_password"
             control={form.control}
+            disabled={isUpdating}
             render={({ field, fieldState }) => (
               <Field
                 data-invalid={fieldState.invalid}
                 className="gap-1 col-span-full"
               >
-                <FieldLabel required htmlFor="new_password">
+                <FieldLabel required htmlFor={`${idPassword}-${field.name}`}>
                   Password Baru
                 </FieldLabel>
                 <InputPassword
                   {...field}
-                  id="new_password"
+                  id={`${idPassword}-${field.name}`}
                   aria-invalid={fieldState.invalid}
                 />
 
@@ -99,17 +118,18 @@ export const ChangePasswordClient = () => {
           <Controller
             name="confirm_password"
             control={form.control}
+            disabled={isUpdating}
             render={({ field, fieldState }) => (
               <Field
                 data-invalid={fieldState.invalid}
                 className="gap-1 col-span-full"
               >
-                <FieldLabel required htmlFor="confirm_password">
+                <FieldLabel required htmlFor={`${idPassword}-${field.name}`}>
                   Konfirmasi Password Baru
                 </FieldLabel>
                 <InputPassword
                   {...field}
-                  id="confirm_password"
+                  id={`${idPassword}-${field.name}`}
                   aria-invalid={fieldState.invalid}
                 />
 
@@ -121,7 +141,26 @@ export const ChangePasswordClient = () => {
           />
         </FieldGroup>
         <div className="flex justify-end items-center w-full">
-          <Button type="submit">Simpan</Button>
+          <Button
+            type="button"
+            disabled={!form.formState.isDirty || isUpdating}
+            onClick={handleReset}
+            variant={"secondary"}
+          >
+            <RotateCcw className="size-3.5" />
+            Reset
+          </Button>
+          <Button
+            type="submit"
+            disabled={!form.formState.isDirty || isUpdating}
+          >
+            {isUpdating ? (
+              <Spinner className="size-3.5" />
+            ) : (
+              <Send className="size-3.5" />
+            )}
+            Simpan
+          </Button>
         </div>
       </form>
     </div>

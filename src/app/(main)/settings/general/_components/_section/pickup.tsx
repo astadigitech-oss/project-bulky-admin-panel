@@ -150,13 +150,15 @@ export const PickupClient = () => {
   };
 
   return (
-    <div className="grid lg:grid-cols-2 max-w-3xl mx-auto w-full gap-4">
-      <h2 className="font-semibold text-lg lg:text-xl tracking-tight">
-        Informasi Pengambilan
-      </h2>
+    <div className="grid lg:grid-cols-3 max-w-4xl mx-auto w-full gap-4">
+      <div className="p-4">
+        <h2 className="font-semibold text-lg lg:text-xl tracking-tight flex items-center relative before:content-[''] before:absolute before:-left-3 before:w-1 before:h-5  before:bg-linear-to-b before:from-yellow-400 before:to-yellow-500 before:rounded-full">
+          Informasi Pengambilan
+        </h2>
+      </div>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-4 border p-2 lg:p-4 rounded-lg dark:bg-gray-900/70 lg:col-span-2"
       >
         <FieldGroup className="gap-3">
           {fields.map((item, index) => (

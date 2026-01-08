@@ -10,6 +10,7 @@ import {
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useId } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
@@ -22,6 +23,7 @@ const formSchema = z.object({
 });
 
 export const WhatsappServiceClient = () => {
+  const idWhatsapp = `${useId()}-whatsapp`;
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,13 +38,15 @@ export const WhatsappServiceClient = () => {
   };
 
   return (
-    <div className="grid lg:grid-cols-2 max-w-3xl mx-auto w-full gap-4">
-      <h2 className="font-semibold text-lg lg:text-xl tracking-tight">
-        Bantuan Whatsapp
-      </h2>
+    <div className="grid lg:grid-cols-3 max-w-4xl mx-auto w-full gap-4">
+      <div className="p-4">
+        <h2 className="font-semibold text-lg lg:text-xl tracking-tight flex items-center relative before:content-[''] before:absolute before:-left-3 before:w-1 before:h-5  before:bg-linear-to-b before:from-yellow-400 before:to-yellow-500 before:rounded-full">
+          Bantuan Whatsapp
+        </h2>
+      </div>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-4 border p-2 lg:p-4 rounded-lg dark:bg-gray-900/70 lg:col-span-2"
       >
         <FieldGroup className="grid w-full">
           <Controller
@@ -53,10 +57,14 @@ export const WhatsappServiceClient = () => {
                 data-invalid={fieldState.invalid}
                 className="gap-1 col-span-1"
               >
-                <FieldLabel required htmlFor="phone">
+                <FieldLabel required htmlFor={`${idWhatsapp}-${field.name}`}>
                   No. Telepon
                 </FieldLabel>
-                <PhoneInput id={"phone"} placeholder="88888888" {...field} />
+                <PhoneInput
+                  id={`${idWhatsapp}-${field.name}`}
+                  placeholder="88888888"
+                  {...field}
+                />
 
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
@@ -72,11 +80,11 @@ export const WhatsappServiceClient = () => {
                 data-invalid={fieldState.invalid}
                 className="gap-1 col-span-1"
               >
-                <FieldLabel required htmlFor="message">
+                <FieldLabel required htmlFor={`${idWhatsapp}-${field.name}`}>
                   Pesan Awal
                 </FieldLabel>
                 <Textarea
-                  id={"message"}
+                  id={`${idWhatsapp}-${field.name}`}
                   className="min-h-28"
                   placeholder="e.g. Halo Bulky, saya butuh bantuan..."
                   {...field}

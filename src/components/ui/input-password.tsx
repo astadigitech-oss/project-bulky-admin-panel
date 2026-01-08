@@ -26,6 +26,7 @@ function InputPassword({
         variant={"ghost"}
         className="size-7 absolute right-1"
         type="button"
+        tabIndex={-1}
         onClick={() => setVisible((v) => !v)}
       >
         {visible ? <EyeOff /> : <Eye />}
