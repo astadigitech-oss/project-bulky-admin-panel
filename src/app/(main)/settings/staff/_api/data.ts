@@ -1,7 +1,7 @@
 import { invalidateQuery } from "@/lib/query";
 import { UseMutateConfig } from "@/lib/query/types";
 import { UseApiQueryProps } from "@/lib/query/use-query";
-import { BaseResponse, MetaPagination } from "@/lib/types";
+import { BaseParams, BaseResponse, MetaPagination } from "@/lib/types";
 import { keepPreviousData, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -17,7 +17,7 @@ type StaffType = {
   updated_at: string;
 };
 
-export type StaffListRequest = { id?: string };
+export type StaffListRequest = BaseParams;
 
 export type StaffDetailRequest = {
   page?: number;
@@ -29,7 +29,7 @@ export type StaffDetailRequest = {
 
 // ------query------
 export type StaffListResponse = BaseResponse & {
-  data: Omit<StaffType, "updated_at">[];
+  data: (Omit<StaffType, "updated_at"> & { role: string })[];
   meta: MetaPagination;
 };
 
@@ -52,12 +52,13 @@ export type CreateStaffBody = {
   email: string;
   nama: string;
   password: string;
+  confirm_password: string;
   role_id: string;
 };
 
 type CreateStaffResponse = StaffDetailResponse;
 
-type UpdateStaffParams = { id: string };
+type UpdateStaffParams = BaseParams;
 
 export type UpdateStaffBody = {
   email: string;
@@ -77,7 +78,10 @@ type ChangeStatusStaffResponse = BaseResponse & {
   data: { id: string; is_active: boolean };
 };
 type ResetPasswordStaffParams = DeleteStaffParams;
-export type ResetPasswordStaffBody = { new_password: string };
+export type ResetPasswordStaffBody = {
+  new_password: string;
+  confirm_password: string;
+};
 
 type ResetPasswordStaffResponse = BaseResponse & {
   data: { id: string; is_active: boolean };
@@ -191,7 +195,7 @@ export const dataAPIStaff = {
       onSuccess: async ({ data }) => {
         toast.success(data.message);
       },
-      onError: { title: "CHANGE_STATUS_STAFF" },
+      onError: { title: "RESET_PASSWORD_STAFF" },
     },
   }),
 };

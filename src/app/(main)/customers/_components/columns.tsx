@@ -8,24 +8,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
-import { Circle, CircleDot, MoreHorizontal, ReceiptText } from "lucide-react";
+import { MoreHorizontal, ReceiptText, Trash } from "lucide-react";
+import { BuyerListResponse } from "../_api/data";
+import Link from "next/link";
+import { MetaPagination } from "@/lib/types";
 
-export const column: ColumnDef<any>[] = [
+export const column = ({
+  handleDelete,
+  metaPage,
+  isDisabled,
+}: {
+  handleDelete: (id: string, userId: string) => Promise<void>;
+  metaPage: MetaPagination;
+  isDisabled: boolean;
+}): ColumnDef<BuyerListResponse["data"][number]>[] => [
   {
     id: "id",
     header: () => <div className="text-center">No</div>,
     cell: ({ row }) => (
       <div className="text-center tabular-nums">
-        {(1 + row.index).toLocaleString()}
+        {(metaPage.from + row.index).toLocaleString()}
       </div>
     ),
   },
   {
-    accessorKey: "name",
+    accessorKey: "nama:",
     header: "Nama",
   },
   {
-    accessorKey: "username",
+    accessorKey: "username:",
     header: "Username",
   },
   {
@@ -38,6 +49,7 @@ export const column: ColumnDef<any>[] = [
     cell: ({ row }) => (
       <DropdownMenu>
         <DropdownMenuTrigger
+          disabled={isDisabled}
           className={buttonVariants({ size: "icon-xs", variant: "ghost" })}
         >
           <MoreHorizontal />
@@ -45,17 +57,22 @@ export const column: ColumnDef<any>[] = [
         <DropdownMenuContent>
           <DropdownMenuGroup>
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem className={"text-xs"}>
-              {row.original.isActive ? (
-                <Circle className="size-3.5" />
-              ) : (
-                <CircleDot className="size-3.5" />
-              )}
-              {row.original.isActive ? "Nonaktifkan" : "Aktifkan"}
-            </DropdownMenuItem>
-            <DropdownMenuItem className={"text-xs"}>
-              <ReceiptText className="size-3.5" />
-              Detail
+            <DropdownMenuItem
+              className={"text-xs"}
+              render={
+                <Link href={`/customers/${row.original.id}`}>
+                  <ReceiptText className="size-3.5" />
+                  Detail
+                </Link>
+              }
+            />
+            <DropdownMenuItem
+              className={"text-xs"}
+              onClick={() => handleDelete(row.original.nama, row.original.id)}
+              variant="destructive"
+            >
+              <Trash className="size-3.5" />
+              Delete
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, PlusCircle, RefreshCcw, XCircle } from "lucide-react";
+import { Check, PlusCircle, RefreshCw, XCircle } from "lucide-react";
 import { useSearchQuery } from "@/hooks/use-search";
 import { InputSearch } from "@/components/ui/input-search";
 import { SortTable } from "@/components/sort-table";
@@ -47,7 +47,7 @@ export const OrderReviewsClient = () => {
             value="Perbarui Data"
             render={
               <Button variant={"outline"} size={"icon"}>
-                <RefreshCcw />
+                <RefreshCw />
               </Button>
             }
           />

@@ -68,6 +68,10 @@ export const DialogFormStaff = ({
       mode === "create" || mode === "password"
         ? z.string().min(8, "Password harus memiliki minimal 8 karakter")
         : z.string().optional(),
+    confirm_password:
+      mode === "create" || mode === "password"
+        ? z.string().min(8, "Password harus memiliki minimal 8 karakter")
+        : z.string().optional(),
     role_id:
       mode === "create"
         ? z.string().min(1, "Role harus dipilih")
@@ -89,6 +93,7 @@ export const DialogFormStaff = ({
       nama: detail?.nama ?? "",
       email: detail?.email ?? "",
       password: "",
+      confirm_password: "",
       role_id: "",
       is_active: detail?.is_active ?? true,
     },
@@ -101,10 +106,17 @@ export const DialogFormStaff = ({
   const onSubmit = (values: z.infer<typeof finalSchema>) => {
     switch (mode) {
       case "create":
+        if (values.password !== values.confirm_password) {
+          form.setError("confirm_password", {
+            message: "Password tidak cocok",
+          });
+          return;
+        }
         const bodyCreate: CreateStaffBody = {
           email: values.email,
           nama: values.nama,
           password: values.password as string,
+          confirm_password: values.confirm_password as string,
           role_id: values.role_id as string,
         };
         createStaff({ body: bodyCreate }, { onSuccess: () => handleClose() });
@@ -121,8 +133,15 @@ export const DialogFormStaff = ({
         );
         break;
       case "password":
+        if (values.password !== values.confirm_password) {
+          form.setError("confirm_password", {
+            message: "Password tidak cocok",
+          });
+          return;
+        }
         const bodyPassword: ResetPasswordStaffBody = {
           new_password: values.password as string,
+          confirm_password: values.confirm_password as string,
         };
         updatePassword(
           {
@@ -244,34 +263,64 @@ export const DialogFormStaff = ({
               )}
 
               {mode !== "edit" && (
-                <Controller
-                  name="password"
-                  control={form.control}
-                  disabled={isDisabled}
-                  render={({ field, fieldState }) => (
-                    <Field
-                      data-invalid={fieldState.invalid}
-                      className="gap-1 col-span-full"
-                    >
-                      <FieldLabel
-                        required
-                        htmlFor={`${idFormStaff}-${field.name}`}
+                <>
+                  <Controller
+                    name="password"
+                    control={form.control}
+                    disabled={isDisabled}
+                    render={({ field, fieldState }) => (
+                      <Field
+                        data-invalid={fieldState.invalid}
+                        className="gap-1 col-span-full"
                       >
-                        Password
-                      </FieldLabel>
-                      <InputPassword
-                        {...field}
-                        id={`${idFormStaff}-${field.name}`}
-                        aria-invalid={fieldState.invalid}
-                        autoComplete="new-password"
-                      />
+                        <FieldLabel
+                          required
+                          htmlFor={`${idFormStaff}-${field.name}`}
+                        >
+                          Password
+                        </FieldLabel>
+                        <InputPassword
+                          {...field}
+                          id={`${idFormStaff}-${field.name}`}
+                          aria-invalid={fieldState.invalid}
+                          autoComplete="new-password"
+                        />
 
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="confirm_password"
+                    control={form.control}
+                    disabled={isDisabled}
+                    render={({ field, fieldState }) => (
+                      <Field
+                        data-invalid={fieldState.invalid}
+                        className="gap-1 col-span-full"
+                      >
+                        <FieldLabel
+                          required
+                          htmlFor={`${idFormStaff}-${field.name}`}
+                        >
+                          Confirm Password
+                        </FieldLabel>
+                        <InputPassword
+                          {...field}
+                          id={`${idFormStaff}-${field.name}`}
+                          aria-invalid={fieldState.invalid}
+                          autoComplete="new-password"
+                        />
+
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </>
               )}
               {mode === "create" && (
                 <Controller
@@ -341,9 +390,9 @@ export const DialogFormStaff = ({
                         onCheckedChange={field.onChange}
                         aria-invalid={fieldState.invalid}
                         className={
-                          "data-checked:bg-emerald-500 data-unchecked:bg-red-500 group"
+                          "data-checked:bg-emerald-500 data-unchecked:bg-red-500 dark:data-checked:bg-emerald-400 dark:data-unchecked:bg-red-400"
                         }
-                        classThumb="group-data-checked:bg-emerald-50 group-data-unchecked:bg-red-50"
+                        classThumb="data-checked:bg-emerald-50 data-unchecked:bg-red-50 dark:data-checked:bg-emerald-950 dark:data-unchecked:bg-red-950"
                         size="sm"
                       />
                       <FieldLabel
