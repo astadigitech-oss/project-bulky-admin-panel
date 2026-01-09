@@ -4,7 +4,7 @@ import {
   Check,
   Download,
   PlusCircle,
-  RefreshCcw,
+  RefreshCw,
   ShoppingCart,
   TrendingUp,
   XCircle,
@@ -468,7 +468,7 @@ export const OrderListClient = () => {
               value="Perbarui Data"
               render={
                 <Button variant={"outline"} size={"icon"}>
-                  <RefreshCcw />
+                  <RefreshCw />
                 </Button>
               }
             />

@@ -12,3 +12,7 @@ export type MetaPagination = {
   per_page: number;
   total: number;
 };
+
+export type BaseParams = {
+  id?: string;
+};

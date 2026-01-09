@@ -63,7 +63,7 @@ export const column = ({
     header: "Email",
   },
   {
-    accessorKey: "role.nama",
+    accessorKey: "role",
     header: "Role",
   },
   {

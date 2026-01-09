@@ -60,9 +60,9 @@ export const SortTable = ({
           ))}
           {!isCustom && (
             <DropdownMenuCheckboxItem
-              onCheckedChange={() => setSort({ sort: "created" })}
+              onCheckedChange={() => setSort({ sort: "created_at" })}
               className="h-7 text-xs group"
-              checked={sort === "created"}
+              checked={sort === "created_at"}
             >
               Dibuat
             </DropdownMenuCheckboxItem>

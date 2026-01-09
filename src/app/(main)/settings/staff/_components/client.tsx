@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Plus, PlusCircle, RefreshCcw, XCircle } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { useSearchQuery } from "@/hooks/use-search";
 import { InputSearch } from "@/components/ui/input-search";
 import { SortTable } from "@/components/sort-table";
@@ -9,18 +9,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { TooltipText } from "@/providers/tooltip-provider";
 import DataTable from "@/components/ui/data-table";
 import { column } from "./columns";
-import {
-  Command,
-  CommandGroup,
-  CommandItem,
-  CommandSeparator,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { usePagination } from "@/hooks/use-pagination";
@@ -82,7 +70,6 @@ export const StaffSettingsClient = () => {
 
   const staffList = list?.data ?? [];
   const isDisabled = isDeleting || isUpdatingStatus;
-  console.log(isDeleting || isUpdatingStatus, isDeleting, isUpdatingStatus);
 
   const handleDelete = async (user: string, userId: string) => {
     const ok = await confirmDelete(user, "user");
@@ -143,19 +130,14 @@ export const StaffSettingsClient = () => {
                 disabled={isDisabled}
                 onClick={() => refetch()}
               >
-                <RefreshCcw
+                <RefreshCw
                   className={cn("size-3.5", isRefetching && "animate-spin")}
                 />
               </Button>
             }
           />
           <SortTable
-            data={[
-              { name: "Nama", value: "name" },
-              { name: "Email", value: "email" },
-              { name: "Status", value: "status" },
-              { name: "Diperbarui", value: "updatedAt" },
-            ]}
+            data={[]}
             order={order}
             sort={sort}
             setSort={setQuery}
@@ -172,7 +154,7 @@ export const StaffSettingsClient = () => {
         </div>
       </div>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
+        {/*<div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger
               render={
@@ -300,7 +282,7 @@ export const StaffSettingsClient = () => {
             Reset
             <XCircle />
           </Button>
-        </div>
+        </div>*/}
 
         <DataTable
           columns={column({
