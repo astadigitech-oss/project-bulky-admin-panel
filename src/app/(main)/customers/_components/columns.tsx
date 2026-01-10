@@ -32,16 +32,20 @@ export const column = ({
     ),
   },
   {
-    accessorKey: "nama:",
+    accessorKey: "nama",
     header: "Nama",
   },
   {
-    accessorKey: "username:",
+    accessorKey: "username",
     header: "Username",
   },
   {
     accessorKey: "email",
     header: "Email",
+  },
+  {
+    accessorKey: "telepon",
+    header: "No. Telepon",
   },
   {
     id: "actions",
