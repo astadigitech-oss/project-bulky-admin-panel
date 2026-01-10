@@ -18,7 +18,7 @@ export type BuyerDetailRequest = {
 };
 
 export type BuyerChartRequest = {
-  filter?: string;
+  filter?: "year" | "month" | "week" | "custom";
   tahun?: number;
   bulan?: number;
   minggu?: number;
@@ -102,7 +102,7 @@ type BuyerStatResponse = BaseResponse & {
       /**
        * "up" / "down" / "stable"
        */
-      trend: string;
+      trend: "up" | "down" | "stable";
       /**
        * Persentase perubahan vs bulan lalu
        */
@@ -123,7 +123,7 @@ type BuyerStatResponse = BaseResponse & {
       /**
        * "up" / "down" / "stable"
        */
-      trend: string;
+      trend: "up" | "down" | "stable";
       /**
        * Persentase perubahan vs bulan lalu
        */
