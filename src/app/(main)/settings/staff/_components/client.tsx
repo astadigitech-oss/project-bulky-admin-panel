@@ -113,7 +113,7 @@ export const StaffSettingsClient = () => {
         detail={detail?.data}
       />
       <div className="flex items-center justify-between">
-        <h1 className="leading-none font-semibold text-2xl">Staff {open}</h1>
+        <h1 className="leading-none font-semibold text-2xl">Staff</h1>
         <div className="flex items-center gap-2">
           <InputSearch
             placeholder="Cari staff..."

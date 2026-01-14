@@ -21,6 +21,11 @@ export const cn = (...inputs: ClassValue[]) => {
 export const sizesImage =
   "(max-width: 768px) 50vw, (max-width: 1200px) 75vw, 100vw";
 
+export const numericString = (e: string) => {
+  if (Number.isNaN(e) || e === "") return "0";
+  return e.startsWith("0") ? e.replace(/^0+/, "") : e;
+};
+
 export const extractCoordsFromURL = (url: string) => {
   // Regex untuk mencari pola @latitude,longitude
   const match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);

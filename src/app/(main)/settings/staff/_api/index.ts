@@ -10,7 +10,7 @@ export const useGetStaffList = ({
   search,
   sort_by,
   order,
-}: StaffDetailRequest) =>
+}: StaffListRequest) =>
   useApiQuery(
     dataAPIStaff.query({
       page,
@@ -20,7 +20,7 @@ export const useGetStaffList = ({
       order,
     }).list,
   );
-export const useGetStaffDetail = ({ id }: StaffListRequest) =>
+export const useGetStaffDetail = ({ id }: StaffDetailRequest) =>
   useApiQuery(dataAPIStaff.query({ id }).show);
 export const useGetSelectRole = () =>
   useApiQuery(dataAPIStaff.query({}).roleSelect);

@@ -1,7 +1,12 @@
 import { invalidateQuery } from "@/lib/query";
 import { UseMutateConfig } from "@/lib/query/types";
 import { UseApiQueryProps } from "@/lib/query/use-query";
-import { BaseParams, BaseResponse, MetaPagination } from "@/lib/types";
+import {
+  BaseListParams,
+  BaseParams,
+  BaseResponse,
+  MetaPagination,
+} from "@/lib/types";
 import { keepPreviousData, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -9,13 +14,7 @@ import { toast } from "sonner";
 // ------partials------
 export type BuyerListRequest = BaseParams;
 
-export type BuyerDetailRequest = {
-  page?: number;
-  per_page?: number;
-  search?: string;
-  sort_by?: string;
-  order?: "asc" | "desc";
-};
+export type BuyerDetailRequest = BaseListParams;
 
 export type BuyerChartRequest = {
   filter?: "year" | "month" | "week" | "custom";
