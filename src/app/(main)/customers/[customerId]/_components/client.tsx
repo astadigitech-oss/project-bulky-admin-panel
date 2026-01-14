@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronRight,
   CircleAlertIcon,
+  Map,
+  MapPinned,
+  MapPinOff,
   RefreshCw,
   Send,
   ShieldCheck,
@@ -46,6 +49,12 @@ import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InputPassword } from "@/components/ui/input-password";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const formSchema = z.object({
   new_password: z.string().min(8, "Password harus memiliki minimal 8 karakter"),
@@ -312,34 +321,89 @@ export const CustomerDetailClient = () => {
         </div>
       </Card>
       <div className="grid grid-cols-2 gap-6">
-        <Card className="p-0 border-gray-300/80 dark:border-gray-600/70 ring-0 border gap-0">
-          <CardHeader className="p-4 bg-gray-50 dark:bg-transparent">
-            <CardTitle>Alamat Pelanggan</CardTitle>
-          </CardHeader>
-          <Separator
-            variant={"dashed"}
-            className={"border-gray-300/80 dark:border-gray-600/70"}
-          />
-          <div className="p-4 dark:bg-gray-950/60">
-            <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-md font-medium flex items-center justify-center">
-              Tidak ada alamat yang tersedia
+        <div>
+          <Card className="p-0 border-gray-300/80 dark:border-gray-600/70 ring-0 border gap-0">
+            <CardHeader className="p-4 bg-gray-50 dark:bg-transparent">
+              <CardTitle className="flex items-center gap-4">
+                <MapPinned className="size-5" />
+                Alamat Pelanggan
+              </CardTitle>
+            </CardHeader>
+            <Separator
+              variant={"dashed"}
+              className={"border-gray-300/80 dark:border-gray-600/70"}
+            />
+            <div className="p-4 dark:bg-gray-950/60">
+              {customer?.alamat && customer?.alamat?.length > 0 ? (
+                <Accordion className="w-full mx-auto space-y-2">
+                  {customer?.alamat.map((address) => (
+                    <AccordionItem
+                      key={address.id}
+                      value={`${address.id}-1`}
+                      className={"data-open:border-0"}
+                    >
+                      <AccordionTrigger className="py-3 px-5 text-base items-center">
+                        <div className="flex items-center gap-3">
+                          <Map className="size-4" />
+                          <ChevronRight className="size-4" />
+                          {address.nama_penerima}
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="relative flex flex-col gap-4 px-5 pl-13 bg-gray-100 dark:bg-gray-800 py-4 rounded-md [&_p:not(:last-child)]:mb-0">
+                        <div className="flex flex-col gap-0 group">
+                          <p className="text-xs leading-relaxed font-medium text-gray-500 dark:text-gray-300/70">
+                            No. Telepon:
+                          </p>
+                          <p className="text-sm leading-relaxed group-hover:underline group-hover:underline-offset-2">
+                            {address.telepon_penerima}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-0 group">
+                          <p className="text-xs leading-relaxed font-medium text-gray-500 dark:text-gray-300/70">
+                            Detail Alamat:
+                          </p>
+                          <p className="text-sm leading-relaxed group-hover:underline group-hover:underline-offset-2">
+                            {address.catatan}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-0 group">
+                          <p className="text-xs leading-relaxed font-medium text-gray-500 dark:text-gray-300/70">
+                            Alamat:
+                          </p>
+                          <p className="text-sm leading-relaxed group-hover:underline group-hover:underline-offset-2">
+                            {address.alamat_formatted}
+                          </p>
+                        </div>
+                        <div className="w-px h-full absolute left-7.5 inset-y-0 border-l border-dashed dark:border-gray-500" />
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-md font-medium flex items-center justify-center gap-3 text-sm">
+                  <MapPinOff className="size-4" />
+                  Tidak ada alamat yang tersedia
+                </div>
+              )}
             </div>
-          </div>
-        </Card>
-        <Card className="p-0 border-gray-300/80 dark:border-gray-600/70 ring-0 border gap-0">
-          <CardHeader className="p-4 bg-gray-50 dark:bg-transparent">
-            <CardTitle>Pesanan Pelanggan</CardTitle>
-          </CardHeader>
-          <Separator
-            variant={"dashed"}
-            className={"border-gray-300/80 dark:border-gray-600/70"}
-          />
-          <div className="p-4 dark:bg-gray-950/60">
-            <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-md font-medium flex items-center justify-center">
-              Tidak ada pesanan yang tersedia
+          </Card>
+        </div>
+        <div>
+          <Card className="p-0 border-gray-300/80 dark:border-gray-600/70 ring-0 border gap-0">
+            <CardHeader className="p-4 bg-gray-50 dark:bg-transparent">
+              <CardTitle>Pesanan Pelanggan</CardTitle>
+            </CardHeader>
+            <Separator
+              variant={"dashed"}
+              className={"border-gray-300/80 dark:border-gray-600/70"}
+            />
+            <div className="p-4 dark:bg-gray-950/60">
+              <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-md font-medium flex items-center justify-center">
+                Tidak ada pesanan yang tersedia
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );

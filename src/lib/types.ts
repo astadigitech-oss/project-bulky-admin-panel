@@ -16,3 +16,11 @@ export type MetaPagination = {
 export type BaseParams = {
   id?: string;
 };
+
+export type BaseListParams = {
+  page?: number;
+  per_page?: number;
+  search?: string;
+  sort_by?: string;
+  order?: "asc" | "desc";
+};
