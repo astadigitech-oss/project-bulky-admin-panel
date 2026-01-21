@@ -91,10 +91,6 @@ const data = {
           url: "/products/sources",
         },
         {
-          title: "Status",
-          url: "/products/statuses",
-        },
-        {
           title: "Banner Jenis Produk",
           url: "/products/banners",
         },

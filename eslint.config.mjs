@@ -19,6 +19,7 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-unused-vars": "warn", // nanti dihapus
       "react-hooks/exhaustive-deps": "off", // nanti dihapus
+      "@next/next/no-img-element": "off",
     },
   },
 ]);

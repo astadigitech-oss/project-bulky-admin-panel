@@ -11,7 +11,7 @@ const buttonVariants = cva(
         default:
           "border-transparent bg-linear-135 from-yellow-400 to-yellow-500 text-yellow-950 shadow-xs hover:to-yellow-400",
         destructive:
-          "border-transparent bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "border-transparent bg-linear-135 from-red-400 to-red-500 text-red-950 hover:to-red-400 text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "border border-gray-300 dark:border-gray-300/50 hover:border-yellow-500/70 dark:hover:border-yellow-400/50 hover:bg-linear-135 hover:from-yellow-300 hover:to-yellow-500 dark:hover:from-yellow-400 dark:hover:to-yellow-600 hover:text-yellow-950 bg-background",
         outlineDestructive:
@@ -43,12 +43,17 @@ const buttonVariants = cva(
   },
 );
 
+export type ButtonProps = ButtonPrimitive.Props &
+  VariantProps<typeof buttonVariants> & {
+    className?: string;
+  };
+
 function Button({
   className,
   variant = "default",
   size = "default",
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonProps) {
   return (
     <ButtonPrimitive
       data-slot="button"
