@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
         pathname: "/assets/images/**",
       },
     ],
+    remotePatterns: [{ hostname: "api.bulky.id" }],
   },
 };
 

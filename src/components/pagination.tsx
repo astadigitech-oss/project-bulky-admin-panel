@@ -50,7 +50,7 @@ const Pagination = ({
             onValueChange={(v) => setLimit(parseInt(v ?? "10"))}
             disabled={disabled}
           >
-            <SelectTrigger className="w-fit h-8 border-0 bg-transparent shadow-none p-0 text-xs font-medium focus:ring-0 focus-visible:ring-0">
+            <SelectTrigger className="w-fit h-8 border-0 bg-transparent dark:bg-transparent shadow-none p-0 text-xs font-medium focus:ring-0 focus-visible:ring-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

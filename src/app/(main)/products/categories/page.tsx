@@ -1,7 +1,10 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { CategoriesProductClient } from "./_components/client";
+import { auth } from "@/lib/action/auth";
+import { redirect } from "next/navigation";
 
-// const pathname = "products/categories";
+const pathname = "products/categories";
 const labelPage = "Kategori";
 
 export const metadata: Metadata = {
@@ -9,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 const ProductCategoriesPage = async () => {
-  // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  const isAuth = await auth();
+  if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer
@@ -18,7 +22,7 @@ const ProductCategoriesPage = async () => {
         { label: labelPage },
       ]}
     >
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <CategoriesProductClient />
     </MainContainer>
   );
 };

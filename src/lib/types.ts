@@ -24,3 +24,5 @@ export type BaseListParams = {
   sort_by?: string;
   order?: "asc" | "desc";
 };
+
+export type DuoLangType = { en: string; id: string };

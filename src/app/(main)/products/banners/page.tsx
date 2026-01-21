@@ -1,7 +1,9 @@
 import { MainContainer } from "@/components/container/main-container";
+import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-// const pathname = "products/banners";
+const pathname = "products/banners";
 const labelPage = "Banner Tipe Produk";
 
 export const metadata: Metadata = {
@@ -9,7 +11,8 @@ export const metadata: Metadata = {
 };
 
 const ProductBannersPage = async () => {
-  // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  const isAuth = auth();
+  if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer
@@ -18,7 +21,7 @@ const ProductBannersPage = async () => {
         { label: labelPage },
       ]}
     >
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <div></div>
     </MainContainer>
   );
 };

@@ -1,23 +1,28 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { SourceProductClient } from "./_components/client";
+import { auth } from "@/lib/action/auth";
+import { redirect } from "next/navigation";
 
-// const pathname = "products/sources";
+const pathname = "products/sources";
+const labelPage = "Sumber";
 
 export const metadata: Metadata = {
-  title: "Sumber Produk",
+  title: `${labelPage} Produk`,
 };
 
 const ProductSourcesPage = async () => {
-  // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  const isAuth = await auth();
+  if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer
       breadcrumbs={[
         { label: "Produk", url: "/products/list" },
-        { label: "Sumber" },
+        { label: labelPage },
       ]}
     >
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <SourceProductClient />
     </MainContainer>
   );
 };

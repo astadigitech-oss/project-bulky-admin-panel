@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CheckIcon, ChevronsUpDown } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 
@@ -75,14 +75,12 @@ InputComponent.displayName = "InputComponent";
 type CountryEntry = { label: string; value: RPNInput.Country | undefined };
 
 type CountrySelectProps = {
-  disabled?: boolean;
   value: RPNInput.Country;
   options: CountryEntry[];
   onChange: (country: RPNInput.Country) => void;
 };
 
 const CountrySelect = ({
-  disabled,
   value: selectedCountry,
   options: countryList,
   onChange,
@@ -105,19 +103,19 @@ const CountrySelect = ({
           <Button
             type="button"
             variant="outline"
-            className="flex gap-1 rounded-e-none rounded-s-lg border-r-0 px-3 focus:z-10"
-            disabled={disabled}
+            className="flex gap-1 rounded-e-none rounded-s-lg border-r-0 px-3 focus:z-10 disabled:opacity-100"
+            disabled
           >
             <FlagComponent
               country={selectedCountry}
               countryName={selectedCountry}
             />
-            <ChevronsUpDown
+            {/*<ChevronsUpDown
               className={cn(
                 "-mr-2 size-4 opacity-50",
                 disabled ? "hidden" : "opacity-100",
               )}
-            />
+            />*/}
           </Button>
         }
       />

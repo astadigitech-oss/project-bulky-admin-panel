@@ -87,3 +87,9 @@ export const getRangeOfMonths = () => {
     month: format(date, "MMMM", { locale: id }),
   }));
 };
+
+export const encodeEscapeHTML = (str: string) =>
+  str.replace(
+    /[^a-zA-Z0-9 ]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
