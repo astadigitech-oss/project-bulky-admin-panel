@@ -31,7 +31,7 @@ const LoginPage = async () => {
               <Image
                 src={"/assets/images/logo-bulky.webp"}
                 sizes={sizesImage}
-                alt="bulky logo"
+                alt="bulky_logo"
                 className="object-contain"
                 fill
               />

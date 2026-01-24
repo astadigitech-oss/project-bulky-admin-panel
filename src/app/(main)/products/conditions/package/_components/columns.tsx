@@ -137,6 +137,7 @@ export const column = ({
               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
               <DropdownMenuItem
                 className={"text-xs"}
+                disabled={row.original.urutan === 1}
                 onClick={() => handleReorder(row.original.id, "up")}
               >
                 <ArrowUp className="size-3.5" />
@@ -144,7 +145,6 @@ export const column = ({
               </DropdownMenuItem>
               <DropdownMenuItem
                 className={"text-xs"}
-                disabled={row.original.urutan === 1}
                 onClick={() => handleReorder(row.original.id, "down")}
               >
                 <ArrowDown className="size-3.5" />

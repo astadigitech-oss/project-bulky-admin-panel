@@ -2,9 +2,10 @@ import { MainContainer } from "@/components/container/main-container";
 import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { BannerTypeProductClient } from "./_components/client";
 
 const pathname = "products/banners";
-const labelPage = "Banner Tipe Produk";
+const labelPage = "Banner Jenis Produk";
 
 export const metadata: Metadata = {
   title: labelPage,
@@ -21,7 +22,7 @@ const ProductBannersPage = async () => {
         { label: labelPage },
       ]}
     >
-      <div></div>
+      <BannerTypeProductClient />
     </MainContainer>
   );
 };

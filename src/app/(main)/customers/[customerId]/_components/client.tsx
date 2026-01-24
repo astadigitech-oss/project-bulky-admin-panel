@@ -9,7 +9,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { cn, sizesImage } from "@/lib/utils";
+import { cn, formatImageAlt, sizesImage } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator-extended";
 import { Button } from "@/components/ui/button";
 import {
@@ -146,7 +146,7 @@ export const CustomerDetailClient = () => {
             <div className="size-16 rounded-md border overflow-hidden relative shadow">
               <Image
                 src={customer?.foto_url ?? "/assets/images/logo-bulky.webp"}
-                alt={`image ${customer?.nama.toLowerCase()}`}
+                alt={formatImageAlt(customer?.nama ?? "")}
                 sizes={sizesImage}
                 className="object-cover"
                 fill

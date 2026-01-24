@@ -7,7 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn, sizesImage } from "@/lib/utils";
+import { cn, formatImageAlt, sizesImage } from "@/lib/utils";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -17,6 +17,7 @@ import {
   CircleDot,
   Clock,
   Edit,
+  ImageOffIcon,
   MoreHorizontal,
   Trash,
 } from "lucide-react";
@@ -66,33 +67,42 @@ export const column = ({
   {
     accessorKey: "logo_url",
     header: "Logo",
-    cell: ({ row }) => (
-      <Dialog>
-        <DialogTrigger className="relative size-12 overflow-hidden rounded-md border">
-          <Image
-            src={row.original.logo_url}
-            alt={row.original.nama.id}
-            fill
-            sizes={sizesImage}
-            className="object-cover"
-          />
-        </DialogTrigger>
-        <DialogContent className={"min-w-[80vh]"} showCloseButton={false}>
-          <div className="relative w-full aspect-square overflow-hidden rounded-md border">
+    cell: ({ row }) => {
+      if (!row.original.logo_url) {
+        return (
+          <div className="size-12 border rounded-md flex items-center justify-center">
+            <ImageOffIcon className="size-6 stroke-[1.5]" />
+          </div>
+        );
+      }
+      return (
+        <Dialog>
+          <DialogTrigger className="relative size-12 overflow-hidden rounded-md border">
             <Image
               src={row.original.logo_url}
-              alt={row.original.nama.id}
+              alt={formatImageAlt(row.original.nama.id)}
               fill
               sizes={sizesImage}
               className="object-cover"
             />
-          </div>
-          <DialogFooter>
-            <DialogClose render={<Button>Close</Button>} />
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    ),
+          </DialogTrigger>
+          <DialogContent className={"min-w-[80vh]"} showCloseButton={false}>
+            <div className="relative w-full aspect-square overflow-hidden rounded-md border">
+              <Image
+                src={row.original.logo_url}
+                alt={formatImageAlt(row.original.nama.id)}
+                fill
+                sizes={sizesImage}
+                className="object-cover"
+              />
+            </div>
+            <DialogFooter>
+              <DialogClose render={<Button>Close</Button>} />
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      );
+    },
   },
   {
     accessorKey: "nama.id",

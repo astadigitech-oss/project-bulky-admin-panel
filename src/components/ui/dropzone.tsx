@@ -24,6 +24,7 @@ export const Dropzone = ({
   onError,
   error,
   oldValue,
+  ratio = "square",
   accept = {
     "image/jpeg": [],
     "image/png": [],
@@ -31,7 +32,7 @@ export const Dropzone = ({
   },
   maxSize = 10 * 1024 * 1024,
   maxFiles = 1,
-}: DropzoneProps) => {
+}: DropzoneProps & { ratio?: "square" | "banner" }) => {
   const [preview, setPreview] = useState("");
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     disabled,
@@ -80,10 +81,20 @@ export const Dropzone = ({
   }, [value, oldValue]);
 
   return (
-    <div className="h-32">
+    <div className={cn(ratio === "square" ? "h-32" : "w-full")}>
       {preview ? (
-        <div className="size-full flex gap-3">
-          <div className="h-full aspect-square rounded-md overflow-hidden border shadow relative border-gray-300 dark:border-gray-300/50">
+        <div
+          className={cn(
+            "size-full flex gap-3",
+            ratio === "square" ? "flex-row" : "flex-col",
+          )}
+        >
+          <div
+            className={cn(
+              "h-full rounded-md overflow-hidden border shadow relative border-gray-300 dark:border-gray-300/50",
+              ratio === "square" ? "aspect-square" : "aspect-4/1",
+            )}
+          >
             <Image
               src={preview}
               alt="preview_logo"
@@ -99,14 +110,15 @@ export const Dropzone = ({
             type="button"
           >
             <XIcon />
-            Ganti Logo
+            Ganti {ratio === "square" ? "Logo" : "Banner"}
           </Button>
         </div>
       ) : (
         <div
           {...getRootProps()}
           className={cn(
-            "flex items-center justify-center border rounded-md p-4 h-full flex-col gap-2 cursor-pointer transition",
+            "flex items-center justify-center border rounded-md p-4 flex-col gap-2 cursor-pointer transition",
+            ratio === "square" ? "h-full" : "w-full aspect-4/1",
             isDragActive
               ? "animate-pulse border-yellow-600 dark:border-yellow-300"
               : "border-gray-300 dark:border-gray-300/50",
@@ -122,7 +134,8 @@ export const Dropzone = ({
             <div className="flex flex-col items-center">
               <p>Klik atau seret & lepas file di sini</p>
               <p className="text-xs text-gray-400">
-                Rekomendasi ratio 1:1 (.jpg, .jpeg, .png, .webp)
+                Rekomendasi ratio {ratio === "square" ? "1:1" : "4:1"} (.jpg,
+                .jpeg, .png, .webp)
               </p>
             </div>
           )}

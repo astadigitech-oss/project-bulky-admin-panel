@@ -74,7 +74,7 @@ export function DataTable<TData, TValue>({
               {isInitialLoading ? (
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-xs"
+                  className="h-50.5 text-center text-xs"
                 >
                   <div className="flex items-center mx-auto gap-2 w-fit">
                     <Spinner />
@@ -84,7 +84,7 @@ export function DataTable<TData, TValue>({
               ) : (
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-xs"
+                  className="h-50.5 text-center text-xs"
                 >
                   Tidak ada data.
                 </TableCell>

@@ -126,6 +126,20 @@ const DialogFormCategory = ({
   };
 
   const onSubmit = (values: z.infer<typeof finalSchema>) => {
+    if (values.tipe_kondisi_tambahan === "TEKS" && !values.teks_kondisi) {
+      form.setError("teks_kondisi", { message: "Teks kondisi wajib diisi" });
+      return;
+    }
+    if (
+      values.tipe_kondisi_tambahan === "GAMBAR" &&
+      mode === "create" &&
+      (!values.gambar_kondisi || values.gambar_kondisi?.length === 0)
+    ) {
+      form.setError("gambar_kondisi", {
+        message: "Gambar kondisi wajib diisi",
+      });
+      return;
+    }
     switch (mode) {
       case "create":
         const bodyCreate = new FormData();

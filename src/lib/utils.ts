@@ -93,3 +93,7 @@ export const encodeEscapeHTML = (str: string) =>
     /[^a-zA-Z0-9 ]/g,
     (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
   );
+
+export const formatImageAlt = (str: string) => {
+  return str.split(" ").join("_").toLowerCase();
+};
