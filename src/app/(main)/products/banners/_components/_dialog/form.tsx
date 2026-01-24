@@ -17,21 +17,34 @@ import {
 } from "@/components/ui/field";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send, X } from "lucide-react";
-import { ComponentProps, useEffect, useId } from "react";
+import {
+  ComponentProps,
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useId,
+} from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { Dropzone } from "@/components/ui/dropzone";
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
-import ID from "country-flag-icons/react/1x1/ID";
-import GB from "country-flag-icons/react/1x1/GB";
-import { useCreateBrand, useUpdateBrand } from "../../_api";
-import { BrandType } from "../../_api/types";
+  useCreateBannerTypeProduct,
+  useUpdateBannerTypeProduct,
+} from "../../_api";
+import {
+  BannerTypeProductResponseType,
+  ListTypeProductType,
+} from "../../_api/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const IMAGE_RULES = {
   mimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
@@ -39,25 +52,29 @@ export const IMAGE_RULES = {
 };
 
 const formSchema = z.object({
-  nama_id: z.string().min(3, "Nama harus memiliki minimal 3 karakter"),
-  nama_en: z.string().min(3, "Nama harus memiliki minimal 3 karakter"),
+  nama: z.string().min(3, "Nama harus memiliki minimal 3 karakter"),
+  tipe_produk_id: z.string().min(1, "Wajib memilih jenis produk"),
 });
 
-const DialogFormBrand = ({
+export const DialogFormBannerTypeProduct = ({
   open,
   onOpenChange,
   mode,
   detail,
   isDisabled,
+  typeProductList,
+  setAccordionValue,
 }: Pick<ComponentProps<typeof Dialog>, "open" | "onOpenChange"> & {
   onOpenChange: (open: boolean) => void;
-  mode: "create" | "edit" | null;
-  detail?: BrandType;
+  typeProductList: ListTypeProductType[];
+  setAccordionValue: Dispatch<SetStateAction<string[]>>;
+  mode?: "create" | "edit";
+  detail?: BannerTypeProductResponseType;
   isDisabled?: boolean;
 }) => {
   const idFormStaff = useId();
   const finalSchema = formSchema.extend({
-    logo:
+    file:
       mode === "create"
         ? z
             .array(
@@ -81,14 +98,16 @@ const DialogFormBrand = ({
   const form = useForm<z.infer<typeof finalSchema>>({
     resolver: zodResolver(finalSchema),
     values: {
-      nama_id: detail?.nama.id ?? "",
-      nama_en: detail?.nama.en ?? "",
-      logo: [],
+      nama: detail?.nama ?? "",
+      file: [],
+      tipe_produk_id: detail?.tipe_produk.id ?? "",
     },
   });
 
-  const { mutate: createBrand, isPending: isCreating } = useCreateBrand();
-  const { mutate: updateBrand, isPending: isUpdating } = useUpdateBrand();
+  const { mutate: createBannerTypeProduct, isPending: isCreating } =
+    useCreateBannerTypeProduct();
+  const { mutate: updateBannerTypeProduct, isPending: isUpdating } =
+    useUpdateBannerTypeProduct();
 
   const isLoading = isCreating || isUpdating || isDisabled;
 
@@ -98,26 +117,33 @@ const DialogFormBrand = ({
   };
 
   const onSubmit = (values: z.infer<typeof finalSchema>) => {
+    const body = new FormData();
+    body.append("nama", values.nama);
+    body.append("tipe_produk_id", values.tipe_produk_id);
+    if (values.file.length > 0) {
+      body.append("file", values.file[0]);
+    }
     switch (mode) {
       case "create":
-        const bodyCreate = new FormData();
-        bodyCreate.append("nama_id", values.nama_id);
-        bodyCreate.append("nama_en", values.nama_en);
-        if (values.logo.length > 0) {
-          bodyCreate.append("logo", values.logo[0]);
-        }
-        createBrand({ body: bodyCreate }, { onSuccess: () => handleClose() });
+        createBannerTypeProduct(
+          { body: body },
+          {
+            onSuccess: ({ data }) => {
+              handleClose();
+              setAccordionValue([data.data.tipe_produk.slug]);
+            },
+          },
+        );
         break;
       case "edit":
-        const bodyUpdate = new FormData();
-        bodyUpdate.append("nama_id", values.nama_id);
-        bodyUpdate.append("nama_en", values.nama_en);
-        if (values.logo.length > 0) {
-          bodyUpdate.append("logo", values.logo[0]);
-        }
-        updateBrand(
-          { body: bodyUpdate, params: { id: detail?.id ?? "" } },
-          { onSuccess: () => handleClose() },
+        updateBannerTypeProduct(
+          { body: body, params: { id: detail?.id ?? "" } },
+          {
+            onSuccess: ({ data }) => {
+              handleClose();
+              setAccordionValue([data.data.tipe_produk.slug]);
+            },
+          },
         );
         break;
     }
@@ -129,15 +155,15 @@ const DialogFormBrand = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false}>
+      <DialogContent showCloseButton={false} className={"min-w-2xl"}>
         <DialogHeader>
           <DialogTitle>
-            {mode === "edit" ? "Ubah Data Merek" : "Tambah Merek Baru"}
+            {mode === "edit" ? "Ubah Data Banner" : "Tambah Banner Baru"}
           </DialogTitle>
           <DialogDescription>
             {mode === "edit"
-              ? "Kelola informasi merek"
-              : "Tambahkan merek baru"}
+              ? "Kelola informasi banner"
+              : "Tambahkan banner baru"}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -149,7 +175,7 @@ const DialogFormBrand = ({
           ) : (
             <FieldGroup className="grid md:grid-cols-6 gap-4">
               <Controller
-                name="logo"
+                name="file"
                 control={form.control}
                 disabled={isDisabled}
                 render={({ field, fieldState }) => (
@@ -161,17 +187,18 @@ const DialogFormBrand = ({
                       required
                       htmlFor={`${idFormStaff}-${field.name}`}
                     >
-                      Logo
+                      Banner
                     </FieldLabel>
                     <Dropzone
                       value={field.value}
                       onChange={field.onChange}
                       error={fieldState.invalid}
+                      ratio="banner"
                       accept={Object.fromEntries(
                         IMAGE_RULES.mimeTypes.map((m) => [m, []]),
                       )}
                       maxSize={IMAGE_RULES.maxSize}
-                      oldValue={detail?.logo_url}
+                      oldValue={detail?.gambar_url}
                     />
 
                     {fieldState.invalid && (
@@ -180,15 +207,15 @@ const DialogFormBrand = ({
                   </Field>
                 )}
               />
-              <div className="grid md:grid-cols-6 gap-2 col-span-full">
+              <div className="grid grid-cols-2 gap-6 col-span-full">
                 <Controller
-                  name="nama_id"
+                  name="nama"
                   control={form.control}
                   disabled={isDisabled}
                   render={({ field, fieldState }) => (
                     <Field
                       data-invalid={fieldState.invalid}
-                      className="gap-1 col-span-full"
+                      className="gap-1 col-span-1"
                     >
                       <FieldLabel
                         required
@@ -196,21 +223,13 @@ const DialogFormBrand = ({
                       >
                         Nama
                       </FieldLabel>
-                      <InputGroup>
-                        <InputGroupInput
-                          {...field}
-                          id={`${idFormStaff}-${field.name}`}
-                          type="text"
-                          aria-invalid={fieldState.invalid}
-                          placeholder="Nama merek..."
-                          autoComplete="off"
-                        />
-                        <InputGroupAddon>
-                          <div className="rounded overflow-hidden size-4 flex items-center justify-center">
-                            <ID />
-                          </div>
-                        </InputGroupAddon>
-                      </InputGroup>
+                      <Input
+                        {...field}
+                        id={`${idFormStaff}-${field.name}`}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Nama banner..."
+                        autoComplete="off"
+                      />
 
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
@@ -219,29 +238,41 @@ const DialogFormBrand = ({
                   )}
                 />
                 <Controller
-                  name="nama_en"
+                  name="tipe_produk_id"
                   control={form.control}
                   disabled={isDisabled}
                   render={({ field, fieldState }) => (
                     <Field
                       data-invalid={fieldState.invalid}
-                      className="col-span-full"
+                      className="gap-1 col-span-1"
                     >
-                      <InputGroup>
-                        <InputGroupInput
-                          {...field}
-                          id={`${idFormStaff}-${field.name}`}
-                          type="text"
-                          aria-invalid={fieldState.invalid}
-                          placeholder="Brand name..."
-                          autoComplete="off"
-                        />
-                        <InputGroupAddon>
-                          <div className="rounded overflow-hidden size-4 flex items-center justify-center">
-                            <GB />
-                          </div>
-                        </InputGroupAddon>
-                      </InputGroup>
+                      <FieldLabel
+                        required
+                        htmlFor={`${idFormStaff}-${field.name}`}
+                      >
+                        Tipe Produk
+                      </FieldLabel>
+                      <Select
+                        items={typeProductList.map((item) => ({
+                          value: item.id,
+                          label: item.nama,
+                        }))}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={field.disabled}
+                        data-invalid={fieldState.invalid}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={"Pilih tipe produk..."} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {typeProductList.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.nama}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
@@ -276,5 +307,3 @@ const DialogFormBrand = ({
     </Dialog>
   );
 };
-
-export default DialogFormBrand;

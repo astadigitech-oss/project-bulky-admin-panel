@@ -39,7 +39,7 @@ function SelectValue({
         return (
           <span
             data-slot="select-value"
-            className="text-muted-foreground text-sm"
+            className="text-muted-foreground text-xs"
           >
             {placeholder}
           </span>
