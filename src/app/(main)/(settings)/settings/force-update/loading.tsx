@@ -3,7 +3,7 @@ import { HeaderLoader } from "@/components/loaders/header";
 import { PaginationLoader } from "@/components/loaders/pagination";
 import { TableLoader } from "@/components/loaders/table";
 
-const label = "Staff";
+const label = "Force Update";
 
 const Loading = () => {
   return (

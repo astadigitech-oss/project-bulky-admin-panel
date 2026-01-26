@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, ReceiptText, Trash } from "lucide-react";
-import { BuyerListResponse } from "../_api/data";
+import { BuyerListResponse } from "../_api/types";
 import Link from "next/link";
 import { MetaPagination } from "@/lib/types";
 

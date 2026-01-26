@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 const ProductBannersPage = async () => {
-  const isAuth = auth();
+  const isAuth = await auth();
   if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (

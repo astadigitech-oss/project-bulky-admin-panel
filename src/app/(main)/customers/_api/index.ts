@@ -1,12 +1,12 @@
 import { useApiQuery } from "@/lib/query/use-query";
 import {
-  dataAPIBuyer,
   BuyerListRequest,
   BuyerDetailRequest,
   BuyerChartRequest,
-} from "./data";
+} from "./types";
 import { useMutate } from "@/lib/query";
 import { useQueryClient } from "@tanstack/react-query";
+import { dataAPIBuyer } from "./data";
 
 // query
 export const useGetBuyerList = ({

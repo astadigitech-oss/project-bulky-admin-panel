@@ -15,12 +15,13 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronRight,
   CircleAlertIcon,
+  ImageOffIcon,
   Map,
   MapPinned,
-  MapPinOff,
   RefreshCw,
   Send,
   ShieldCheck,
+  ShoppingBag,
   Trash,
   User2,
   X,
@@ -55,6 +56,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
   new_password: z.string().min(8, "Password harus memiliki minimal 8 karakter"),
@@ -143,16 +145,30 @@ export const CustomerDetailClient = () => {
       <Card className="p-0 border-gray-300/80 dark:border-gray-600/70 ring-0 border gap-0">
         <div className="p-4 flex items-center gap-4 bg-gray-50 dark:bg-transparent">
           <div className="flex items-center justify-between gap-4">
-            <div className="size-16 rounded-md border overflow-hidden relative shadow">
-              <Image
-                src={customer?.foto_url ?? "/assets/images/logo-bulky.webp"}
-                alt={formatImageAlt(customer?.nama ?? "")}
-                sizes={sizesImage}
-                className="object-cover"
-                fill
-              />
-            </div>
-            <p className="text-xl font-semibold">{customer?.nama}</p>
+            {customer?.foto_url ? (
+              <div className="size-16 rounded-md border overflow-hidden relative shadow">
+                <Image
+                  src={customer?.foto_url}
+                  alt={formatImageAlt(customer?.nama ?? "")}
+                  sizes={sizesImage}
+                  className="object-cover"
+                  fill
+                />
+              </div>
+            ) : (
+              <div className="size-16 border rounded-md flex items-center justify-center">
+                <ImageOffIcon className="size-8 stroke-[1.25]" />
+              </div>
+            )}
+            {customer?.nama ? (
+              <p className="text-xl font-semibold items-center flex">
+                {customer?.nama}
+              </p>
+            ) : (
+              <div className="h-7 flex items-center w-32">
+                <Skeleton className="h-6 w-full" />
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3 ml-auto">
             <Dialog open={open} onOpenChange={setOpen}>
@@ -302,21 +318,39 @@ export const CustomerDetailClient = () => {
         <div className="dark:bg-gray-950/60 p-4 grid grid-cols-3">
           <div className="flex flex-col gap-0.5">
             <p className="font-medium text-sm">Username</p>
-            <p className="text-xs font-light h-7 items-center flex">
-              {customer?.username}
-            </p>
+            {customer?.username ? (
+              <p className="text-xs font-light h-7 items-center flex">
+                {customer?.username}
+              </p>
+            ) : (
+              <div className="h-7 flex items-center w-32">
+                <Skeleton className="h-4 w-full" />
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-0.5">
             <p className="font-medium text-sm">Email</p>
-            <p className="text-xs font-light h-7 items-center flex">
-              {customer?.email}
-            </p>
+            {customer?.email ? (
+              <p className="text-xs font-light h-7 items-center flex">
+                {customer?.email}
+              </p>
+            ) : (
+              <div className="h-7 flex items-center w-32">
+                <Skeleton className="h-4 w-full" />
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-0.5">
             <p className="font-medium text-sm">No. Telepon</p>
-            <p className="text-xs font-light h-7 items-center flex">
-              {customer?.telepon}
-            </p>
+            {customer?.telepon ? (
+              <p className="text-xs font-light h-7 items-center flex">
+                {customer?.telepon}
+              </p>
+            ) : (
+              <div className="h-7 flex items-center w-32">
+                <Skeleton className="h-4 w-full" />
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -380,8 +414,7 @@ export const CustomerDetailClient = () => {
                   ))}
                 </Accordion>
               ) : (
-                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-md font-medium flex items-center justify-center gap-3 text-sm">
-                  <MapPinOff className="size-4" />
+                <div className="h-20 bg-gray-200 dark:bg-gray-800 rounded-md font-medium flex items-center justify-center gap-3 text-sm">
                   Tidak ada alamat yang tersedia
                 </div>
               )}
@@ -391,14 +424,17 @@ export const CustomerDetailClient = () => {
         <div>
           <Card className="p-0 border-gray-300/80 dark:border-gray-600/70 ring-0 border gap-0">
             <CardHeader className="p-4 bg-gray-50 dark:bg-transparent">
-              <CardTitle>Pesanan Pelanggan</CardTitle>
+              <CardTitle className="flex items-center gap-4">
+                <ShoppingBag className="size-5" />
+                Pesanan Pelanggan
+              </CardTitle>
             </CardHeader>
             <Separator
               variant={"dashed"}
               className={"border-gray-300/80 dark:border-gray-600/70"}
             />
             <div className="p-4 dark:bg-gray-950/60">
-              <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-md font-medium flex items-center justify-center">
+              <div className="h-20 bg-gray-200 dark:bg-gray-800 rounded-md font-medium flex items-center justify-center">
                 Tidak ada pesanan yang tersedia
               </div>
             </div>

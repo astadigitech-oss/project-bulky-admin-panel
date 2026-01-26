@@ -23,7 +23,7 @@ import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { BannerTypeProductType } from "../../_api/types";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   AccordionContent,
   AccordionItem,
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/accordion";
 import { Options } from "nuqs";
 import { Spinner } from "@/components/ui/spinner";
+import { VariantProps } from "class-variance-authority";
 
 export const BannerCard = ({
   list,
@@ -59,7 +60,11 @@ export const BannerCard = ({
     label: string,
     direction: "up" | "down",
   ) => Promise<void>;
-  handleStatus: (id: string, label: string) => Promise<void>;
+  handleStatus: (
+    id: string,
+    label: string,
+    variant: VariantProps<typeof buttonVariants>["variant"],
+  ) => Promise<void>;
   isLoading: boolean;
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -306,6 +311,7 @@ export const BannerCard = ({
                           data.is_active
                             ? `Nonaktifkan ${data.nama}`
                             : `Aktifkan ${data.nama}`,
+                          data.is_active ? "destructive" : "default",
                         )
                       }
                     >
