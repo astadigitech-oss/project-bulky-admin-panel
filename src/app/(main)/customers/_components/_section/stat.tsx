@@ -45,7 +45,7 @@ export const StatisticSection = ({
       )}
     >
       {/* Header dengan icon dan trend */}
-      <div className="flex items-center justify-between relative z-10">
+      <div className="flex items-center justify-between relative">
         <div
           className={cn(
             "flex size-7 items-center justify-center rounded-lg border",
@@ -88,7 +88,7 @@ export const StatisticSection = ({
       </div>
 
       {/* Content area */}
-      <div className="relative z-10">
+      <div className="relative">
         <p className="text-3xl font-bold leading-none mb-1 text-zinc-900 dark:text-white">
           {value.toLocaleString("id-ID")}
         </p>

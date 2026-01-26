@@ -2,6 +2,7 @@ import {
   BaseListParams,
   BaseParams,
   BaseResponse,
+  DuoLangType,
   MetaPagination,
 } from "@/lib/types";
 
@@ -12,7 +13,7 @@ export type BrandType = {
   id: string;
   is_active: boolean;
   logo_url: string;
-  nama: { en: string; id: string };
+  nama: DuoLangType;
   slug: string;
   updated_at: string;
 };

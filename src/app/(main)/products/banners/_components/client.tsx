@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   useChangeStatusBannerTypeProduct,
   useDeleteBannerTypeProduct,
@@ -17,6 +17,7 @@ import { useState } from "react";
 import { parseAsString, useQueryState } from "nuqs";
 import { DialogFormBannerTypeProduct } from "./_dialog/form";
 import { useConfirm } from "@/hooks/use-confirm";
+import { VariantProps } from "class-variance-authority";
 
 export const BannerTypeProductClient = () => {
   const [accordionValue, setAccordionValue] = useState(["palet-load"]);
@@ -29,6 +30,7 @@ export const BannerTypeProductClient = () => {
   const [DialogSort, confirmSort] = useConfirm(
     "[banner]",
     "Apakah Anda yakin ingin mengubah urutan item ini?",
+    "destructive",
   );
   const [DialogDelete, confirmDelete] = useConfirm(
     "Hapus Banner [banner]",
@@ -63,13 +65,21 @@ export const BannerTypeProductClient = () => {
     label: string,
     direction: "up" | "down",
   ) => {
-    const ok = await confirmSort(label, "banner");
+    const ok = await confirmSort(
+      label,
+      "banner",
+      direction === "up" ? "default" : "destructive",
+    );
     if (!ok) return;
     reorderBanner({ body: { direction }, params: { id } });
   };
 
-  const handleStatus = async (id: string, label: string) => {
-    const ok = await confirmStatus(label, "banner");
+  const handleStatus = async (
+    id: string,
+    label: string,
+    variant: VariantProps<typeof buttonVariants>["variant"],
+  ) => {
+    const ok = await confirmStatus(label, "banner", variant);
     if (!ok) return;
     changeStatus({ params: { id } });
   };

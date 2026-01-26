@@ -213,7 +213,6 @@ const data = {
       icon: Settings2,
       items: [
         {
-          // TODO: account (v), change password (v), Informasi Pengambilan(v), Kontak (v), warehouses (v), force update, mode maintenance
           title: "Umum",
           url: "/settings/general",
         },
@@ -222,12 +221,16 @@ const data = {
           url: "/settings/staff",
         },
         {
-          title: "Staff Role",
-          url: "/settings/role",
-        },
-        {
           title: "Pajak",
           url: "/settings/tax",
+        },
+        {
+          title: "Maintenance",
+          url: "/settings/maintenance",
+        },
+        {
+          title: "Force Update",
+          url: "/settings/force-update",
         },
         {
           title: "Metode Pembayaran",

@@ -97,3 +97,15 @@ export const encodeEscapeHTML = (str: string) =>
 export const formatImageAlt = (str: string) => {
   return str.split(" ").join("_").toLowerCase();
 };
+
+export const typeMaintenances = [
+  { label: "Big Update", value: "BIG_UPDATE" },
+  { label: "Bug", value: "BUG" },
+  { label: "Error", value: "ERROR" },
+  { label: "Lainnya", value: "OTHER" },
+];
+
+export const typeForceUpdates = [
+  { label: "Opsional", value: "OPTIONAL" },
+  { label: "Wajib", value: "MANDATORY" },
+];
