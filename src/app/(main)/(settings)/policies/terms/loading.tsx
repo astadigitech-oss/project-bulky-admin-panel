@@ -1,26 +1,14 @@
 import { MainContainer } from "@/components/container/main-container";
 import { HeaderLoader } from "@/components/loaders/header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Scale } from "lucide-react";
 
-const label = "Penaifan";
+const label = "Syarat & Ketentuan";
 
 const Loading = () => {
   return (
-    <MainContainer
-      breadcrumbs={[
-        { label: "Kebijakan" },
-        { label: label },
-        { label: "Edit" },
-      ]}
-    >
+    <MainContainer breadcrumbs={[{ label: "Kebijakan" }, { label: label }]}>
       <div className="flex flex-col gap-6 pt-4">
-        <HeaderLoader
-          title={`Edit ${label}`}
-          isDetail
-          withTitle={false}
-          icon={Scale}
-        />
+        <HeaderLoader title={label} withTitle={false} />
         <div className="w-full flex flex-col gap-1">
           <p className="text-xs font-medium">Judul</p>
           <div className="grid grid-cols-2 gap-2">

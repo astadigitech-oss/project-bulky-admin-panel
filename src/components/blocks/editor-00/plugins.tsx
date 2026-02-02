@@ -58,7 +58,7 @@ export function Plugins({ placeholder }: { placeholder: string }) {
       {/* toolbar plugins */}
       <ToolbarPlugin
         childrenAction={() => (
-          <div className="vertical-align-middle sticky top-0 z-5 flex gap-2 overflow-auto border-b p-1">
+          <div className="vertical-align-middle sticky top-0 z-5 flex gap-2 overflow-auto border-b border-gray-300 dark:border-gray-300/30 scrollbar-hide p-1">
             <HistoryToolbarPlugin />
             <Separator orientation="vertical" className={"h-5!"} />
             <BlockFormatDropDown>
@@ -124,7 +124,7 @@ export function Plugins({ placeholder }: { placeholder: string }) {
       </div>
       {/* actions plugins */}
       <ActionsPlugin>
-        <div className="clear-both flex items-center justify-between gap-2 overflow-auto border-t p-1">
+        <div className="clear-both flex items-center justify-between gap-2 overflow-auto border-t border-gray-300 dark:border-gray-300/30 p-1">
           <div className="flex flex-1 justify-start px-2">
             <CounterCharacterPlugin charset="UTF-16" />
           </div>
