@@ -1,7 +1,10 @@
 import { MainContainer } from "@/components/container/main-container";
+import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { TermsPolicyClient } from "./_components/client";
 
-// const pathname = "policies/terms";
+const pathname = "policies/terms";
 const labelPage = "Syarat & Ketentuan";
 
 export const metadata: Metadata = {
@@ -9,11 +12,12 @@ export const metadata: Metadata = {
 };
 
 const TermsPage = async () => {
-  // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  const isAuth = await auth();
+  if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer breadcrumbs={[{ label: "Kebijakan" }, { label: labelPage }]}>
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <TermsPolicyClient />
     </MainContainer>
   );
 };

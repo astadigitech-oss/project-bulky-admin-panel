@@ -24,7 +24,7 @@ const DisclaimerDetailPage = async ({
     <MainContainer
       breadcrumbs={[
         { label: "Kebijakan" },
-        { label: "Penaifan (disclaimer)", url: `/${pathname}` },
+        { label: "Penaifan", url: `/${pathname}` },
         { label: disclaimerId === "create" ? "Tambah" : "Edit" },
       ]}
     >

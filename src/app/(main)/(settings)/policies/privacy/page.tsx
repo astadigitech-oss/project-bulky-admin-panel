@@ -1,7 +1,10 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { PrivacyPolicyClient } from "./_components/client";
+import { auth } from "@/lib/action/auth";
+import { redirect } from "next/navigation";
 
-// const pathname = "policies/privacy";
+const pathname = "policies/privacy";
 const labelPage = "Kebijakan Privasi";
 
 export const metadata: Metadata = {
@@ -9,11 +12,12 @@ export const metadata: Metadata = {
 };
 
 const PrivacyPage = async () => {
-  // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  const isAuth = await auth();
+  if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer breadcrumbs={[{ label: "Kebijakan" }, { label: labelPage }]}>
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <PrivacyPolicyClient />
     </MainContainer>
   );
 };

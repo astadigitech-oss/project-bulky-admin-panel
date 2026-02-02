@@ -1,91 +1,131 @@
+/* ======================================================
+   SHADCN-STYLE LEXICAL THEME
+   ====================================================== */
+
+/* ---------- Light ---------- */
+:root {
+    --editor-code-bg: transparent;
+    --editor-border: hsl(214.3 31.8% 91.4%);
+    --editor-gutter: hsl(215 20.2% 65.1%);
+
+    --syntax-comment: hsl(215 16% 47%);
+    --syntax-punctuation: hsl(215 14% 55%);
+    --syntax-property: hsl(262.1 83.3% 57.8%);
+    --syntax-selector: hsl(142.1 70.6% 45.3%);
+    --syntax-operator: hsl(32.1 94.6% 43.7%);
+    --syntax-attr: hsl(199 89% 48%);
+    --syntax-variable: hsl(38 92% 50%);
+    --syntax-function: hsl(346.8 77.2% 49.8%);
+}
+
+/* ---------- Dark ---------- */
+.dark {
+    --editor-code-bg: transparent;
+    --editor-border: hsl(217.2 32.6% 17.5%);
+    --editor-gutter: hsl(215 20.2% 65.1%);
+
+    --syntax-comment: hsl(215 15% 65%);
+    --syntax-punctuation: hsl(215 14% 60%);
+    --syntax-property: hsl(263.4 70% 70%);
+    --syntax-selector: hsl(142.1 70.6% 60%);
+    --syntax-operator: hsl(38 92% 60%);
+    --syntax-attr: hsl(199 89% 70%);
+    --syntax-variable: hsl(38 92% 65%);
+    --syntax-function: hsl(346.8 77.2% 65%);
+}
+
 .EditorTheme__code {
-  background-color: transparent;
-  font-family: Menlo, Consolas, Monaco, monospace;
-  display: block;
-  padding: 8px 8px 8px 52px;
-  line-height: 1.53;
-  font-size: 13px;
-  margin: 0;
-  margin-top: 8px;
-  margin-bottom: 8px;
-  overflow-x: auto;
-  border: 1px solid #ccc;
-  position: relative;
-  border-radius: 8px;
-  tab-size: 2;
+    background-color: var(--editor-code-bg);
+    font-family:
+        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.65;
+
+    padding: 0.75rem 0.75rem 0.75rem 3.25rem;
+    margin: 0.75rem 0;
+    border-radius: 0.5rem;
+
+    border: 1px solid var(--editor-border);
+    overflow-x: auto;
+    position: relative;
+    tab-size: 2;
 }
-.EditorTheme__code:before {
-  content: attr(data-gutter);
-  position: absolute;
-  background-color: transparent;
-  border-right: 1px solid #ccc;
-  left: 0;
-  top: 0;
-  padding: 8px;
-  color: #777;
-  white-space: pre-wrap;
-  text-align: right;
-  min-width: 25px;
+
+/* Gutter (line number) */
+.EditorTheme__code::before {
+    content: attr(data-gutter);
+    position: absolute;
+    inset: 0 auto 0 0;
+
+    width: 2.75rem;
+    padding: 0.75rem 0.5rem;
+
+    font-size: 12px;
+    line-height: 1.65;
+    text-align: right;
+    white-space: pre-wrap;
+
+    color: var(--editor-gutter);
+    border-right: 1px solid var(--editor-border);
 }
-.EditorTheme__table {
-  border-collapse: collapse;
-  border-spacing: 0;
-  overflow-y: scroll;
-  overflow-x: scroll;
-  table-layout: fixed;
-  width: fit-content;
-  width: 100%;
-  margin: 0px 0px 30px 0px;
-}
+
 .EditorTheme__tokenComment {
-  color: slategray;
+    color: var(--syntax-comment);
+    font-style: italic;
 }
+
 .EditorTheme__tokenPunctuation {
-  color: #999;
+    color: var(--syntax-punctuation);
 }
+
 .EditorTheme__tokenProperty {
-  color: #905;
+    color: var(--syntax-property);
 }
+
 .EditorTheme__tokenSelector {
-  color: #690;
+    color: var(--syntax-selector);
 }
+
 .EditorTheme__tokenOperator {
-  color: #9a6e3a;
+    color: var(--syntax-operator);
 }
+
 .EditorTheme__tokenAttr {
-  color: #07a;
+    color: var(--syntax-attr);
 }
+
 .EditorTheme__tokenVariable {
-  color: #e90;
+    color: var(--syntax-variable);
 }
+
 .EditorTheme__tokenFunction {
-  color: #dd4a68;
+    color: var(--syntax-function);
+}
+
+.EditorTheme__table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--editor-border);
+}
+
+.EditorTheme__table th,
+.EditorTheme__table td {
+    border: 1px solid var(--editor-border);
 }
 
 .Collapsible__container {
-  background-color: var(--background);
-  border: 1px solid #ccc;
-  border-radius: 0.5rem;
-  margin-bottom: 0.5rem;
+    background-color: hsl(var(--background));
+    border: 1px solid var(--editor-border);
+    border-radius: 0.5rem;
 }
 
-.Collapsible__title{
-  padding: 0.25rem;
-  padding-left: 1rem;
-  position: relative;
-  font-weight: bold;
-  outline: none;
-  cursor: pointer;
-  list-style-type: disclosure-closed;
-  list-style-position: inside;
+.Collapsible__title {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: hsl(var(--foreground));
 }
 
-.Collapsible__title p{
-  display: inline-flex;
-}
-.Collapsible__title::marker{
-  color: lightgray;
-}
-.Collapsible__container[open] >.Collapsible__title {
-  list-style-type: disclosure-open;
+.Collapsible__title::marker {
+    color: hsl(var(--muted-foreground));
 }

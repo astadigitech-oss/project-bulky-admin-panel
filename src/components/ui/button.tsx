@@ -20,6 +20,8 @@ const buttonVariants = cva(
           "border-transparent bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost:
           "border-transparent hover:bg-yellow-200 dark:hover:bg-yellow-300/30 dark:hover:text-white hover:text-yellow-950",
+        ghostDestructive:
+          "border-transparent hover:bg-red-200 dark:hover:bg-red-500/30 dark:hover:text-red-500 text-red-400 dark:text-red-300 hover:text-red-500",
         link: "border-transparent text-primary underline-offset-4 hover:underline",
       },
       size: {

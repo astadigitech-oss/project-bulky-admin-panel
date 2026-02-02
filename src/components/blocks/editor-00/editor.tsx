@@ -55,7 +55,7 @@ export default function Editor({
   placeholder?: string;
 }) {
   return (
-    <div className="bg-background overflow-hidden rounded-lg border border-gray-300 dark:border-gray-300/50">
+    <div className="bg-background overflow-hidden rounded-lg border border-gray-300 dark:border-gray-300/30">
       <LexicalComposer
         initialConfig={{
           ...editorConfig,

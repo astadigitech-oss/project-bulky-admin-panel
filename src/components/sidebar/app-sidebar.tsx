@@ -171,10 +171,6 @@ const data = {
       icon: Headset,
       items: [
         {
-          title: "Informasi Pengambilan",
-          url: "/helps/pickup-info",
-        },
-        {
           title: "Cara Pembelian",
           url: "/helps/how-to-buy",
         },

@@ -19,7 +19,7 @@ export const HeaderLoader = ({
   withTitle?: boolean;
 }) => {
   return (
-    <div className="flex items-center">
+    <div className="flex items-center w-full">
       {isDetail && Icon ? (
         <div className="flex items-center gap-2">
           <Button variant={"ghost"} size={"icon-lg"}>
@@ -34,7 +34,7 @@ export const HeaderLoader = ({
         )
       )}
       {withTitle && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <Skeleton className="h-8 w-60" />
           <Skeleton className="size-8" />
           <Skeleton className="size-8" />
