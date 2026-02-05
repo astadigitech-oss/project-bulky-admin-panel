@@ -1,7 +1,10 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/action/auth";
+import { FAQHelpClient } from "./_components/client";
 
-// const pathname = "helps/faqs";
+const pathname = "helps/faqs";
 const labelPage = "FAQ's";
 
 export const metadata: Metadata = {
@@ -9,11 +12,12 @@ export const metadata: Metadata = {
 };
 
 const FaqsPage = async () => {
-  // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  const isAuth = await auth();
+  if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer breadcrumbs={[{ label: "Bantuan" }, { label: labelPage }]}>
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <FAQHelpClient />
     </MainContainer>
   );
 };

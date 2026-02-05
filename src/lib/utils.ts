@@ -88,12 +88,6 @@ export const getRangeOfMonths = () => {
   }));
 };
 
-export const encodeEscapeHTML = (str: string) =>
-  str.replace(
-    /[^a-zA-Z0-9 ]/g,
-    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
-  );
-
 export const formatImageAlt = (str: string) => {
   return str.split(" ").join("_").toLowerCase();
 };
@@ -109,3 +103,18 @@ export const typeForceUpdates = [
   { label: "Opsional", value: "OPTIONAL" },
   { label: "Wajib", value: "MANDATORY" },
 ];
+
+export function formatRupiah(rupiah: string | number): string {
+  const value =
+    typeof rupiah === "string"
+      ? parseFloat(rupiah.replace(/[^\d.-]/g, ""))
+      : rupiah;
+
+  if (!value || isNaN(value)) return "Rp 0";
+
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(Math.ceil(value));
+}

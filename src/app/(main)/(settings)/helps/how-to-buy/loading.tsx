@@ -6,7 +6,7 @@ const label = "Cara Pembelian";
 
 const Loading = () => {
   return (
-    <MainContainer breadcrumbs={[{ label: "Kebijakan" }, { label: label }]}>
+    <MainContainer breadcrumbs={[{ label: "Bantuan" }, { label: label }]}>
       <div className="flex flex-col gap-6 pt-4">
         <HeaderLoader title={label} withTitle={false} />
         <div className="w-full flex flex-col gap-1">
