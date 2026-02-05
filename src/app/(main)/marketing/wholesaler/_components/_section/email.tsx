@@ -1,22 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
-import {
-  ArrowDown,
-  ArrowUp,
-  Edit2,
-  Plus,
-  RefreshCw,
-  Send,
-  Trash,
-  X,
-} from "lucide-react";
+import { Plus, RefreshCw, Send, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
 import z from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,6 +31,9 @@ import { useUpdateWholesalerConfig } from "../../_api";
 import { useConfirm } from "@/hooks/use-confirm";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
+import { LoadingData } from "./loading-data";
+import { EmptyData } from "./empty-data";
+import { ItemData } from "./item-data";
 
 const formSchemaConfig = z.object({
   email: z.email(),
@@ -143,6 +135,12 @@ export const EmailSection = ({
     );
   };
 
+  const handleClose = () => {
+    setIndexEdit(null);
+    setDialog(null);
+    form.reset();
+  };
+
   useEffect(() => {
     if (indexEdit && emailList) {
       form.setValue("email", emailList[indexEdit - 1]);
@@ -154,6 +152,9 @@ export const EmailSection = ({
       <DialogDelete />
       <Dialog
         open={dialog === "create" || (dialog === "edit" && indexEdit !== null)}
+        onOpenChange={(e) => {
+          if (!e) handleClose();
+        }}
       >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
@@ -194,11 +195,7 @@ export const EmailSection = ({
                     <Button
                       type="button"
                       variant={"outline"}
-                      onClick={() => {
-                        setIndexEdit(null);
-                        setDialog(null);
-                        form.reset();
-                      }}
+                      onClick={handleClose}
                     >
                       <X className="size-3.5" />
                       Batal
@@ -256,87 +253,25 @@ export const EmailSection = ({
       <CardContent>
         <div className="flex items-center flex-col w-full border rounded-lg">
           {isLoading ? (
-            Array.from({ length: 4 }, (_, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between gap-4 w-full border-b last:border-0 border-gray-300 dark:border-gray-500/50 h-10 pl-5 pr-1"
-              >
-                <div className="w-full flex items-center relative before:content-[''] before:absolute before:-left-2.5 before:w-1 before:h-6 before:rounded-full before:bg-yellow-400">
-                  <Skeleton className="h-4 w-1/3" />
-                </div>
-                <Skeleton className="h-4 w-1/5 mr-2" />
-              </div>
-            ))
+            Array.from({ length: 4 }, (_, i) => <LoadingData key={i} />)
           ) : emailList.length === 0 ? (
-            <div className="flex items-center justify-center w-full h-42">
-              <p className="text-gray-500 dark:text-gray-400">
-                No emails found
-              </p>
-            </div>
+            <EmptyData type="email" />
           ) : (
             emailList.map((email, index) => (
-              <div
+              <ItemData
                 key={`${email}-${index}`}
-                className="flex items-center justify-between gap-4 w-full border-b last:border-0 border-gray-300 dark:border-gray-500/50 h-10 pl-5 pr-1"
-              >
-                <p className="h-8 text-sm items-center flex whitespace-pre-wrap relative before:content-[''] before:absolute before:-left-2.5 before:w-1 before:h-6 before:rounded-full before:bg-yellow-400">
-                  {email}
-                </p>
-                <ButtonGroup className="[&>[data-slot]:not(:has(~[data-slot]))]:rounded-r-md!">
-                  <Button
-                    variant={"ghost"}
-                    size={"icon-sm"}
-                    className={"rounded-l-md!"}
-                    disabled={index === 0}
-                    onClick={() => handleReorder("up", index)}
-                  >
-                    {isUpdating ? (
-                      <Spinner className="size-3.5" />
-                    ) : (
-                      <ArrowUp className="size-3.5" />
-                    )}
-                  </Button>
-                  <Button
-                    variant={"ghost"}
-                    size={"icon-sm"}
-                    disabled={index === emailList.length - 1}
-                    onClick={() => handleReorder("down", index)}
-                  >
-                    {isUpdating ? (
-                      <Spinner className="size-3.5" />
-                    ) : (
-                      <ArrowDown className="size-3.5" />
-                    )}
-                  </Button>
-                  <Button
-                    variant={"ghost"}
-                    type="button"
-                    size={"icon-sm"}
-                    onClick={() => {
-                      setIndexEdit(index + 1);
-                      setDialog("edit");
-                    }}
-                  >
-                    {isUpdating ? (
-                      <Spinner className="size-3.5" />
-                    ) : (
-                      <Edit2 className="size-3.5" />
-                    )}
-                  </Button>
-                  <Button
-                    variant={"ghostDestructive"}
-                    size={"icon-sm"}
-                    className={"rounded-r-md!"}
-                    onClick={() => handleDelete(index, email)}
-                  >
-                    {isUpdating ? (
-                      <Spinner className="size-3.5" />
-                    ) : (
-                      <Trash className="size-3.5" />
-                    )}
-                  </Button>
-                </ButtonGroup>
-              </div>
+                label={email}
+                handleUp={() => handleReorder("up", index)}
+                handleDown={() => handleReorder("down", index)}
+                handleDelete={() => handleDelete(index, email)}
+                handleEdit={() => {
+                  setIndexEdit(index + 1);
+                  setDialog("edit");
+                }}
+                isDisabled={isUpdating}
+                isDisabledUp={index === 0}
+                isDisabledDown={index === emailList.length - 1}
+              />
             ))
           )}
         </div>
