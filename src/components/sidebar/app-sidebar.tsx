@@ -229,10 +229,6 @@ const data = {
           url: "/settings/force-update",
         },
         {
-          title: "Metode Pembayaran",
-          url: "/settings/payment",
-        },
-        {
           title: "Hero Section",
           url: "/settings/hero",
         },

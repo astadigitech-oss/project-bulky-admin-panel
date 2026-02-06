@@ -32,9 +32,6 @@ export const AccountSetting = () => {
       email: data?.data.email ?? "",
       nama: data?.data.nama ?? "",
     },
-    resetOptions: {
-      keepDefaultValues: false,
-    },
   });
 
   const isDisabled = isUpdating || isMePending;

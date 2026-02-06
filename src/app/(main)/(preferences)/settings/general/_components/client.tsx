@@ -6,6 +6,7 @@ import { WarehouseSettingClient } from "./_section/warehouse";
 import { WhatsappServiceClient } from "./_section/whastapp-service";
 import { PickupClient } from "./_section/pickup";
 import { Settings } from "lucide-react";
+import { PaymentSetting } from "./_section/payment";
 
 export const GeneralSettingsClient = () => {
   return (
@@ -26,6 +27,8 @@ export const GeneralSettingsClient = () => {
       <WhatsappServiceClient />
       <Separator />
       <PickupClient />
+      <Separator />
+      <PaymentSetting />
     </div>
   );
 };
