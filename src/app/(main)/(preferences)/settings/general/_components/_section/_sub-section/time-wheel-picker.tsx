@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Controller, useWatch } from "react-hook-form";
 import { Clock } from "lucide-react";
 
@@ -29,7 +29,11 @@ export function TimeWheelPicker({ control, baseName, disabled }: Props) {
 
   const [dayField, openTime, closeTime] = useWatch({
     control,
-    name: [`${baseName}.day`, `${baseName}.openTime`, `${baseName}.closeTime`],
+    name: [
+      `${baseName}.day_name`,
+      `${baseName}.openTime`,
+      `${baseName}.closeTime`,
+    ],
   });
 
   const parse = (v?: string) => {
@@ -41,8 +45,8 @@ export function TimeWheelPicker({ control, baseName, disabled }: Props) {
     };
   };
 
-  const openParsed = useMemo(() => parse(openTime), [openTime]);
-  const closeParsed = useMemo(() => parse(closeTime), [closeTime]);
+  const openParsed = parse(openTime);
+  const closeParsed = parse(closeTime);
 
   return (
     <Field>
@@ -55,11 +59,11 @@ export function TimeWheelPicker({ control, baseName, disabled }: Props) {
               disabled={disabled}
               className={"h-7! text-xs"}
             >
-              {`${openTime} - ${closeTime}`}
+              {!openTime && !closeTime ? "" : `${openTime} - ${closeTime}`}
               <Clock className="size-3.5 opacity-60" />
             </Button>
           }
-        ></DialogTrigger>
+        />
 
         <DialogContent className="max-w-sm">
           <DialogHeader>

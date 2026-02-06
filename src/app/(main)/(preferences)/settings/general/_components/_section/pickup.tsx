@@ -8,29 +8,21 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { TimeWheelPicker } from "./_sub-section/time-wheel-picker";
 import { Toggle } from "@/components/ui/toggle";
-import { Warehouse } from "lucide-react";
+import { RotateCw, Send, Warehouse } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-/* =======================
-   DEFAULT DATA
-======================= */
-const defaultSchedules = [
-  { day: "Senin", openTime: "09:00", closeTime: "18:00", isOpen: true },
-  { day: "Selasa", openTime: "09:00", closeTime: "18:00", isOpen: true },
-  { day: "Rabu", openTime: "09:00", closeTime: "18:00", isOpen: true },
-  { day: "Kamis", openTime: "09:00", closeTime: "18:00", isOpen: true },
-  { day: "Jumat", openTime: "09:00", closeTime: "18:00", isOpen: true },
-  { day: "Sabtu", openTime: "09:00", closeTime: "18:00", isOpen: true },
-  { day: "Minggu", openTime: "", closeTime: "", isOpen: false },
-];
+import { useGetSchedule, useUpdateSchedule } from "../../_api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { MouseEvent } from "react";
 
 /* =======================
    SCHEMA
 ======================= */
 const scheduleSchema = z.object({
   day: z.string(),
-  openTime: z.string(),
-  closeTime: z.string(),
+  day_name: z.string(),
+  openTime: z.string().nullable(),
+  closeTime: z.string().nullable(),
   isOpen: z.boolean(),
 });
 
@@ -78,17 +70,18 @@ function ScheduleRow({
           render={({ field }) => (
             <Field orientation="horizontal">
               <Toggle
+                type="button"
                 pressed={field.value}
                 onPressedChange={(pressed) => {
                   field.onChange(pressed);
 
                   setValue(
                     `schedules.${index}.openTime`,
-                    pressed ? "00.00" : "",
+                    pressed ? "00.00" : null,
                   );
                   setValue(
                     `schedules.${index}.closeTime`,
-                    pressed ? "00.00" : "",
+                    pressed ? "00.00" : null,
                   );
                 }}
                 aria-label={`Toggle ${day}`}
@@ -96,24 +89,15 @@ function ScheduleRow({
                 size={"sm"}
                 className={cn(
                   "w-20 text-xs transition-all duration-300",
-                  // Efek Neon Emerald saat True (Buka)
                   field.value
                     ? [
-                        // THEME EMERALD (TRUE)
-                        // Light Mode
                         "border-emerald-500 bg-emerald-50/50! text-emerald-600",
-                        // Dark Mode
                         "dark:border-emerald-500/50 dark:bg-emerald-500/10! dark:text-emerald-400",
-                        // Hover
                         "hover:bg-emerald-100/50! dark:hover:bg-emerald-500/20! hover:text-emerald-600 hover:dark:text-emerald-400",
                       ]
                     : [
-                        // THEME RED (FALSE)
-                        // Light Mode
                         "border-red-500 bg-red-50/50! text-red-600",
-                        // Dark Mode
                         "dark:border-red-500/50 dark:bg-red-500/10! dark:text-red-400",
-                        // Hover
                         "hover:bg-red-100/50! dark:hover:bg-red-500/20! hover:text-red-600 hover:dark:text-red-400",
                       ],
                 )}
@@ -133,10 +117,22 @@ function ScheduleRow({
    FORM
 ======================= */
 export const PickupClient = () => {
+  const { mutate: updateSchedule, isPending: isUpdating } = useUpdateSchedule();
+  const { data: schedule, isLoading } = useGetSchedule();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      schedules: defaultSchedules,
+    values: {
+      schedules:
+        schedule?.data.map((item) => ({
+          day: item.hari.toString(),
+          day_name: item.nama_hari,
+          isOpen: item.is_buka,
+          openTime: item.jam_buka ? item.jam_buka.replace(/:\d{2}$/, "") : null,
+          closeTime: item.jam_tutup
+            ? item.jam_tutup.replace(/:\d{2}$/, "")
+            : null,
+        })) ?? [],
     },
   });
 
@@ -145,8 +141,22 @@ export const PickupClient = () => {
     name: "schedules",
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data.schedules);
+  const onSubmit = (values: FormValues) => {
+    updateSchedule({
+      body: {
+        jadwal: values.schedules.map((item) => ({
+          hari: Number.parseFloat(item.day),
+          jam_buka: item.openTime ?? null,
+          jam_tutup: item.closeTime ?? null,
+          is_buka: item.isOpen,
+        })),
+      },
+    });
+  };
+
+  const handleReset = (e: MouseEvent) => {
+    e.preventDefault();
+    form.reset();
   };
 
   return (
@@ -161,19 +171,40 @@ export const PickupClient = () => {
         className="flex flex-col gap-4 border p-2 lg:p-4 rounded-lg dark:bg-gray-900/70 lg:col-span-2"
       >
         <FieldGroup className="gap-3">
-          {fields.map((item, index) => (
-            <ScheduleRow
-              key={item.id}
-              index={index}
-              control={form.control}
-              setValue={form.setValue}
-              day={item.day}
-            />
-          ))}
+          {isLoading && fields.length === 0
+            ? Array.from({ length: 7 }, (_, i) => (
+                <Skeleton key={i} className="w-full h-12" />
+              ))
+            : fields.map((item, index) => (
+                <ScheduleRow
+                  key={item.id}
+                  index={index}
+                  control={form.control}
+                  setValue={form.setValue}
+                  day={item.day_name}
+                />
+              ))}
         </FieldGroup>
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={!form.formState.isDirty}>
+        <div className="flex justify-end items-center w-full gap-3">
+          <Button
+            type="button"
+            disabled={!form.formState.isDirty || isLoading || isUpdating}
+            onClick={handleReset}
+            variant={"secondary"}
+          >
+            <RotateCw className="size-3.5" />
+            Reset
+          </Button>
+          <Button
+            type="submit"
+            disabled={!form.formState.isDirty || isLoading || isUpdating}
+          >
+            {isLoading || isUpdating ? (
+              <Spinner className="size-3.5" />
+            ) : (
+              <Send className="size-3.5" />
+            )}
             Simpan
           </Button>
         </div>
