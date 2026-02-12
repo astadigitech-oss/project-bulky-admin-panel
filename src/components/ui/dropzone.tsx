@@ -32,7 +32,7 @@ export const Dropzone = ({
   },
   maxSize = 10 * 1024 * 1024,
   maxFiles = 1,
-}: DropzoneProps & { ratio?: "square" | "banner" }) => {
+}: DropzoneProps & { ratio?: "square" | "banner" | "hero" }) => {
   const [preview, setPreview] = useState("");
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     disabled,
@@ -52,7 +52,7 @@ export const Dropzone = ({
       // Mapping error bawaan dropzone → message kita
       switch (error.code) {
         case "file-too-large":
-          onError?.("Ukuran file melebihi batas");
+          onError?.("Ukuran file melebihi batas 10MB");
           break;
         case "file-invalid-type":
           onError?.("Format file tidak didukung");
@@ -92,7 +92,11 @@ export const Dropzone = ({
           <div
             className={cn(
               "h-full rounded-md overflow-hidden border shadow relative border-gray-300 dark:border-gray-300/50",
-              ratio === "square" ? "aspect-square" : "aspect-4/1",
+              ratio === "square"
+                ? "aspect-square"
+                : ratio === "hero"
+                  ? "aspect-2/1"
+                  : "aspect-4/1",
             )}
           >
             <Image
@@ -118,7 +122,11 @@ export const Dropzone = ({
           {...getRootProps()}
           className={cn(
             "flex items-center justify-center border rounded-md p-4 flex-col gap-2 cursor-pointer transition",
-            ratio === "square" ? "h-full" : "w-full aspect-4/1",
+            ratio === "square"
+              ? "h-full"
+              : ratio === "hero"
+                ? "w-full aspect-2/1"
+                : "w-full aspect-4/1",
             isDragActive
               ? "animate-pulse border-yellow-600 dark:border-yellow-300"
               : "border-gray-300 dark:border-gray-300/50",
@@ -134,8 +142,9 @@ export const Dropzone = ({
             <div className="flex flex-col items-center">
               <p>Klik atau seret & lepas file di sini</p>
               <p className="text-xs text-gray-400">
-                Rekomendasi ratio {ratio === "square" ? "1:1" : "4:1"} (.jpg,
-                .jpeg, .png, .webp)
+                Rekomendasi ratio{" "}
+                {ratio === "square" ? "1:1" : ratio === "hero" ? "2:1" : "4:1"}{" "}
+                (.jpg, .jpeg, .png, .webp)
               </p>
             </div>
           )}

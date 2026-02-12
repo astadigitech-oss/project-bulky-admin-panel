@@ -2,13 +2,13 @@ import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-const pathname = "policies/terms";
+const pathname = "operationals/maintenance";
 
 export const metadata: Metadata = {
-  title: "Kebijakan",
+  title: "Mobile",
 };
 
-const PoliciesPage = async () => {
+const MobilesPage = async () => {
   const isAuth = await auth();
   if (!isAuth) {
     redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
@@ -17,4 +17,4 @@ const PoliciesPage = async () => {
   }
 };
 
-export default PoliciesPage;
+export default MobilesPage;

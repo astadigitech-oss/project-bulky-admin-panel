@@ -12,42 +12,41 @@ import { column } from "./columns";
 import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { usePagination } from "@/hooks/use-pagination";
-import {
-  useActivateForceUpdate,
-  useDeleteForceUpdate,
-  useGetForceUpdateDetail,
-  useGetForceUpdateList,
-} from "../_api";
 import { useEffect, useState } from "react";
-import { DialogFormForceUpdate } from "./_dialog/form";
 import { useConfirm } from "@/hooks/use-confirm";
+import {
+  useChangeStatusHero,
+  useDeleteHero,
+  useGetHeroDetail,
+  useGetHeroList,
+} from "../_api";
+import { DialogFormHero } from "./_dialog/form";
 
-export const ForceUpdateSettingsClient = () => {
-  const [open, setOpen] = useState<"edit" | "create">();
-  const [{ sort, order, forceUpdateId }, setQuery] = useQueryStates(
+export const BannerHeroClient = () => {
+  const [open, setOpen] = useState<"edit" | "create" | null>(null);
+  const [{ sort, order, heroId }, setQuery] = useQueryStates(
     {
-      forceUpdateId: parseAsString.withDefault(""),
+      heroId: parseAsString.withDefault(""),
       sort: parseAsString.withDefault("created_at"),
       order: parseAsString.withDefault("desc"),
     },
-    { urlKeys: { forceUpdateId: "id" } },
+    { urlKeys: { heroId: "id" } },
   );
 
   const [DialogDelete, confirmDelete] = useConfirm(
-    "Hapus [force]",
+    "Hapus [hero]",
     "Apakah anda yakin? tindakan ini bersifat permanen",
     "destructive",
   );
 
   const [DialogStatus, confirmStatus] = useConfirm(
-    "[command]",
+    "Jadikan [command] Sebagai Banner Utama",
     "Tindakan tidak bersifat permanen, anda dapat mengubahnya lagi lain kali",
   );
 
-  const { mutate: deleteForceUpdate, isPending: isDeleting } =
-    useDeleteForceUpdate();
-  const { mutate: activateStatus, isPending: isActivating } =
-    useActivateForceUpdate();
+  const { mutate: deleteHero, isPending: isDeleting } = useDeleteHero();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } =
+    useChangeStatusHero();
 
   const { search, searchValue, setSearch } = useSearchQuery();
   const { page, limit, metaPage, setPage, setLimit, setPaginationData } =
@@ -57,30 +56,30 @@ export const ForceUpdateSettingsClient = () => {
     refetch,
     isRefetching,
     isLoading: isLoadList,
-  } = useGetForceUpdateList({
+  } = useGetHeroList({
     page,
     per_page: limit,
     search: searchValue,
     sort_by: sort,
     order: order as "asc" | "desc",
   });
-  const { data: detail } = useGetForceUpdateDetail({
-    id: forceUpdateId,
+  const { data: detail } = useGetHeroDetail({
+    id: heroId,
   });
 
-  const forceUpdateList = list?.data ?? [];
-  const isDisabled = isDeleting || isActivating;
+  const categoriesList = list?.data ?? [];
+  const isDisabled = isDeleting || isUpdatingStatus;
 
-  const handleDelete = async (force: string, id: string) => {
-    const ok = await confirmDelete(force, "force");
+  const handleDelete = async (user: string, userId: string) => {
+    const ok = await confirmDelete(user, "hero");
     if (!ok) return;
-    deleteForceUpdate({ params: { id } });
+    deleteHero({ params: { id: userId } });
   };
 
-  const handleChangeStatus = async (id: string, command: string) => {
+  const handleMakeDefault = async (command: string, userId: string) => {
     const ok = await confirmStatus(command, "command");
     if (!ok) return;
-    activateStatus({ params: { id } });
+    updateStatus({ params: { id: userId } });
   };
 
   useEffect(() => {
@@ -97,22 +96,23 @@ export const ForceUpdateSettingsClient = () => {
     <div className="flex flex-col gap-6 pt-4">
       <DialogStatus />
       <DialogDelete />
-      <DialogFormForceUpdate
+      <DialogFormHero
         open={!!open}
         onOpenChange={(e) => {
           if (!e) {
-            setOpen(undefined);
-            if (forceUpdateId) setQuery({ forceUpdateId: "" });
+            setOpen(null);
+            if (heroId) setQuery({ heroId: "" });
           }
         }}
         mode={open}
         detail={detail?.data}
+        isDisabled={isDisabled}
       />
       <div className="flex items-center justify-between">
-        <h1 className="leading-none font-semibold text-2xl">Force Update</h1>
+        <h1 className="leading-none font-semibold text-2xl">Banner Hero</h1>
         <div className="flex items-center gap-2">
           <InputSearch
-            placeholder="Cari ForceUpdate..."
+            placeholder="Cari Banner Hero..."
             classNameWrap="w-60"
             value={search}
             setValue={setSearch}
@@ -145,7 +145,7 @@ export const ForceUpdateSettingsClient = () => {
             disabled={isDisabled}
           >
             <Plus className="size-3.5" />
-            Tambah Force Update
+            Tambah Banner Hero
           </Button>
         </div>
       </div>
@@ -156,10 +156,10 @@ export const ForceUpdateSettingsClient = () => {
             setOpen,
             setQuery,
             handleDelete,
-            handleChangeStatus,
+            handleMakeDefault,
             disabled: isDisabled,
           })}
-          data={forceUpdateList}
+          data={categoriesList}
           isInitialLoading={isLoadList}
         />
         <Pagination

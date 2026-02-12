@@ -8,6 +8,7 @@ import {
   CategoryDetailResponse,
   CategoryListRequest,
   CategoryListResponse,
+  CategorySelectResponse,
   ChangeStatusCategoryParams,
   ChangeStatusCategoryResponse,
   CreateCategoryBody,
@@ -20,7 +21,7 @@ import {
 } from "./types";
 
 // query-key
-const key = ["category-list", "category-detail"];
+const key = ["category-list", "category-detail", "category-select"];
 
 // data
 export const dataAPICategory = {
@@ -34,6 +35,7 @@ export const dataAPICategory = {
   }: CategoryListRequest & CategoryDetailRequest): {
     list: UseApiQueryProps<CategoryListResponse>;
     show: UseApiQueryProps<CategoryDetailResponse>;
+    select: UseApiQueryProps<CategorySelectResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order }],
@@ -45,6 +47,10 @@ export const dataAPICategory = {
       key: [key[1], id],
       endpoint: `/kategori-produk/${id}`,
       enabled: !!id,
+    },
+    select: {
+      key: [key[2]],
+      endpoint: `/kategori-produk/dropdown`,
     },
   }),
   mutation: (
@@ -76,6 +82,7 @@ export const dataAPICategory = {
           await invalidateQuery(queryClient, [
             [key[0]],
             [key[1], data.data.id],
+            [key[2]],
           ]);
       },
       onError: { title: "CREATE_CATEGORY" },
@@ -89,6 +96,7 @@ export const dataAPICategory = {
           await invalidateQuery(queryClient, [
             [key[0]],
             [key[1], data.data.id],
+            [key[2]],
           ]);
       },
       onError: { title: "UPDATE_CATEGORY" },
@@ -98,7 +106,8 @@ export const dataAPICategory = {
       method: "delete",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
-        if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
+        if (queryClient)
+          await invalidateQuery(queryClient, [[key[0]], [key[2]]]);
       },
       onError: { title: "DELETE_CATEGORY" },
     },
@@ -111,6 +120,7 @@ export const dataAPICategory = {
           await invalidateQuery(queryClient, [
             [key[0]],
             [key[1], data.data.id],
+            [key[2]],
           ]);
       },
       onError: { title: "CHANGE_STATUS_CATEGORY" },
