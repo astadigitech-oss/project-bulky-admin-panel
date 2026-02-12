@@ -17,7 +17,7 @@ export const PaymentSetting = () => {
     <div className="grid lg:grid-cols-3 max-w-4xl mx-auto w-full gap-4">
       <div className="p-4">
         <h2 className="font-semibold text-lg lg:text-xl tracking-tight flex items-center relative before:content-[''] before:absolute before:-left-3 before:w-1 before:h-5  before:bg-linear-to-b before:from-yellow-400 before:to-yellow-500 before:rounded-full">
-          Payment Method
+          Metode Pembayaran
         </h2>
       </div>
       <div className="flex flex-col gap-4 border p-2 lg:p-4 rounded-lg dark:bg-gray-900/70 lg:col-span-2">

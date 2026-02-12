@@ -24,6 +24,11 @@ export type CategoryPartIIType = {
   tipe_kondisi_tambahan?: "TEKS" | "GAMBAR";
 };
 
+export type CategorySelectType = {
+  id: string;
+  nama: DuoLangType;
+};
+
 export type CategoryListRequest = BaseListParams;
 
 export type CategoryDetailRequest = BaseParams;
@@ -36,6 +41,10 @@ export type CategoryListResponse = BaseResponse & {
 
 export type CategoryDetailResponse = BaseResponse & {
   data: CategoryPartIType & CategoryPartIIType;
+};
+
+export type CategorySelectResponse = BaseResponse & {
+  data: CategorySelectType[];
 };
 
 // ------mutation------

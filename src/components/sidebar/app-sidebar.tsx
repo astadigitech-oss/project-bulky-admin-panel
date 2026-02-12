@@ -13,6 +13,7 @@ import {
   ChartNoAxesCombined,
   Headset,
   Megaphone,
+  MonitorSmartphone,
   Newspaper,
   Package,
   Scale,
@@ -204,6 +205,25 @@ const data = {
       ],
     },
     {
+      title: "Operasional",
+      url: "/operationals",
+      icon: MonitorSmartphone,
+      items: [
+        {
+          title: "Maintenance",
+          url: "/operationals/maintenance",
+        },
+        {
+          title: "Force Update",
+          url: "/operationals/force-update",
+        },
+        {
+          title: "Banner Hero",
+          url: "/operationals/hero",
+        },
+      ],
+    },
+    {
       title: "Pengaturan",
       url: "/settings",
       icon: Settings2,
@@ -219,18 +239,6 @@ const data = {
         {
           title: "Pajak",
           url: "/settings/tax",
-        },
-        {
-          title: "Maintenance",
-          url: "/settings/maintenance",
-        },
-        {
-          title: "Force Update",
-          url: "/settings/force-update",
-        },
-        {
-          title: "Hero Section",
-          url: "/settings/hero",
         },
       ],
     },

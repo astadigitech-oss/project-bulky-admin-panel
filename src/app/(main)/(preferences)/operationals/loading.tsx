@@ -7,7 +7,7 @@ const label = "Maintenance";
 
 const Loading = () => {
   return (
-    <MainContainer breadcrumbs={[{ label: "Pengaturan" }, { label: label }]}>
+    <MainContainer breadcrumbs={[{ label: "Operasional" }, { label: label }]}>
       <div className="flex flex-col gap-6 pt-4">
         <HeaderLoader title={label} />
         <TableLoader />

@@ -13,18 +13,20 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import {
-  Circle,
-  CircleDot,
+  CalendarIcon,
+  CalendarOff,
   Clock,
   Edit,
   ImageOffIcon,
+  Monitor,
+  MonitorOff,
   MoreHorizontal,
+  Star,
   Trash,
 } from "lucide-react";
 import { MetaPagination } from "@/lib/types";
 import { Dispatch, SetStateAction } from "react";
-import { VariantProps } from "class-variance-authority";
-import { PromoPartIType } from "../_api/types";
+import { HeroPartIType } from "../_api/types";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
 import Image from "next/image";
@@ -41,20 +43,16 @@ export const column = ({
   metaPage,
   setQuery,
   handleDelete,
-  handleChangeStatus,
+  handleMakeDefault,
   disabled,
 }: {
   setOpen: Dispatch<SetStateAction<"edit" | "create" | null>>;
   metaPage: MetaPagination;
   setQuery: any;
   disabled: boolean;
+  handleMakeDefault: (command: string, userId: string) => Promise<void>;
   handleDelete: (user: string, userId: string) => Promise<void>;
-  handleChangeStatus: (
-    command: string,
-    userId: string,
-    variant: VariantProps<typeof buttonVariants>["variant"],
-  ) => Promise<void>;
-}): ColumnDef<PromoPartIType>[] => [
+}): ColumnDef<HeroPartIType>[] => [
   {
     id: "id",
     header: () => <div className="text-center">No</div>,
@@ -115,32 +113,68 @@ export const column = ({
     header: "Nama",
   },
   {
-    accessorKey: "is_visible",
-    header: "Status",
-    cell: ({ row }) => (
-      <div
-        className={cn(
-          "flex items-center gap-2 text-xs bg-green-500/20 px-2 py-0.5 rounded-full font-medium w-fit",
-          row.original.is_visible
-            ? "bg-green-500/20 dark:bg-green-500/30 dark:text-emerald-100 text-emerald-600"
-            : "bg-red-500/10 dark:bg-red-500/30 dark:text-red-200 text-red-600",
-        )}
-      >
-        <div
-          className={cn(
-            "size-2 rounded-full",
-            row.original.is_visible ? "bg-green-500" : "bg-red-500",
-          )}
-        />
-        {row.original.is_visible ? "Aktif" : "Tidak Aktif"}
-      </div>
-    ),
-  },
-  {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
+        <TooltipText
+          value={row.original.is_default ? "Banner Utama" : "Banner Event"}
+          render={
+            <Button
+              variant={"ghost"}
+              size={"icon-xs"}
+              className={"hover:bg-transparent dark:bg-transparent"}
+            >
+              <Star
+                className={cn(
+                  "stroke-0 stroke-transparent size-4",
+                  row.original.is_default ? "fill-yellow-500" : "fill-gray-200",
+                )}
+              />
+            </Button>
+          }
+        />
+        <TooltipText
+          value={row.original.is_visible ? "Ditampilkan" : "Disembunyikan"}
+          render={
+            <Button
+              variant={"ghost"}
+              size={"icon-xs"}
+              className={"hover:bg-transparent dark:bg-transparent"}
+            >
+              {row.original.is_visible ? (
+                <Monitor className="size-3.5" />
+              ) : (
+                <MonitorOff className="size-3.5 text-gray-400" />
+              )}
+            </Button>
+          }
+        />
+        <TooltipText
+          value={
+            row.original.is_default ||
+            row.original.tanggal_mulai ||
+            row.original.tanggal_selesai
+              ? "Tanggal telah diatur"
+              : "Tanggal belum diatur"
+          }
+          render={
+            <Button
+              variant={"ghost"}
+              size={"icon-xs"}
+              className={"hover:bg-transparent dark:bg-transparent"}
+              disabled={row.original.is_default}
+            >
+              {row.original.is_default ||
+              row.original.tanggal_mulai ||
+              row.original.tanggal_selesai ? (
+                <CalendarIcon className="size-3.5" />
+              ) : (
+                <CalendarOff className="size-3.5 text-gray-400" />
+              )}
+            </Button>
+          }
+        />
         <TooltipText
           value={
             <div className="flex flex-col gap-2">
@@ -166,33 +200,24 @@ export const column = ({
             <MoreHorizontal />
             <span className="sr-only">toggle action</span>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent className={"w-auto"}>
             <DropdownMenuGroup>
               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
               <DropdownMenuItem
-                className={"text-xs"}
+                className={"text-xs whitespace-nowrap"}
                 onClick={() =>
-                  handleChangeStatus(
-                    row.original.is_visible
-                      ? `Nonaktifkan ${row.original.nama}`
-                      : `Aktifkan ${row.original.nama}`,
-                    row.original.id,
-                    row.original.is_visible ? "destructive" : "default",
-                  )
+                  handleMakeDefault(row.original.nama, row.original.id)
                 }
+                disabled={row.original.is_default}
               >
-                {row.original.is_visible ? (
-                  <Circle className="size-3.5" />
-                ) : (
-                  <CircleDot className="size-3.5" />
-                )}
-                {row.original.is_visible ? "Nonaktifkan" : "Aktifkan"}
+                <Star className="size-4 fill-yellow-500 stroke-0" />
+                Jadikan Banner Utama
               </DropdownMenuItem>
               <DropdownMenuItem
                 className={"text-xs"}
                 onClick={() => {
                   setOpen("edit");
-                  setQuery({ promoId: row.original.id });
+                  setQuery({ heroId: row.original.id });
                 }}
               >
                 <Edit className="size-3.5" />
@@ -217,7 +242,7 @@ export const column = ({
 const DialogPreview = ({ url, alt }: { url: string; alt: string }) => {
   return (
     <Dialog>
-      <DialogTrigger className="relative h-12 aspect-4/1 overflow-hidden rounded-md border">
+      <DialogTrigger className="relative h-12 aspect-2/1 overflow-hidden rounded-md border">
         <Image
           src={url}
           alt={alt}
@@ -227,7 +252,7 @@ const DialogPreview = ({ url, alt }: { url: string; alt: string }) => {
         />
       </DialogTrigger>
       <DialogContent className={"min-w-[80vw]"} showCloseButton={false}>
-        <div className="relative w-full aspect-4/1 overflow-hidden rounded-md border">
+        <div className="relative w-full aspect-2/1 overflow-hidden rounded-md border">
           <Image
             src={url}
             alt={alt}

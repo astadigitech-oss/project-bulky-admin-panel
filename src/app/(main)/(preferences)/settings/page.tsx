@@ -1,18 +1,20 @@
+import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-const pathname = "policies/terms";
+const pathname = "settings/general";
 
 export const metadata: Metadata = {
-  title: "Kebijakan",
+  title: "Pengaturan",
 };
 
-const PoliciesPage = () => {
-  // if (!auth) {
-  //   redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
-  // } else {
-  redirect(`/${pathname}`);
-  // }
+const SettingsPage = async () => {
+  const isAuth = await auth();
+  if (!isAuth) {
+    redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  } else {
+    redirect(`/${pathname}`);
+  }
 };
 
-export default PoliciesPage;
+export default SettingsPage;

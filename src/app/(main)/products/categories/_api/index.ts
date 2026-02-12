@@ -23,6 +23,8 @@ export const useGetCategoryList = ({
   );
 export const useGetCategoryDetail = ({ id }: CategoryDetailRequest) =>
   useApiQuery(dataAPICategory.query({ id }).show);
+export const useGetCategorySelect = () =>
+  useApiQuery(dataAPICategory.query({}).select);
 
 // mutation
 export const useCreateCategory = () =>

@@ -22,7 +22,7 @@ export const sizesImage =
   "(max-width: 768px) 50vw, (max-width: 1200px) 75vw, 100vw";
 
 export const numericString = (e: string) => {
-  if (Number.isNaN(e) || e === "") return "0";
+  if (Number.isNaN(e) || e === "" || Number.parseFloat(e) === 0) return "0";
   return e.startsWith("0") ? e.replace(/^0+/, "") : e;
 };
 

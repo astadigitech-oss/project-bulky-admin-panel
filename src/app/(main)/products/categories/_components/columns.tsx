@@ -121,7 +121,7 @@ export const column = ({
     ),
   },
   {
-    accessorKey: "isActive",
+    accessorKey: "is_active",
     header: "Status",
     cell: ({ row }) => (
       <div

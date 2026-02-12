@@ -5,38 +5,36 @@ import { useSearchQuery } from "@/hooks/use-search";
 import { InputSearch } from "@/components/ui/input-search";
 import { SortTable } from "@/components/sort-table";
 import { parseAsString, useQueryStates } from "nuqs";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { TooltipText } from "@/providers/tooltip-provider";
 import DataTable from "@/components/ui/data-table";
 import { column } from "./columns";
 import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { usePagination } from "@/hooks/use-pagination";
-import { useEffect, useState } from "react";
-import { useConfirm } from "@/hooks/use-confirm";
-import { VariantProps } from "class-variance-authority";
 import {
-  useChangeStatusPromo,
-  useDeletePromo,
-  useGetPromoDetail,
-  useGetPromoList,
+  useActivateForceUpdate,
+  useDeleteForceUpdate,
+  useGetForceUpdateDetail,
+  useGetForceUpdateList,
 } from "../_api";
-import { DialogFormPromo } from "./_dialog/form";
-import { useGetCategorySelect } from "@/app/(main)/products/categories/_api";
+import { useEffect, useState } from "react";
+import { DialogFormForceUpdate } from "./_dialog/form";
+import { useConfirm } from "@/hooks/use-confirm";
 
-export const BannerMarketingClient = () => {
-  const [open, setOpen] = useState<"edit" | "create" | null>(null);
-  const [{ sort, order, promoId }, setQuery] = useQueryStates(
+export const ForceUpdateSettingsClient = () => {
+  const [open, setOpen] = useState<"edit" | "create">();
+  const [{ sort, order, forceUpdateId }, setQuery] = useQueryStates(
     {
-      promoId: parseAsString.withDefault(""),
+      forceUpdateId: parseAsString.withDefault(""),
       sort: parseAsString.withDefault("created_at"),
       order: parseAsString.withDefault("desc"),
     },
-    { urlKeys: { promoId: "id" } },
+    { urlKeys: { forceUpdateId: "id" } },
   );
 
   const [DialogDelete, confirmDelete] = useConfirm(
-    "Delete [Promo]",
+    "Hapus [force]",
     "Apakah anda yakin? tindakan ini bersifat permanen",
     "destructive",
   );
@@ -46,9 +44,10 @@ export const BannerMarketingClient = () => {
     "Tindakan tidak bersifat permanen, anda dapat mengubahnya lagi lain kali",
   );
 
-  const { mutate: deletePromo, isPending: isDeleting } = useDeletePromo();
-  const { mutate: updateStatus, isPending: isUpdatingStatus } =
-    useChangeStatusPromo();
+  const { mutate: deleteForceUpdate, isPending: isDeleting } =
+    useDeleteForceUpdate();
+  const { mutate: activateStatus, isPending: isActivating } =
+    useActivateForceUpdate();
 
   const { search, searchValue, setSearch } = useSearchQuery();
   const { page, limit, metaPage, setPage, setLimit, setPaginationData } =
@@ -58,35 +57,30 @@ export const BannerMarketingClient = () => {
     refetch,
     isRefetching,
     isLoading: isLoadList,
-  } = useGetPromoList({
+  } = useGetForceUpdateList({
     page,
     per_page: limit,
     search: searchValue,
     sort_by: sort,
     order: order as "asc" | "desc",
   });
-  const { data: detail } = useGetPromoDetail({
-    id: promoId,
+  const { data: detail } = useGetForceUpdateDetail({
+    id: forceUpdateId,
   });
-  const { data: categorySelect } = useGetCategorySelect();
 
-  const categoriesList = list?.data ?? [];
-  const isDisabled = isDeleting || isUpdatingStatus;
+  const forceUpdateList = list?.data ?? [];
+  const isDisabled = isDeleting || isActivating;
 
-  const handleDelete = async (user: string, userId: string) => {
-    const ok = await confirmDelete(user, "Promo");
+  const handleDelete = async (force: string, id: string) => {
+    const ok = await confirmDelete(force, "force");
     if (!ok) return;
-    deletePromo({ params: { id: userId } });
+    deleteForceUpdate({ params: { id } });
   };
 
-  const handleChangeStatus = async (
-    command: string,
-    userId: string,
-    variant: VariantProps<typeof buttonVariants>["variant"],
-  ) => {
-    const ok = await confirmStatus(command, "command", variant);
+  const handleChangeStatus = async (id: string, command: string) => {
+    const ok = await confirmStatus(command, "command");
     if (!ok) return;
-    updateStatus({ params: { id: userId } });
+    activateStatus({ params: { id } });
   };
 
   useEffect(() => {
@@ -103,24 +97,22 @@ export const BannerMarketingClient = () => {
     <div className="flex flex-col gap-6 pt-4">
       <DialogStatus />
       <DialogDelete />
-      <DialogFormPromo
+      <DialogFormForceUpdate
         open={!!open}
         onOpenChange={(e) => {
           if (!e) {
-            setOpen(null);
-            if (promoId) setQuery({ promoId: "" });
+            setOpen(undefined);
+            if (forceUpdateId) setQuery({ forceUpdateId: "" });
           }
         }}
         mode={open}
         detail={detail?.data}
-        isDisabled={isDisabled}
-        categories={categorySelect?.data ?? []}
       />
       <div className="flex items-center justify-between">
-        <h1 className="leading-none font-semibold text-2xl">Banner Promo</h1>
+        <h1 className="leading-none font-semibold text-2xl">Force Update</h1>
         <div className="flex items-center gap-2">
           <InputSearch
-            placeholder="Cari banner..."
+            placeholder="Cari force update..."
             classNameWrap="w-60"
             value={search}
             setValue={setSearch}
@@ -153,7 +145,7 @@ export const BannerMarketingClient = () => {
             disabled={isDisabled}
           >
             <Plus className="size-3.5" />
-            Tambah Banner
+            Tambah Force Update
           </Button>
         </div>
       </div>
@@ -167,7 +159,7 @@ export const BannerMarketingClient = () => {
             handleChangeStatus,
             disabled: isDisabled,
           })}
-          data={categoriesList}
+          data={forceUpdateList}
           isInitialLoading={isLoadList}
         />
         <Pagination

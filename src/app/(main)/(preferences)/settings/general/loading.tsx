@@ -9,6 +9,7 @@ const skeletonLoading = [
   "Informasi Gudang",
   "Bantuan Whatsapp",
   "Informasi Pengambilan",
+  "Metode Pembayaran",
 ];
 
 const Loading = () => {

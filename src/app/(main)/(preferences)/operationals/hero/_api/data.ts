@@ -4,29 +4,26 @@ import { UseApiQueryProps } from "@/lib/query/use-query";
 import { keepPreviousData, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  PromoDetailRequest,
-  PromoDetailResponse,
-  PromoListRequest,
-  PromoListResponse,
-  ChangeStatusPromoParams,
-  ChangeStatusPromoResponse,
-  CreatePromoBody,
-  CreatePromoResponse,
-  DeletePromoParams,
-  DeletePromoResponse,
-  UpdatePromoBody,
-  UpdatePromoParams,
-  UpdatePromoResponse,
-  ReorderPromoResponse,
-  ReorderPromoBody,
-  ReorderPromoParams,
+  HeroDetailRequest,
+  HeroDetailResponse,
+  HeroListRequest,
+  HeroListResponse,
+  ChangeStatusHeroParams,
+  ChangeStatusHeroResponse,
+  CreateHeroBody,
+  CreateHeroResponse,
+  DeleteHeroParams,
+  DeleteHeroResponse,
+  UpdateHeroBody,
+  UpdateHeroParams,
+  UpdateHeroResponse,
 } from "./types";
 
 // query-key
-const key = ["promo-list", "promo-detail"];
+const key = ["hero-list", "hero-detail"];
 
 // data
-export const dataAPIPromo = {
+export const dataAPIHero = {
   query: ({
     id,
     page,
@@ -34,45 +31,40 @@ export const dataAPIPromo = {
     search,
     sort_by,
     order,
-  }: PromoListRequest & PromoDetailRequest): {
-    list: UseApiQueryProps<PromoListResponse>;
-    show: UseApiQueryProps<PromoDetailResponse>;
+  }: HeroListRequest & HeroDetailRequest): {
+    list: UseApiQueryProps<HeroListResponse>;
+    show: UseApiQueryProps<HeroDetailResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order }],
-      endpoint: `/banner-event-promo`,
+      endpoint: `/hero-section`,
       searchParams: { page, per_page, search, sort_by, order },
       placeholderData: keepPreviousData,
     },
     show: {
       key: [key[1], id],
-      endpoint: `/banner-event-promo/${id}`,
+      endpoint: `/hero-section/${id}`,
       enabled: !!id,
     },
   }),
   mutation: (
     queryClient?: QueryClient,
   ): {
-    create: UseMutateConfig<CreatePromoResponse, CreatePromoBody>;
+    create: UseMutateConfig<CreateHeroResponse, CreateHeroBody>;
     update: UseMutateConfig<
-      UpdatePromoResponse,
-      UpdatePromoBody,
-      UpdatePromoParams
+      UpdateHeroResponse,
+      UpdateHeroBody,
+      UpdateHeroParams
     >;
-    delete: UseMutateConfig<DeletePromoResponse, undefined, DeletePromoParams>;
+    delete: UseMutateConfig<DeleteHeroResponse, undefined, DeleteHeroParams>;
     changeStatus: UseMutateConfig<
-      ChangeStatusPromoResponse,
+      ChangeStatusHeroResponse,
       undefined,
-      ChangeStatusPromoParams
-    >;
-    reorder: UseMutateConfig<
-      ReorderPromoResponse,
-      ReorderPromoBody,
-      ReorderPromoParams
+      ChangeStatusHeroParams
     >;
   } => ({
     create: {
-      endpoint: "/banner-event-promo",
+      endpoint: "/hero-section",
       method: "post",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
@@ -82,10 +74,10 @@ export const dataAPIPromo = {
             [key[1], data.data.id],
           ]);
       },
-      onError: { title: "CREATE_PROMO" },
+      onError: { title: "CREATE_HERO" },
     },
     update: {
-      endpoint: "/banner-event-promo/:id",
+      endpoint: "/hero-section/:id",
       method: "put",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
@@ -95,19 +87,19 @@ export const dataAPIPromo = {
             [key[1], data.data.id],
           ]);
       },
-      onError: { title: "UPDATE_PROMO" },
+      onError: { title: "UPDATE_HERO" },
     },
     delete: {
-      endpoint: "/banner-event-promo/:id",
+      endpoint: "/hero-section/:id",
       method: "delete",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
         if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
       },
-      onError: { title: "DELETE_PROMO" },
+      onError: { title: "DELETE_HERO" },
     },
     changeStatus: {
-      endpoint: "/banner-event-promo/:id/toggle-status",
+      endpoint: "/hero-section/:id/toggle-status",
       method: "patch",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
@@ -117,21 +109,7 @@ export const dataAPIPromo = {
             [key[1], data.data.id],
           ]);
       },
-      onError: { title: "CHANGE_STATUS_PROMO" },
-    },
-    reorder: {
-      endpoint: "/banner-event-promo/:id/reorder",
-      method: "patch",
-      onSuccess: async ({ data }) => {
-        toast.success(data.message);
-        if (queryClient)
-          await invalidateQuery(queryClient, [
-            [key[0]],
-            [key[1], data.data.item.id],
-            [key[1], data.data.swapped_with.id],
-          ]);
-      },
-      onError: { title: "CHANGE_STATUS_PROMO" },
+      onError: { title: "CHANGE_STATUS_HERO" },
     },
   }),
 };
