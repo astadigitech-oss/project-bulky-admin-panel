@@ -23,6 +23,8 @@ export const useGetBrandList = ({
   );
 export const useGetBrandDetail = ({ id }: BrandDetailRequest) =>
   useApiQuery(dataAPIBrand.query({ id }).show);
+export const useGetBrandSelect = () =>
+  useApiQuery(dataAPIBrand.query({}).select);
 
 // mutation
 export const useCreateBrand = () =>

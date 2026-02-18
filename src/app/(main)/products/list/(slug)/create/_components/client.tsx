@@ -31,7 +31,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRight, Package, Send } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useId } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import z from "zod";
@@ -43,6 +43,13 @@ import { cn, formatRupiah, numericString } from "@/lib/utils";
 import { DropzonePDF } from "@/components/ui/dropzone-pdf";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { useGetBrandSelect } from "@api/product/brands";
+import { useGetCategorySelect } from "@api/product/categories";
+import { useGetPackageConditionSelect } from "@api/product/conditions/package";
+import { useGetProductConditionSelect } from "@api/product/conditions/product";
+import { useGetSourceSelect } from "@api/product/sources";
+import { useCreateProduct } from "@api/product/list";
 
 const reference_ids = [
   {
@@ -59,97 +66,6 @@ const reference_ids = [
   },
 ];
 
-const merek = [
-  {
-    id: "a3b37703-8427-49ef-8d97-b86110272d10",
-    nama: "Xiaomi",
-  },
-  {
-    id: "9a506c6e-6d7c-4f61-903f-78d962efecee",
-    nama: "Tas",
-  },
-  {
-    id: "2fb93a2f-969a-4ae5-92f4-48b6c075eb2a",
-    nama: "Sony",
-  },
-];
-const kategori = [
-  {
-    id: "ef3568ec-5782-411c-b30c-8b912ea077c5",
-    nama: {
-      id: "Elektronik",
-      en: "Electronics",
-    },
-    slug: "elektronik",
-  },
-  {
-    id: "df74f002-31f5-4567-bc58-d156d6c3b994",
-    nama: {
-      id: "Ibu \u0026 Anak",
-      en: "Mother \u0026 Baby",
-    },
-    slug: "ibu-anak",
-  },
-  {
-    id: "288b8def-ab77-4c94-ad02-a5c40870b21d",
-    nama: {
-      id: "Kosmetik",
-      en: "Cosmetics",
-    },
-    slug: "kosmetik",
-  },
-];
-const kondisi_paket = [
-  {
-    id: "5163c66d-0358-4fd3-9523-d549ea358c0f",
-    nama: "Set Lengkap",
-  },
-  {
-    id: "1463e328-e9d3-4d21-9809-e2cba17d6cfe",
-    nama: "Rusak Sedang",
-  },
-  {
-    id: "f18c5907-864a-472a-baca-d4c531369c0f",
-    nama: "Rusak Ringan",
-  },
-];
-const kondisi = [
-  {
-    id: "af1df525-00e6-4813-822d-2dae9759724e",
-    nama: "Bekas Baik",
-  },
-  {
-    id: "5c87438a-1e64-4a95-9e0c-bcca90ff14f5",
-    nama: "Bekas Grade B",
-  },
-  {
-    id: "44919624-ab6c-42ca-806f-3451eebb259e",
-    nama: "Rusak",
-  },
-  {
-    id: "5aac65a7-39a1-48ef-bc66-cf74c13caa1f",
-    nama: "Bekas Cukup Baik",
-  },
-];
-const sumber = [
-  {
-    id: "125c85f4-1188-4d5e-a503-eff20017a92b",
-    nama: "Reject",
-  },
-  {
-    id: "507be3fc-552f-4bb2-831a-67504f576fae",
-    nama: "Liquidasi",
-  },
-  {
-    id: "1bd762f8-d0f1-4d52-a59c-7ca0e7da7cdf",
-    nama: "Excess",
-  },
-  {
-    id: "3ff7b524-9120-40bc-b6a0-9a5ca3f1ad94",
-    nama: "Closeout",
-  },
-];
-
 export const FILE_RULES = {
   imageMimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
   docMimeTypes: ["application/pdf"],
@@ -157,10 +73,11 @@ export const FILE_RULES = {
 };
 
 const formSchema = z.object({
-  reference_id: z.string(),
+  reference_id: z.string().optional(),
   nama_id: z.string().min(1, "Nama ID tidak boleh kosong"),
   nama_en: z.string().min(1, "Nama EN tidak boleh kosong"),
   id_cargo: z.string().min(1, "Id Cargo tidak boleh kosong"),
+  discrepancy: z.string().optional(),
   merek_id: z.array(z.object({ data: z.string() })),
   kategori_id: z.string().min(1, "Kategori id tidak boleh kosong"),
   kondisi_id: z.string().min(1, "Kondisi id tidak boleh kosong"),
@@ -183,41 +100,44 @@ const formSchema = z.object({
     )
     .max(1, "Hanya boleh 1 file")
     .optional(),
+  gambar: z
+    .array(
+      z
+        .file()
+        .max(FILE_RULES.maxSize, "Ukuran maksimal 10MB")
+        .mime(FILE_RULES.imageMimeTypes),
+    )
+    .min(1, "Icon wajib diunggah")
+    .max(10, "Hanya boleh 10 file"),
 });
 
 export const ProductIdClient = () => {
   const anchor = useComboboxAnchor();
   const idFormProduct = useId();
-  const productId = useParams().productId;
-  const isCreate = productId === "create";
+  const router = useRouter();
 
-  const finalSchema = formSchema.extend({
-    gambar: isCreate
-      ? z
-          .array(
-            z
-              .file()
-              .max(FILE_RULES.maxSize, "Ukuran maksimal 10MB")
-              .mime(FILE_RULES.imageMimeTypes),
-          )
-          .min(1, "Icon wajib diunggah")
-          .max(10, "Hanya boleh 10 file")
-      : z
-          .array(
-            z
-              .file()
-              .max(FILE_RULES.maxSize, "Ukuran maksimal 10MB")
-              .mime(FILE_RULES.imageMimeTypes),
-          )
-          .max(10, "Hanya boleh 10 file")
-          .optional(),
-  });
+  const { mutate } = useCreateProduct();
 
-  const form = useForm<z.infer<typeof finalSchema>>({
-    resolver: zodResolver(finalSchema),
+  const { data: brandSelectData } = useGetBrandSelect();
+  const { data: categorySelectData } = useGetCategorySelect();
+  const { data: packageConditionSelectData } = useGetPackageConditionSelect();
+  const { data: productConditionSelectData } = useGetProductConditionSelect();
+  const { data: sourceSelectData } = useGetSourceSelect();
+
+  const selectProduct = {
+    brand: brandSelectData?.data ?? [],
+    category: categorySelectData?.data ?? [],
+    packageCondition: packageConditionSelectData?.data ?? [],
+    productCondition: productConditionSelectData?.data ?? [],
+    source: sourceSelectData?.data ?? [],
+  };
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     values: {
       nama_en: "",
       nama_id: "",
+      discrepancy: "",
       id_cargo: "",
       reference_id: "",
       kategori_id: "",
@@ -238,8 +158,42 @@ export const ProductIdClient = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof finalSchema>) => {
-    console.log(values);
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const body = new FormData();
+    body.append("nama_en", values.nama_en);
+    body.append("nama_id", values.nama_id);
+    body.append("discrepancy", values.discrepancy ?? "");
+    body.append("id_cargo", values.id_cargo);
+    body.append("reference_id", values.reference_id ?? "");
+    body.append("kategori_id", values.kategori_id);
+    body.append("kondisi_id", values.kondisi_id);
+    body.append("kondisi_paket_id", values.kondisi_paket_id);
+    body.append("sumber_id", values.sumber_id);
+    body.append("harga_sebelum_diskon", values.harga_sebelum_diskon);
+    body.append("harga_sesudah_diskon", values.harga_sesudah_diskon);
+    body.append("quantity", values.quantity);
+    body.append("panjang", values.panjang);
+    body.append("tinggi", values.tinggi);
+    body.append("lebar", values.lebar);
+    body.append("berat", values.berat);
+    body.append("is_active", values.is_active.toString());
+    if (values.merek_id && values.merek_id.length > 0) {
+      for (const m of values.merek_id) {
+        body.append("merek_id", m.data);
+      }
+    }
+    if (values.gambar && values.gambar.length > 0) {
+      for (const g of values.gambar) {
+        body.append("gambar[]", g);
+      }
+    }
+    if (values.dokumen && values.dokumen.length > 0) {
+      for (const d of values.dokumen) {
+        body.append("dokumen[]", d);
+      }
+    }
+
+    mutate({ body }, { onSuccess: () => router.push("/products/list") });
   };
 
   const { fields, replace } = useFieldArray({
@@ -279,9 +233,7 @@ export const ProductIdClient = () => {
           </Button>
         </Link>
         <ChevronRight className="size-4" />
-        <h1 className="leading-none font-semibold text-2xl">
-          {isCreate ? "Tambah" : "Edit"} Produk
-        </h1>
+        <h1 className="leading-none font-semibold text-2xl">Tambah Produk</h1>
       </div>
       <Separator />
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -386,12 +338,7 @@ export const ProductIdClient = () => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid} className="gap-1">
-                  <FieldLabel
-                    required
-                    htmlFor={`${idFormProduct}_${field.name}`}
-                  >
-                    ID Cargo
-                  </FieldLabel>
+                  <FieldLabel required>Dokumen PDF</FieldLabel>
                   <DropzonePDF onChange={field.onChange} value={field.value} />
 
                   {fieldState.invalid && (
@@ -462,6 +409,28 @@ export const ProductIdClient = () => {
                 )}
               />
             </div>
+            <Controller
+              name="discrepancy"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid} className="gap-1">
+                  <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
+                    Discrepancy
+                  </FieldLabel>
+                  <Textarea
+                    {...field}
+                    id={`${idFormProduct}_${field.name}`}
+                    aria-invalid={fieldState.invalid}
+                    className="min-h-28"
+                    placeholder="Kekurangan produk..."
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
             <Separator />
             <Field className="gap-1 col-span-full">
               <FieldLabel required htmlFor={`${idFormProduct}_brand`}>
@@ -471,12 +440,12 @@ export const ProductIdClient = () => {
                 id={`${idFormProduct}_brand`}
                 multiple
                 autoHighlight
-                items={merek}
+                items={selectProduct.brand}
                 value={fields.map((f) => f.data)}
                 onValueChange={(e) => replace(e.map((i) => ({ data: i })))}
                 isItemEqualToValue={(i: any, s: any) => {
-                  if ((i as (typeof merek)[number]).id) {
-                    return (i as (typeof merek)[number]).id === s;
+                  if ((i as (typeof selectProduct.brand)[number]).id) {
+                    return (i as (typeof selectProduct.brand)[number]).id === s;
                   }
                   return i === s;
                 }}
@@ -490,7 +459,10 @@ export const ProductIdClient = () => {
                       <React.Fragment>
                         {values.map((value: any) => (
                           <ComboboxChip key={value}>
-                            {merek.find((i) => i.id === value)?.nama}
+                            {
+                              selectProduct.brand.find((i) => i.id === value)
+                                ?.nama
+                            }
                           </ComboboxChip>
                         ))}
                         <ComboboxChipsInput
@@ -504,9 +476,12 @@ export const ProductIdClient = () => {
                 <ComboboxContent anchor={anchor}>
                   <ComboboxEmpty>No items found.</ComboboxEmpty>
                   <ComboboxList>
-                    {(item: (typeof merek)[number]) => (
+                    {(item: (typeof selectProduct.brand)[number]) => (
                       <ComboboxItem key={item.id} value={item.id}>
-                        {merek.find((i) => i.id === item.id)?.nama}
+                        {
+                          selectProduct.brand.find((i) => i.id === item.id)
+                            ?.nama
+                        }
                       </ComboboxItem>
                     )}
                   </ComboboxList>
@@ -517,198 +492,253 @@ export const ProductIdClient = () => {
               <Controller
                 control={form.control}
                 name="kategori_id"
-                render={({ field, fieldState }) => (
-                  <Field className="gap-1" data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
-                      Kategori
-                    </FieldLabel>
-                    <Combobox
-                      autoHighlight
-                      id={`${idFormProduct}_${field.name}`}
-                      items={kategori}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      isItemEqualToValue={(
-                        itemValue: any,
-                        selectedValue: any,
-                      ) => {
-                        if (
-                          (itemValue as (typeof kategori)[number]).id ===
-                          selectedValue
-                        ) {
-                          return true;
+                render={({ field, fieldState }) => {
+                  const categories = selectProduct.category;
+                  return (
+                    <Field className="gap-1" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
+                        Kategori
+                      </FieldLabel>
+                      <Combobox
+                        autoHighlight
+                        id={`${idFormProduct}_${field.name}`}
+                        items={categories}
+                        value={field.value}
+                        onValueChange={(e) => {
+                          console.log(e);
+                          field.onChange(e);
+                        }}
+                        isItemEqualToValue={(
+                          itemValue: any,
+                          selectedValue: any,
+                        ) => {
+                          if (
+                            (itemValue as (typeof categories)[number]).id ===
+                            selectedValue
+                          ) {
+                            return true;
+                          }
+                          return itemValue === selectedValue;
+                        }}
+                        itemToStringLabel={(v: string) =>
+                          categories.find((i) => i.id === v)?.nama.id ?? ""
                         }
-                        return itemValue === selectedValue;
-                      }}
-                      itemToStringLabel={(v: string) =>
-                        kategori.find((i) => i.id === v)?.nama.id ?? ""
-                      }
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <ComboboxInput placeholder="Pilih kategori..." />
-                      <ComboboxContent>
-                        <ComboboxEmpty>No items found.</ComboboxEmpty>
-                        <ComboboxList>
-                          {(item: (typeof kategori)[number]) => (
-                            <ComboboxItem key={item.id} value={item.id}>
-                              {item.nama.id}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                        filter={(itemValue: any, query: any) => {
+                          if (
+                            (itemValue as (typeof categories)[number]).nama.id
+                              .toLowerCase()
+                              .includes(query.toLowerCase())
+                          )
+                            return true;
+                          return false;
+                        }}
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <ComboboxInput placeholder="Pilih kategori..." />
+                        <ComboboxContent>
+                          <ComboboxEmpty>No items found.</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item: (typeof categories)[number]) => (
+                              <ComboboxItem key={item.id} value={item.id}>
+                                {item.nama.id}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  );
+                }}
               />
               <Controller
                 control={form.control}
                 name="kondisi_id"
-                render={({ field, fieldState }) => (
-                  <Field className="gap-1" data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
-                      Kondisi Produk
-                    </FieldLabel>
-                    <Combobox
-                      autoHighlight
-                      id={`${idFormProduct}_${field.name}`}
-                      items={kondisi}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      isItemEqualToValue={(
-                        itemValue: any,
-                        selectedValue: any,
-                      ) => {
-                        if (
-                          (itemValue as (typeof kondisi)[number]).id ===
-                          selectedValue
-                        ) {
-                          return true;
+                render={({ field, fieldState }) => {
+                  const productCondition = selectProduct.productCondition;
+                  return (
+                    <Field className="gap-1" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
+                        Kondisi Produk
+                      </FieldLabel>
+                      <Combobox
+                        autoHighlight
+                        id={`${idFormProduct}_${field.name}`}
+                        items={productCondition}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        isItemEqualToValue={(
+                          itemValue: any,
+                          selectedValue: any,
+                        ) => {
+                          if (
+                            (itemValue as (typeof productCondition)[number])
+                              .id === selectedValue
+                          ) {
+                            return true;
+                          }
+                          return itemValue === selectedValue;
+                        }}
+                        itemToStringLabel={(v: string) =>
+                          productCondition.find((i) => i.id === v)?.nama ?? ""
                         }
-                        return itemValue === selectedValue;
-                      }}
-                      itemToStringLabel={(v: string) =>
-                        kondisi.find((i) => i.id === v)?.nama ?? ""
-                      }
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <ComboboxInput placeholder="Pilih kondisi produk..." />
-                      <ComboboxContent>
-                        <ComboboxEmpty>No items found.</ComboboxEmpty>
-                        <ComboboxList>
-                          {(item: (typeof kondisi)[number]) => (
-                            <ComboboxItem key={item.id} value={item.id}>
-                              {item.nama}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                        filter={(itemValue: any, query: any) => {
+                          if (
+                            (
+                              itemValue as (typeof productCondition)[number]
+                            ).nama
+                              .toLowerCase()
+                              .includes(query.toLowerCase())
+                          )
+                            return true;
+                          return false;
+                        }}
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <ComboboxInput placeholder="Pilih kondisi produk..." />
+                        <ComboboxContent>
+                          <ComboboxEmpty>No items found.</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item: (typeof productCondition)[number]) => (
+                              <ComboboxItem key={item.id} value={item.id}>
+                                {item.nama}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  );
+                }}
               />
               <Controller
                 control={form.control}
                 name="kondisi_paket_id"
-                render={({ field, fieldState }) => (
-                  <Field className="gap-1" data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
-                      Kondisi Paket
-                    </FieldLabel>
-                    <Combobox
-                      autoHighlight
-                      id={`${idFormProduct}_${field.name}`}
-                      items={kondisi_paket}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      isItemEqualToValue={(
-                        itemValue: any,
-                        selectedValue: any,
-                      ) => {
-                        if (
-                          (itemValue as (typeof kondisi_paket)[number]).id ===
-                          selectedValue
-                        ) {
-                          return true;
+                render={({ field, fieldState }) => {
+                  const packageCondition = selectProduct.packageCondition;
+                  return (
+                    <Field className="gap-1" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
+                        Kondisi Paket
+                      </FieldLabel>
+                      <Combobox
+                        autoHighlight
+                        id={`${idFormProduct}_${field.name}`}
+                        items={packageCondition}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        isItemEqualToValue={(
+                          itemValue: any,
+                          selectedValue: any,
+                        ) => {
+                          if (
+                            (itemValue as (typeof packageCondition)[number])
+                              .id === selectedValue
+                          ) {
+                            return true;
+                          }
+                          return itemValue === selectedValue;
+                        }}
+                        itemToStringLabel={(v: string) =>
+                          packageCondition.find((i) => i.id === v)?.nama ?? ""
                         }
-                        return itemValue === selectedValue;
-                      }}
-                      itemToStringLabel={(v: string) =>
-                        kondisi_paket.find((i) => i.id === v)?.nama ?? ""
-                      }
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <ComboboxInput placeholder="Pilih kondisi paket..." />
-                      <ComboboxContent>
-                        <ComboboxEmpty>No items found.</ComboboxEmpty>
-                        <ComboboxList>
-                          {(item: (typeof kondisi_paket)[number]) => (
-                            <ComboboxItem key={item.id} value={item.id}>
-                              {item.nama}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                        filter={(itemValue: any, query: any) => {
+                          if (
+                            (
+                              itemValue as (typeof packageCondition)[number]
+                            ).nama
+                              .toLowerCase()
+                              .includes(query.toLowerCase())
+                          )
+                            return true;
+                          return false;
+                        }}
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <ComboboxInput placeholder="Pilih kondisi paket..." />
+                        <ComboboxContent>
+                          <ComboboxEmpty>No items found.</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item: (typeof packageCondition)[number]) => (
+                              <ComboboxItem key={item.id} value={item.id}>
+                                {item.nama}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  );
+                }}
               />
               <Controller
                 control={form.control}
                 name="sumber_id"
-                render={({ field, fieldState }) => (
-                  <Field className="gap-1" data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
-                      Sumber
-                    </FieldLabel>
-                    <Combobox
-                      autoHighlight
-                      id={`${idFormProduct}_${field.name}`}
-                      items={sumber}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      isItemEqualToValue={(
-                        itemValue: any,
-                        selectedValue: any,
-                      ) => {
-                        if (
-                          (itemValue as (typeof sumber)[number]).id ===
-                          selectedValue
-                        ) {
-                          return true;
+                render={({ field, fieldState }) => {
+                  const source = selectProduct.source;
+                  return (
+                    <Field className="gap-1" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
+                        Sumber
+                      </FieldLabel>
+                      <Combobox
+                        autoHighlight
+                        id={`${idFormProduct}_${field.name}`}
+                        items={source}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        isItemEqualToValue={(
+                          itemValue: any,
+                          selectedValue: any,
+                        ) => {
+                          if (
+                            (itemValue as (typeof source)[number]).id ===
+                            selectedValue
+                          ) {
+                            return true;
+                          }
+                          return itemValue === selectedValue;
+                        }}
+                        itemToStringLabel={(v: string) =>
+                          source.find((i) => i.id === v)?.nama ?? ""
                         }
-                        return itemValue === selectedValue;
-                      }}
-                      itemToStringLabel={(v: string) =>
-                        sumber.find((i) => i.id === v)?.nama ?? ""
-                      }
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <ComboboxInput placeholder="Pilih sumber..." />
-                      <ComboboxContent>
-                        <ComboboxEmpty>No items found.</ComboboxEmpty>
-                        <ComboboxList>
-                          {(item: (typeof sumber)[number]) => (
-                            <ComboboxItem key={item.id} value={item.id}>
-                              {item.nama}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                        filter={(itemValue: any, query: any) => {
+                          if (
+                            (itemValue as (typeof source)[number]).nama
+                              .toLowerCase()
+                              .includes(query.toLowerCase())
+                          )
+                            return true;
+                          return false;
+                        }}
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <ComboboxInput placeholder="Pilih sumber..." />
+                        <ComboboxContent>
+                          <ComboboxEmpty>No items found.</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item: (typeof source)[number]) => (
+                              <ComboboxItem key={item.id} value={item.id}>
+                                {item.nama}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  );
+                }}
               />
             </div>
             <Separator />
@@ -940,7 +970,7 @@ export const ProductIdClient = () => {
                 )}
               />
             </div>
-            <div className="grid lg:grid-cols-2 items-end gap-2 lg:gap-6">
+            <div className="grid lg:grid-cols-3 items-end gap-2 lg:gap-6">
               <Controller
                 name="berat"
                 control={form.control}
@@ -995,6 +1025,18 @@ export const ProductIdClient = () => {
                   m&sup3;
                 </div>
               </Field>
+              <Field className="gap-1">
+                <FieldLabel>Berat Volumetrik</FieldLabel>
+                <div className="h-8 rounded-lg border w-full border-gray-300 dark:border-gray-300/50 flex items-center gap-2 text-xs px-3">
+                  {(
+                    (Number.parseFloat(panjang ?? "0") *
+                      Number.parseFloat(lebar ?? "0") *
+                      Number.parseFloat(tinggi ?? "0")) /
+                    6000
+                  ).toLocaleString("id-ID")}{" "}
+                  kg
+                </div>
+              </Field>
             </div>
             <Separator />
             <Controller
@@ -1038,7 +1080,7 @@ export const ProductIdClient = () => {
                 </Field>
               )}
             />
-            <div className="bg-gray-300 dark:bg-gray-800 flex items-center h-20 rounded-lg w-full justify-end p-4">
+            <div className="bg-gray-100 dark:bg-gray-800 flex items-center h-20 rounded-lg w-full justify-end p-4">
               <Button type="submit" className={"w-fit"}>
                 <Send />
                 Kirim

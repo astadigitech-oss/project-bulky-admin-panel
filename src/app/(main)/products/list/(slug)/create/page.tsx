@@ -2,25 +2,28 @@ import { MainContainer } from "@/components/container/main-container";
 import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { TagBlogClient } from "./_components/client";
+import { ProductIdClient } from "./_components/client";
 
-const pathname = "blogs/tags";
-const labelPage1 = "Tag";
-const labelPage2 = "Berita";
+const pathname = "products/list";
 
 export const metadata: Metadata = {
-  title: `${labelPage1} ${labelPage2}`,
+  title: "Produk",
 };
 
-const BlogTagsPage = async () => {
+const ProductListPage = async () => {
   const isAuth = await auth();
   if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
-    <MainContainer breadcrumbs={[{ label: labelPage2 }, { label: labelPage1 }]}>
-      <TagBlogClient />
+    <MainContainer
+      breadcrumbs={[
+        { label: "Produk", url: "/products/list" },
+        { label: "Tambah" },
+      ]}
+    >
+      <ProductIdClient />
     </MainContainer>
   );
 };
 
-export default BlogTagsPage;
+export default ProductListPage;

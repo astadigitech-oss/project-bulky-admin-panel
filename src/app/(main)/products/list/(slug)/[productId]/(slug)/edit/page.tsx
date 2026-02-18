@@ -10,20 +10,15 @@ export const metadata: Metadata = {
   title: "Produk",
 };
 
-const ProductListPage = async ({
-  params,
-}: {
-  params: Promise<{ productId: string }>;
-}) => {
+const ProductListPage = async () => {
   const isAuth = await auth();
   if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
-  const { productId } = await params;
 
   return (
     <MainContainer
       breadcrumbs={[
         { label: "Produk", url: "/products/list" },
-        { label: productId === "create" ? "Tambah" : "Edit" },
+        { label: "Edit" },
       ]}
     >
       <ProductIdClient />

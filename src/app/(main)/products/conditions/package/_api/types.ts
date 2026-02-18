@@ -36,6 +36,10 @@ export type PackageConditionDetailResponse = BaseResponse & {
   data: PackageConditionType & PackageConditionPartIType;
 };
 
+export type PackageConditionSelectResponse = BaseResponse & {
+  data: { id: string; nama: string }[];
+};
+
 // ------mutation------
 export type CreatePackageConditionBody = {
   deskripsi: string;

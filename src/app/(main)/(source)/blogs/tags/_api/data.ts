@@ -4,31 +4,30 @@ import { UseApiQueryProps } from "@/lib/query/use-query";
 import { keepPreviousData, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  SourceDetailRequest,
-  SourceDetailResponse,
-  SourceListRequest,
-  SourceListResponse,
-  ChangeStatusSourceParams,
-  ChangeStatusSourceResponse,
-  CreateSourceBody,
-  CreateSourceResponse,
-  DeleteSourceParams,
-  DeleteSourceResponse,
-  UpdateSourceBody,
-  UpdateSourceParams,
-  UpdateSourceResponse,
-  SourceSelectResponse,
+  TagBlogDetailRequest,
+  TagBlogDetailResponse,
+  TagBlogListRequest,
+  TagBlogListResponse,
+  ChangeStatusTagBlogParams,
+  ChangeStatusTagBlogResponse,
+  CreateTagBlogBody,
+  CreateTagBlogResponse,
+  DeleteTagBlogParams,
+  DeleteTagBlogResponse,
+  UpdateTagBlogBody,
+  UpdateTagBlogParams,
+  UpdateTagBlogResponse,
+  ReorderTagBlogResponse,
+  ReorderTagBlogParams,
+  ReorderTagBlogBody,
+  TagBlogSelectResponse,
 } from "./types";
 
 // query-key
-const key = [
-  "source-product-list",
-  "source-product-detail",
-  "source-product-select",
-];
+const key = ["tag-blog-list", "tag-blog-detail"];
 
 // data
-export const dataAPISource = {
+export const dataAPITagBlog = {
   query: ({
     id,
     page,
@@ -36,49 +35,54 @@ export const dataAPISource = {
     search,
     sort_by,
     order,
-  }: SourceListRequest & SourceDetailRequest): {
-    list: UseApiQueryProps<SourceListResponse>;
-    show: UseApiQueryProps<SourceDetailResponse>;
-    select: UseApiQueryProps<SourceSelectResponse>;
+  }: TagBlogListRequest & TagBlogDetailRequest): {
+    list: UseApiQueryProps<TagBlogListResponse>;
+    show: UseApiQueryProps<TagBlogDetailResponse>;
+    select: UseApiQueryProps<TagBlogSelectResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order }],
-      endpoint: `/sumber-produk`,
+      endpoint: `/label-blog`,
       searchParams: { page, per_page, search, sort_by, order },
       placeholderData: keepPreviousData,
     },
     show: {
       key: [key[1], id],
-      endpoint: `/sumber-produk/${id}`,
+      endpoint: `/label-blog/${id}`,
       enabled: !!id,
     },
     select: {
       key: [key[2]],
-      endpoint: `/sumber-produk/dropdown`,
+      endpoint: `/label-blog/dropdown`,
     },
   }),
   mutation: (
     queryClient?: QueryClient,
   ): {
-    create: UseMutateConfig<CreateSourceResponse, CreateSourceBody>;
+    create: UseMutateConfig<CreateTagBlogResponse, CreateTagBlogBody>;
     update: UseMutateConfig<
-      UpdateSourceResponse,
-      UpdateSourceBody,
-      UpdateSourceParams
+      UpdateTagBlogResponse,
+      UpdateTagBlogBody,
+      UpdateTagBlogParams
     >;
     delete: UseMutateConfig<
-      DeleteSourceResponse,
+      DeleteTagBlogResponse,
       undefined,
-      DeleteSourceParams
+      DeleteTagBlogParams
     >;
     changeStatus: UseMutateConfig<
-      ChangeStatusSourceResponse,
+      ChangeStatusTagBlogResponse,
       undefined,
-      ChangeStatusSourceParams
+      ChangeStatusTagBlogParams
+    >;
+    reorder: UseMutateConfig<
+      ReorderTagBlogResponse,
+      ReorderTagBlogBody,
+      ReorderTagBlogParams
     >;
   } => ({
     create: {
-      endpoint: "/sumber-produk",
+      endpoint: "/label-blog",
       method: "post",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
@@ -89,10 +93,10 @@ export const dataAPISource = {
             [key[1], data.data.id],
           ]);
       },
-      onError: { title: "CREATE_SOURCE" },
+      onError: { title: "CREATE_PACKAGE_CONDITION" },
     },
     update: {
-      endpoint: "/sumber-produk/:id",
+      endpoint: "/label-blog/:id",
       method: "put",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
@@ -103,20 +107,20 @@ export const dataAPISource = {
             [key[1], data.data.id],
           ]);
       },
-      onError: { title: "UPDATE_SOURCE" },
+      onError: { title: "UPDATE_PACKAGE_CONDITION" },
     },
     delete: {
-      endpoint: "/sumber-produk/:id",
+      endpoint: "/label-blog/:id",
       method: "delete",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
         if (queryClient)
           await invalidateQuery(queryClient, [[key[0]], [key[2]]]);
       },
-      onError: { title: "DELETE_SOURCE" },
+      onError: { title: "DELETE_PACKAGE_CONDITION" },
     },
     changeStatus: {
-      endpoint: "/sumber-produk/:id/toggle-status",
+      endpoint: "/label-blog/:id/toggle-status",
       method: "patch",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
@@ -127,7 +131,22 @@ export const dataAPISource = {
             [key[1], data.data.id],
           ]);
       },
-      onError: { title: "CHANGE_STATUS_SOURCE" },
+      onError: { title: "CHANGE_STATUS_PACKAGE_CONDITION" },
+    },
+    reorder: {
+      endpoint: "/label-blog/:id/reorder",
+      method: "patch",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient)
+          await invalidateQuery(queryClient, [
+            [key[0]],
+            [key[2]],
+            [key[1], data.data.item.id],
+            [key[1], data.data.swapped_with.id],
+          ]);
+      },
+      onError: { title: "REORDER_PACKAGE_CONDITION" },
     },
   }),
 };

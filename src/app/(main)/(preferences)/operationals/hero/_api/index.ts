@@ -23,6 +23,8 @@ export const useGetHeroList = ({
   );
 export const useGetHeroDetail = ({ id }: HeroDetailRequest) =>
   useApiQuery(dataAPIHero.query({ id }).show);
+export const useGetHeroSchedule = () =>
+  useApiQuery(dataAPIHero.query({}).schedule);
 
 // mutation
 export const useCreateHero = () =>

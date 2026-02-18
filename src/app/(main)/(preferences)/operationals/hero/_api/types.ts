@@ -21,6 +21,11 @@ export type HeroPartIType = {
 export type HeroPartIIType = {
   created_at: string;
 };
+export type HeroScheduleType = {
+  date_end: string;
+  date_start: string;
+  label: string;
+};
 
 export type HeroListRequest = BaseListParams;
 
@@ -34,6 +39,9 @@ export type HeroListResponse = BaseResponse & {
 
 export type HeroDetailResponse = BaseResponse & {
   data: HeroPartIType & HeroPartIIType;
+};
+export type HeroScheduleResponse = BaseResponse & {
+  data: HeroScheduleType;
 };
 
 // ------mutation------

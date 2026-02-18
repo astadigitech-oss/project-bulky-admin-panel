@@ -14,7 +14,7 @@ import Link from "next/link";
 import { parseAsString, useQueryStates } from "nuqs";
 import React, { useEffect } from "react";
 import { column } from "./columns";
-import { useGetProductList } from "../_api";
+import { useGetProductList } from "@api/product/list";
 
 export const ProductClient = () => {
   const [{ sort, order }, setQuery] = useQueryStates({
@@ -25,13 +25,19 @@ export const ProductClient = () => {
   const { search, searchValue, setSearch } = useSearchQuery();
   const { page, limit, metaPage, setPage, setLimit, setPaginationData } =
     usePagination();
-  const { data: list } = useGetProductList({
+  const {
+    data: list,
+    refetch,
+    isRefetching,
+  } = useGetProductList({
     page,
     per_page: limit,
     search: searchValue,
     sort_by: sort,
     order: order as "asc" | "desc",
   });
+
+  const productList = list?.data ?? [];
 
   useEffect(() => {
     if (list) {
@@ -61,13 +67,10 @@ export const ProductClient = () => {
                 variant={"outline"}
                 size={"icon"}
                 // disabled={isDisabled}
-                // onClick={() => refetch()}
+                onClick={() => refetch()}
               >
                 <RefreshCw
-                  className={cn(
-                    "size-3.5",
-                    // isRefetching && "animate-spin"
-                  )}
+                  className={cn("size-3.5", isRefetching && "animate-spin")}
                 />
               </Button>
             }
@@ -93,7 +96,7 @@ export const ProductClient = () => {
       <div className="flex flex-col gap-4">
         <DataTable
           columns={column({ metaPage })}
-          data={[]}
+          data={productList}
           // isInitialLoading={isLoadList}
         />
         <Pagination

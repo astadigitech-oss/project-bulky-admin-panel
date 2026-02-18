@@ -20,10 +20,15 @@ import {
   ReorderProductConditionResponse,
   ReorderProductConditionParams,
   ReorderProductConditionBody,
+  ProductConditionSelectResponse,
 } from "./types";
 
 // query-key
-const key = ["condition-product-list", "condition-product-detail"];
+const key = [
+  "condition-product-list",
+  "condition-product-detail",
+  "condition-product-select",
+];
 
 // data
 export const dataAPIProductCondition = {
@@ -37,6 +42,7 @@ export const dataAPIProductCondition = {
   }: ProductConditionListRequest & ProductConditionDetailRequest): {
     list: UseApiQueryProps<ProductConditionListResponse>;
     show: UseApiQueryProps<ProductConditionDetailResponse>;
+    select: UseApiQueryProps<ProductConditionSelectResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order }],
@@ -48,6 +54,10 @@ export const dataAPIProductCondition = {
       key: [key[1], id],
       endpoint: `/kondisi-produk/${id}`,
       enabled: !!id,
+    },
+    select: {
+      key: [key[2]],
+      endpoint: `/kondisi-produk/dropdown`,
     },
   }),
   mutation: (
@@ -86,6 +96,7 @@ export const dataAPIProductCondition = {
         if (queryClient)
           await invalidateQuery(queryClient, [
             [key[0]],
+            [key[2]],
             [key[1], data.data.id],
           ]);
       },
@@ -99,6 +110,7 @@ export const dataAPIProductCondition = {
         if (queryClient)
           await invalidateQuery(queryClient, [
             [key[0]],
+            [key[2]],
             [key[1], data.data.id],
           ]);
       },
@@ -109,7 +121,8 @@ export const dataAPIProductCondition = {
       method: "delete",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
-        if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
+        if (queryClient)
+          await invalidateQuery(queryClient, [[key[0]], [key[2]]]);
       },
       onError: { title: "DELETE_PRODUCT_CONDITION" },
     },
@@ -121,6 +134,7 @@ export const dataAPIProductCondition = {
         if (queryClient)
           await invalidateQuery(queryClient, [
             [key[0]],
+            [key[2]],
             [key[1], data.data.id],
           ]);
       },
@@ -134,6 +148,7 @@ export const dataAPIProductCondition = {
         if (queryClient)
           await invalidateQuery(queryClient, [
             [key[0]],
+            [key[2]],
             [key[1], data.data.item.id],
             [key[1], data.data.swapped_with.id],
           ]);

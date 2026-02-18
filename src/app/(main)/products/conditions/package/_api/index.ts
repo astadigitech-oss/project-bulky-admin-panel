@@ -28,6 +28,8 @@ export const useGetPackageConditionDetail = ({
   id,
 }: PackageConditionDetailRequest) =>
   useApiQuery(dataAPIPackageCondition.query({ id }).show);
+export const useGetPackageConditionSelect = () =>
+  useApiQuery(dataAPIPackageCondition.query({}).select);
 
 // mutation
 export const useCreatePackageCondition = () =>

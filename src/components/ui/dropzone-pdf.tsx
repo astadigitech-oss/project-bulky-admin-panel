@@ -17,7 +17,7 @@ import { Spinner } from "./spinner";
 const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center gap-2 justify-center size-full">
+    <div className="flex items-center gap-2 justify-center w-full aspect-[1/1.414] border">
       <Spinner className="size-3.5" />
       <p>Loading PDF...</p>
     </div>
@@ -25,7 +25,7 @@ const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
 });
 
 type DropzoneProps = {
-  value?: File[]; // 🔑 ganti ke File[]
+  value?: File[];
   onChange: (files: File[]) => void;
   disabled?: boolean;
   error?: boolean;
@@ -46,7 +46,7 @@ export const DropzonePDF = ({
     maxFiles: 1,
     maxSize: 10 * 1024 * 1024,
     onDrop: (files) => {
-      onChange(files); // ✅ langsung File[]
+      onChange(files);
     },
     onDropRejected: (rejections) => {
       const first = rejections[0];
@@ -55,7 +55,6 @@ export const DropzonePDF = ({
       const error = first.errors[0];
       if (!error) return;
 
-      // Mapping error bawaan dropzone → message kita
       switch (error.code) {
         case "file-too-large":
           toast.error("Ukuran file melebihi batas 10MB");
@@ -75,12 +74,12 @@ export const DropzonePDF = ({
   return (
     <div className="w-full">
       {value.length > 0 || oldValue ? (
-        <div className="flex items-center border rounded-md justify-between p-4 gap-4 transition border-gray-300 dark:border-gray-300/50">
-          <div className="size-10 flex items-center justify-center dark:bg-red-500 bg-red-200 text-red-600 dark:text-red-100 rounded">
+        <div className="flex items-center border rounded-lg justify-between p-4 gap-4 transition border-gray-300 dark:border-gray-300/50">
+          <div className="size-10 flex items-center justify-center dark:bg-red-500 bg-red-200 text-red-600 dark:text-red-100 rounded-md">
             <FileText className="size-5" />
           </div>
           <p className="text-sm font-semibold">
-            {value ? "File Baru" : "File Lama"}
+            {value ? "File PDF Baru" : "File PDF Lama"}
           </p>
           <div className="flex items-center gap-4">
             <Dialog>
@@ -88,7 +87,7 @@ export const DropzonePDF = ({
                 render={
                   <Button
                     type="button"
-                    className={"size-10 rounded"}
+                    className={"size-10 rounded-md"}
                     variant={"outline"}
                   >
                     <Eye />
@@ -102,7 +101,7 @@ export const DropzonePDF = ({
                 <DialogHeader>
                   <DialogTitle>PDF Preview</DialogTitle>
                 </DialogHeader>
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center rounded-md overflow-hidden shadow">
                   <PDFViewer file={value ? value[0] : oldValue} />
                 </div>
                 <DialogFooter>
@@ -118,7 +117,7 @@ export const DropzonePDF = ({
               </DialogContent>
             </Dialog>
             <Button
-              className={"size-10 rounded"}
+              className={"size-10 rounded-md"}
               variant={"outlineDestructive"}
               type="button"
               onClick={() => onChange([])}
@@ -148,7 +147,9 @@ export const DropzonePDF = ({
           ) : (
             <div className="flex flex-col items-center text-sm">
               <p>Klik atau seret & lepas file di sini</p>
-              <p className="text-xs text-gray-400">Maksimal ukuran file 10MB</p>
+              <p className="text-xs text-gray-400">
+                Maksimal ukuran file 10MB (.pdf)
+              </p>
             </div>
           )}
         </div>

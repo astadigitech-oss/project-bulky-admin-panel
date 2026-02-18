@@ -8,6 +8,7 @@ import {
   BrandDetailResponse,
   BrandListRequest,
   BrandListResponse,
+  BrandSelectResponse,
   ChangeStatusBrandParams,
   ChangeStatusBrandResponse,
   CreateBrandBody,
@@ -20,7 +21,7 @@ import {
 } from "./types";
 
 // query-key
-const key = ["brand-list", "brand-detail"];
+const key = ["brand-list", "brand-detail", "brand-select"];
 
 // data
 export const dataAPIBrand = {
@@ -34,6 +35,7 @@ export const dataAPIBrand = {
   }: BrandListRequest & BrandDetailRequest): {
     list: UseApiQueryProps<BrandListResponse>;
     show: UseApiQueryProps<BrandDetailResponse>;
+    select: UseApiQueryProps<BrandSelectResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order }],
@@ -45,6 +47,10 @@ export const dataAPIBrand = {
       key: [key[1], id],
       endpoint: `/merek-produk/${id}`,
       enabled: !!id,
+    },
+    select: {
+      key: [key[2]],
+      endpoint: `/merek-produk/dropdown`,
     },
   }),
   mutation: (

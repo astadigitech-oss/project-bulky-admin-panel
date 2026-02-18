@@ -17,10 +17,11 @@ import {
   UpdateHeroBody,
   UpdateHeroParams,
   UpdateHeroResponse,
+  HeroScheduleResponse,
 } from "./types";
 
 // query-key
-const key = ["hero-list", "hero-detail"];
+const key = ["hero-list", "hero-detail", "hero-schedule"];
 
 // data
 export const dataAPIHero = {
@@ -34,6 +35,7 @@ export const dataAPIHero = {
   }: HeroListRequest & HeroDetailRequest): {
     list: UseApiQueryProps<HeroListResponse>;
     show: UseApiQueryProps<HeroDetailResponse>;
+    schedule: UseApiQueryProps<HeroScheduleResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order }],
@@ -45,6 +47,11 @@ export const dataAPIHero = {
       key: [key[1], id],
       endpoint: `/hero-section/${id}`,
       enabled: !!id,
+    },
+    schedule: {
+      key: [key[2]],
+      endpoint: `/hero-section/schedule`,
+      placeholderData: keepPreviousData,
     },
   }),
   mutation: (
