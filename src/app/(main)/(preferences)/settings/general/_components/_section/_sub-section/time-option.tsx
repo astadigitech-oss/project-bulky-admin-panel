@@ -12,5 +12,5 @@ const createOptions = (
     };
   });
 
-export const hour24Options = createOptions(24); // 00 - 23
-export const minuteOptions = createOptions(60); // 00 - 59
+export const hour24Options = createOptions(24);
+export const minuteOptions = createOptions(60);
