@@ -44,8 +44,8 @@ const Editor = dynamic(() => import("@/components/blocks/editor-00/editor"), {
 const formSchema = z.object({
   judul: z.string().min(3, "Judul ID harus memiliki minimal 3 karakter"),
   judul_en: z.string().min(3, "Judul EN harus memiliki minimal 3 karakter"),
-  konten: z.string().min(1, "Konten harus diisi"), // Ubah ke string
-  konten_en: z.string().min(1, "Konten harus diisi"), // Ubah ke string
+  konten: z.string().min(1, "Konten harus diisi"),
+  konten_en: z.string().min(1, "Konten harus diisi"),
 });
 
 export const PaymentHelpClient = () => {

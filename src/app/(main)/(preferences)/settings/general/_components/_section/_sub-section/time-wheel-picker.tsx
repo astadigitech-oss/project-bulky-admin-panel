@@ -20,7 +20,7 @@ import { hour24Options, minuteOptions } from "./time-option";
 
 type Props = {
   control: any;
-  baseName: string; // contoh: schedules.0
+  baseName: string;
   disabled?: boolean;
 };
 
