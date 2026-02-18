@@ -1,11 +1,11 @@
 "use client";
 
-import { CalendarIcon, Plus, RefreshCw, XIcon } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { useSearchQuery } from "@/hooks/use-search";
 import { InputSearch } from "@/components/ui/input-search";
 import { SortTable } from "@/components/sort-table";
 import { parseAsString, useQueryStates } from "nuqs";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { TooltipText } from "@/providers/tooltip-provider";
 import DataTable from "@/components/ui/data-table";
 import { column } from "./columns";
@@ -14,47 +14,43 @@ import Pagination from "@/components/pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useEffect, useState } from "react";
 import { useConfirm } from "@/hooks/use-confirm";
+import { VariantProps } from "class-variance-authority";
 import {
-  useChangeStatusHero,
-  useDeleteHero,
-  useGetHeroDetail,
-  useGetHeroList,
+  useChangeStatusTagBlog,
+  useDeleteTagBlog,
+  useGetTagBlogDetail,
+  useGetTagBlogList,
+  useReorderTagBlog,
 } from "../_api";
-import { DialogFormHero } from "./_dialog/form";
-import CalendarEvent from "@/components/calendar-hero";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { DialogFormTagBlog } from "./_dialog/form";
 
-export const BannerHeroClient = () => {
+export const TagBlogClient = () => {
   const [open, setOpen] = useState<"edit" | "create" | null>(null);
-  const [{ sort, order, heroId }, setQuery] = useQueryStates(
+  const [{ sort, order, tagBlogId }, setQuery] = useQueryStates(
     {
-      heroId: parseAsString.withDefault(""),
+      tagBlogId: parseAsString.withDefault(""),
       sort: parseAsString.withDefault("created_at"),
       order: parseAsString.withDefault("desc"),
     },
-    { urlKeys: { heroId: "id" } },
+    { urlKeys: { tagBlogId: "id" } },
   );
 
   const [DialogDelete, confirmDelete] = useConfirm(
-    "Hapus [hero]",
+    "Hapus [name]",
     "Apakah anda yakin? tindakan ini bersifat permanen",
     "destructive",
   );
 
   const [DialogStatus, confirmStatus] = useConfirm(
-    "Jadikan [command] Sebagai Banner Utama",
+    "[command]",
     "Tindakan tidak bersifat permanen, anda dapat mengubahnya lagi lain kali",
   );
 
-  const { mutate: deleteHero, isPending: isDeleting } = useDeleteHero();
+  const { mutate: deleteTagBlog, isPending: isDeleting } = useDeleteTagBlog();
   const { mutate: updateStatus, isPending: isUpdatingStatus } =
-    useChangeStatusHero();
+    useChangeStatusTagBlog();
+  const { mutate: reorderStatus, isPending: isReordering } =
+    useReorderTagBlog();
 
   const { search, searchValue, setSearch } = useSearchQuery();
   const { page, limit, metaPage, setPage, setLimit, setPaginationData } =
@@ -64,30 +60,38 @@ export const BannerHeroClient = () => {
     refetch,
     isRefetching,
     isLoading: isLoadList,
-  } = useGetHeroList({
+  } = useGetTagBlogList({
     page,
     per_page: limit,
     search: searchValue,
     sort_by: sort,
     order: order as "asc" | "desc",
   });
-  const { data: detail } = useGetHeroDetail({
-    id: heroId,
+  const { data: detail } = useGetTagBlogDetail({
+    id: tagBlogId,
   });
 
-  const categoriesList = list?.data ?? [];
-  const isDisabled = isDeleting || isUpdatingStatus;
+  const packageContionList = list?.data ?? [];
+  const isDisabled = isDeleting || isUpdatingStatus || isReordering;
 
-  const handleDelete = async (user: string, userId: string) => {
-    const ok = await confirmDelete(user, "hero");
+  const handleDelete = async (user: string, id: string) => {
+    const ok = await confirmDelete(user, "name");
     if (!ok) return;
-    deleteHero({ params: { id: userId } });
+    deleteTagBlog({ params: { id } });
   };
 
-  const handleMakeDefault = async (command: string, userId: string) => {
-    const ok = await confirmStatus(command, "command");
+  const handleChangeStatus = async (
+    command: string,
+    id: string,
+    variant: VariantProps<typeof buttonVariants>["variant"],
+  ) => {
+    const ok = await confirmStatus(command, "command", variant);
     if (!ok) return;
-    updateStatus({ params: { id: userId } });
+    updateStatus({ params: { id } });
+  };
+
+  const handleReorder = (id: string, direction: "up" | "down") => {
+    reorderStatus({ params: { id }, body: { direction } });
   };
 
   useEffect(() => {
@@ -104,12 +108,12 @@ export const BannerHeroClient = () => {
     <div className="flex flex-col gap-6 pt-4">
       <DialogStatus />
       <DialogDelete />
-      <DialogFormHero
+      <DialogFormTagBlog
         open={!!open}
         onOpenChange={(e) => {
           if (!e) {
             setOpen(null);
-            if (heroId) setQuery({ heroId: "" });
+            if (tagBlogId) setQuery({ tagBlogId: "" });
           }
         }}
         mode={open}
@@ -117,49 +121,14 @@ export const BannerHeroClient = () => {
         isDisabled={isDisabled}
       />
       <div className="flex items-center justify-between">
-        <h1 className="leading-none font-semibold text-2xl">Banner Hero</h1>
+        <h1 className="leading-none font-semibold text-2xl">Tag Berita</h1>
         <div className="flex items-center gap-2">
           <InputSearch
-            placeholder="Cari Banner Hero..."
+            placeholder="Cari tag berita..."
             classNameWrap="w-60"
             value={search}
             setValue={setSearch}
           />
-          <Dialog>
-            <TooltipText
-              value="Kalender Banner"
-              render={
-                <DialogTrigger
-                  render={
-                    <Button
-                      variant={"outline"}
-                      size={"icon"}
-                      disabled={isDisabled}
-                    >
-                      <CalendarIcon />
-                    </Button>
-                  }
-                />
-              }
-            />
-            <DialogContent
-              showCloseButton={false}
-              className={"min-w-[80vw] max-h-[80vh]"}
-            >
-              <CalendarEvent />
-              <DialogFooter>
-                <DialogClose
-                  render={
-                    <Button>
-                      <XIcon className="size-3.5" />
-                      Tutup
-                    </Button>
-                  }
-                />
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
           <TooltipText
             value="Perbarui Data"
             render={
@@ -188,7 +157,7 @@ export const BannerHeroClient = () => {
             disabled={isDisabled}
           >
             <Plus className="size-3.5" />
-            Tambah Banner Hero
+            Tambah Tag Berita
           </Button>
         </div>
       </div>
@@ -199,10 +168,11 @@ export const BannerHeroClient = () => {
             setOpen,
             setQuery,
             handleDelete,
-            handleMakeDefault,
+            handleChangeStatus,
+            handleReorder,
             disabled: isDisabled,
           })}
-          data={categoriesList}
+          data={packageContionList}
           isInitialLoading={isLoadList}
         />
         <Pagination

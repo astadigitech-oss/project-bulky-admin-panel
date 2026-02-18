@@ -20,24 +20,14 @@ import {
   CircleDot,
   Clock,
   Edit,
-  Eye,
   MoreHorizontal,
   Trash,
 } from "lucide-react";
 import { MetaPagination } from "@/lib/types";
 import { Dispatch, SetStateAction } from "react";
 import { VariantProps } from "class-variance-authority";
-import { FAQsType } from "../_api/types";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { HeaderDuoLang } from "@/components/column";
+import GB from "country-flag-icons/react/3x2/GB";
+import ID from "country-flag-icons/react/3x2/ID";
 
 export const column = ({
   setOpen,
@@ -59,7 +49,7 @@ export const column = ({
     userId: string,
     variant: VariantProps<typeof buttonVariants>["variant"],
   ) => Promise<void>;
-}): ColumnDef<FAQsType>[] => [
+}): ColumnDef<any>[] => [
   {
     id: "id",
     header: () => <div className="text-center">No</div>,
@@ -70,31 +60,18 @@ export const column = ({
     ),
   },
   {
-    accessorKey: "question",
-    header: () => <HeaderDuoLang title="Pertanyaan" />,
-    cell: ({ row }) => (
+    accessorKey: "nama.id",
+    header: () => (
       <div className="flex items-center gap-2">
-        <p>{row.original.question}</p>
-        <DialogPriview
-          label="Pratinjau"
-          question={row.original.question}
-          answer={row.original.answer}
-        />
+        Nama <ID className="h-3 aspect-3/2 rounded shadow" />
       </div>
     ),
   },
   {
-    accessorKey: "question_en",
-    header: () => <HeaderDuoLang title="Question" en />,
-    cell: ({ row }) => (
+    accessorKey: "nama.en",
+    header: () => (
       <div className="flex items-center gap-2">
-        <p>{row.original.question_en}</p>
-        <DialogPriview
-          label="Preview"
-          question={row.original.question_en}
-          answer={row.original.answer_en}
-          en
-        />
+        Nama <GB className="h-3 aspect-3/2 rounded shadow" />
       </div>
     ),
   },
@@ -178,8 +155,8 @@ export const column = ({
                 onClick={() =>
                   handleChangeStatus(
                     row.original.is_active
-                      ? `Nonaktifkan ${row.original.question}`
-                      : `Aktifkan ${row.original.question}`,
+                      ? `Nonaktifkan ${row.original.nama.id}`
+                      : `Aktifkan ${row.original.nama.id}`,
                     row.original.id,
                     row.original.is_active ? "destructive" : "default",
                   )
@@ -196,7 +173,7 @@ export const column = ({
                 className={"text-xs"}
                 onClick={() => {
                   setOpen("edit");
-                  setQuery({ faqId: row.original.id });
+                  setQuery({ packageConditionId: row.original.id });
                 }}
               >
                 <Edit className="size-3.5" />
@@ -205,7 +182,7 @@ export const column = ({
               <DropdownMenuItem
                 className={"text-xs"}
                 onClick={() =>
-                  handleDelete(row.original.question, row.original.id)
+                  handleDelete(row.original.nama.id, row.original.id)
                 }
                 variant="destructive"
               >
@@ -219,51 +196,3 @@ export const column = ({
     ),
   },
 ];
-
-const DialogPriview = ({
-  label,
-  question,
-  answer,
-  en = false,
-}: {
-  label: string;
-  question: string;
-  answer: string;
-  en?: boolean;
-}) => {
-  return (
-    <Dialog>
-      <TooltipText
-        value={label}
-        render={
-          <DialogTrigger
-            render={
-              <Button variant={"ghost"} size={"icon-sm"} type="button">
-                <Eye className="size-3.5 stroke-[1.25]" />
-              </Button>
-            }
-          />
-        }
-      />
-      <DialogContent
-        className={"p-0 gap-0 overflow-hidden min-w-md"}
-        showCloseButton={false}
-      >
-        <div className="bg-gray-100 dark:bg-gray-900 p-4 border-b">
-          <DialogHeader>
-            <DialogTitle className={"flex items-center gap-2"}>
-              <HeaderDuoLang title={`FAQ ${label}`} en={en} />
-            </DialogTitle>
-          </DialogHeader>
-        </div>
-        <div className="text-sm leading-relaxed flex flex-col gap-1 p-4">
-          <p className="font-medium">{question}</p>
-          <p className="text-gray-500">{answer}</p>
-        </div>
-        <DialogFooter className="m-0">
-          <DialogClose render={<Button>Close</Button>} />
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};

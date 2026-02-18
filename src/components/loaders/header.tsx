@@ -10,6 +10,7 @@ export const HeaderLoader = ({
   canCreated = true,
   justTitle = true,
   withTitle = true,
+  lengthButton = 2,
 }: {
   icon?: LucideIcon;
   title?: string;
@@ -17,6 +18,7 @@ export const HeaderLoader = ({
   canCreated?: boolean;
   justTitle?: boolean;
   withTitle?: boolean;
+  lengthButton?: number;
 }) => {
   return (
     <div className="flex items-center w-full">
@@ -36,8 +38,9 @@ export const HeaderLoader = ({
       {withTitle && (
         <div className="flex items-center gap-2 ml-auto">
           <Skeleton className="h-8 w-60" />
-          <Skeleton className="size-8" />
-          <Skeleton className="size-8" />
+          {Array.from({ length: lengthButton }).map((_, index) => (
+            <Skeleton key={index} className="size-8" />
+          ))}
           {canCreated && <Skeleton className="h-8 w-32" />}
         </div>
       )}

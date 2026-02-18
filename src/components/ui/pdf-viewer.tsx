@@ -9,6 +9,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { ScrollArea } from "./scroll-area";
 import { Spinner } from "./spinner";
+import { FileExclamationPoint } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -26,6 +27,7 @@ export default function PDFViewer({ file }: { file: PDFFile }) {
   const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const onResize = useCallback<ResizeObserverCallback>((entries) => {
     const [entry] = entries;
@@ -47,20 +49,34 @@ export default function PDFViewer({ file }: { file: PDFFile }) {
   function onDocumentLoadStart() {
     setLoading(true);
   }
+  function onDocumentLoadError() {
+    setError(true);
+  }
 
   return (
     <div className="w-full aspect-[1/1.414] overflow-hidden">
       {loading ? (
-        <div className="flex items-center gap-2 justify-center size-full">
+        <div className="flex items-center gap-2 justify-center size-full border">
           <Spinner className="size-3.5" />
           <p>Loading PDF...</p>
         </div>
+      ) : error ? (
+        <div className="flex items-center gap-2 justify-center flex-col size-full rounded-md border">
+          <div className="size-10 bg-yellow-400 rounded-full flex items-center justify-center">
+            <FileExclamationPoint className="size-4" />
+          </div>
+          <p>Error load PDF</p>
+        </div>
       ) : (
-        <ScrollArea className={"size-full rounded-md"} ref={setContainerRef}>
+        <ScrollArea
+          className={"size-full rounded-md border"}
+          ref={setContainerRef}
+        >
           <Document
             file={file}
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadStart={onDocumentLoadStart}
+            onLoadError={onDocumentLoadError}
           >
             {Array.from({ length: numPages ?? 0 }, (_el, index) => (
               <Page

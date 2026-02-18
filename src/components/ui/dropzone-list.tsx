@@ -15,6 +15,7 @@ type DropzoneProps = {
   maxFiles?: number;
   maxSize?: number;
   oldValue?: string[];
+  isEdit?: boolean;
 };
 
 export const DropzoneList = ({
@@ -30,6 +31,7 @@ export const DropzoneList = ({
   },
   maxSize = 10 * 1024 * 1024,
   maxFiles = 1,
+  isEdit = false,
 }: DropzoneProps) => {
   const [preview, setPreview] = useState<string[]>([]);
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -116,13 +118,18 @@ export const DropzoneList = ({
                 </div>
               </div>
             )}
-            <div className="w-full grid gap-3 grid-cols-7">
+            <div
+              className={cn(
+                "w-full grid gap-3",
+                isEdit ? "grid-cols-5" : "grid-cols-7",
+              )}
+            >
               {preview.map((i, idx) => (
                 <div
                   key={i}
                   className={cn(
                     "h-full rounded-md overflow-hidden border shadow relative border-gray-300 dark:border-gray-300/50 aspect-square group",
-                    idx === 0 && "col-span-2 row-span-2",
+                    idx === 0 && !isEdit && "col-span-2 row-span-2",
                   )}
                 >
                   <Button

@@ -20,12 +20,14 @@ import {
   ReorderPackageConditionResponse,
   ReorderPackageConditionParams,
   ReorderPackageConditionBody,
+  PackageConditionSelectResponse,
 } from "./types";
 
 // query-key
 const key = [
   "condition-package-product-list",
   "condition-package-product-detail",
+  "condition-package-product-select",
 ];
 
 // data
@@ -40,6 +42,7 @@ export const dataAPIPackageCondition = {
   }: PackageConditionListRequest & PackageConditionDetailRequest): {
     list: UseApiQueryProps<PackageConditionListResponse>;
     show: UseApiQueryProps<PackageConditionDetailResponse>;
+    select: UseApiQueryProps<PackageConditionSelectResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order }],
@@ -51,6 +54,10 @@ export const dataAPIPackageCondition = {
       key: [key[1], id],
       endpoint: `/kondisi-paket/${id}`,
       enabled: !!id,
+    },
+    select: {
+      key: [key[2]],
+      endpoint: `/kondisi-paket/dropdown`,
     },
   }),
   mutation: (
@@ -89,6 +96,7 @@ export const dataAPIPackageCondition = {
         if (queryClient)
           await invalidateQuery(queryClient, [
             [key[0]],
+            [key[2]],
             [key[1], data.data.id],
           ]);
       },
@@ -102,6 +110,7 @@ export const dataAPIPackageCondition = {
         if (queryClient)
           await invalidateQuery(queryClient, [
             [key[0]],
+            [key[2]],
             [key[1], data.data.id],
           ]);
       },
@@ -112,7 +121,8 @@ export const dataAPIPackageCondition = {
       method: "delete",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
-        if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
+        if (queryClient)
+          await invalidateQuery(queryClient, [[key[0]], [key[2]]]);
       },
       onError: { title: "DELETE_PACKAGE_CONDITION" },
     },
@@ -124,6 +134,7 @@ export const dataAPIPackageCondition = {
         if (queryClient)
           await invalidateQuery(queryClient, [
             [key[0]],
+            [key[2]],
             [key[1], data.data.id],
           ]);
       },
@@ -137,6 +148,7 @@ export const dataAPIPackageCondition = {
         if (queryClient)
           await invalidateQuery(queryClient, [
             [key[0]],
+            [key[2]],
             [key[1], data.data.item.id],
             [key[1], data.data.swapped_with.id],
           ]);

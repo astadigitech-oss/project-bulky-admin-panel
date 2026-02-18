@@ -28,6 +28,8 @@ export const useGetProductConditionDetail = ({
   id,
 }: ProductConditionDetailRequest) =>
   useApiQuery(dataAPIProductCondition.query({ id }).show);
+export const useGetProductConditionSelect = () =>
+  useApiQuery(dataAPIProductCondition.query({}).select);
 
 // mutation
 export const useCreateProductCondition = () =>

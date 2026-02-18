@@ -23,6 +23,8 @@ export const useGetSourceList = ({
   );
 export const useGetSourceDetail = ({ id }: SourceDetailRequest) =>
   useApiQuery(dataAPISource.query({ id }).show);
+export const useGetSourceSelect = () =>
+  useApiQuery(dataAPISource.query({}).select);
 
 // mutation
 export const useCreateSource = () =>

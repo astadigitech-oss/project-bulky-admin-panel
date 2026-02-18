@@ -36,6 +36,10 @@ export type ProductConditionDetailResponse = BaseResponse & {
   data: ProductConditionType & ProductConditionPartIType;
 };
 
+export type ProductConditionSelectResponse = BaseResponse & {
+  data: { id: string; nama: string }[];
+};
+
 // ------mutation------
 export type CreateProductConditionBody = {
   deskripsi: string;

@@ -35,6 +35,10 @@ export type SourceDetailResponse = BaseResponse & {
   data: SourceType & SourcePartIType;
 };
 
+export type SourceSelectResponse = BaseResponse & {
+  data: { id: string; nama: string }[];
+};
+
 // ------mutation------
 export type CreateSourceBody = {
   deskripsi: string;

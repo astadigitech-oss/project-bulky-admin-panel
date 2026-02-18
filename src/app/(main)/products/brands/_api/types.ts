@@ -11,9 +11,9 @@ import {
 export type BrandType = {
   created_at: string;
   id: string;
+  nama: DuoLangType;
   is_active: boolean;
   logo_url: string;
-  nama: DuoLangType;
   slug: string;
   updated_at: string;
 };
@@ -29,6 +29,9 @@ export type BrandListResponse = BaseResponse & {
 };
 
 export type BrandDetailResponse = BaseResponse & { data: BrandType };
+export type BrandSelectResponse = BaseResponse & {
+  data: { id: string; nama: string }[];
+};
 
 // ------mutation------
 export type CreateBrandBody = FormData;
