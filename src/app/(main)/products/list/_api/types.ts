@@ -75,8 +75,46 @@ export type CreateProductResponse = BaseResponse & {
   };
 };
 
+export type UpdateProductParams = BaseParams;
+
+export type UpdateProductBody = FormData;
+
+export type UpdateProductResponse = BaseResponse & {
+  data: {
+    id: string;
+    nama_id: string;
+  };
+};
+
+export type DeleteProductParams = BaseParams;
+
+export type DeleteProductResponse = BaseResponse;
+
 export type ChangeStatusProductParams = BaseParams;
 
 export type ChangeStatusProductResponse = BaseResponse & {
   data: { id: string; is_active: boolean };
 };
+
+export type UploadProductImageParams = BaseParams;
+
+export type UploadProductImageBody = FormData;
+
+export type UploadProductImageResponse = BaseResponse & {
+  data: { gambar_url: string; id: string; is_primary: boolean; urutan: number };
+};
+
+export type ReorderProductImageParams = BaseParams & { imageId: string };
+
+export type ReorderProductImageBody = { direction: "up" | "down" };
+
+export type ReorderProductImageResponse = BaseResponse & {
+  data: {
+    item: { id: string; urutan: number };
+    swapped_with: { id: string; urutan: number };
+  };
+};
+
+export type DeleteProductImageParams = BaseParams & { imageId: string };
+
+export type DeleteProductImageResponse = BaseResponse;

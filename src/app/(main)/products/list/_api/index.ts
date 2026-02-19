@@ -27,5 +27,20 @@ export const useGetProductDetail = ({ id }: ProductDetailRequest) =>
 // mutation
 export const useCreateProduct = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).create);
+export const useUpdateProduct = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).update);
+
+export const useDeleteProduct = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).delete);
+
 export const useChangeStatusProduct = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).changeStatus);
+
+export const useUploadProductImage = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).imageUpload);
+
+export const useReorderProductImage = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).imageReorder);
+
+export const useDeleteProductImage = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).imageDelete);

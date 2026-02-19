@@ -13,8 +13,8 @@ import {
   XIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useGetProductDetail } from "@api/product/list";
-import { useParams } from "next/navigation";
+import { useDeleteProduct, useGetProductDetail } from "@api/product/list";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn, formatRupiah } from "@/lib/utils";
 import {
@@ -29,6 +29,8 @@ import {
 import { Flag } from "@/components/column";
 import dynamic from "next/dynamic";
 import { Spinner } from "@/components/ui/spinner";
+import { useConfirm } from "@/hooks/use-confirm";
+import { Skeleton } from "@/components/ui/skeleton";
 const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
   ssr: false,
   loading: () => (
@@ -40,15 +42,36 @@ const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
 });
 
 export const ProductDetailClient = () => {
+  const router = useRouter();
   const productId = useParams().productId as string;
+
+  const [DialogDelete, confirmDelete] = useConfirm(
+    "Hapus [name]",
+    "Apakah anda yakin? tindakan ini bersifat permanen",
+    "destructive",
+  );
+
+  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
+
   const {
     data: productDetail,
     refetch,
     isRefetching,
   } = useGetProductDetail({ id: productId });
   const detail = productDetail?.data;
+
+  const handleDelete = async () => {
+    const ok = await confirmDelete(detail?.nama_id ?? "", "name");
+    if (!ok) return;
+    deleteProduct(
+      { params: { id: detail?.id } },
+      { onSuccess: () => router.push("/products/list") },
+    );
+  };
+
   return (
     <div className="flex flex-col gap-6 pt-4 pb-20">
+      <DialogDelete />
       <div className="flex items-center gap-2 justify-between">
         <div className="flex items-center gap-2">
           <Link href={"/products/list"}>
@@ -60,7 +83,12 @@ export const ProductDetailClient = () => {
           <h1 className="leading-none font-semibold text-2xl">Detail Produk</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant={"outline"} size={"icon"} onClick={() => refetch()}>
+          <Button
+            variant={"outline"}
+            size={"icon"}
+            onClick={() => refetch()}
+            disabled={isDeleting}
+          >
             <RefreshCw
               className={cn("size-3.5", isRefetching && "animate-spin")}
             />
@@ -70,7 +98,12 @@ export const ProductDetailClient = () => {
               <Edit2 className="size-3.5" />
             </Button>
           </Link>
-          <Button variant={"outline"} size={"icon"}>
+          <Button
+            variant={"outlineDestructive"}
+            size={"icon"}
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
             <Trash className="size-3.5" />
           </Button>
         </div>
@@ -80,57 +113,67 @@ export const ProductDetailClient = () => {
         <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold">Gambar</p>
           <div className="grid grid-cols-7 grid-rows-2 gap-3 w-full border rounded-lg p-3 border-gray-300 dark:border-gray-300/50">
-            {detail?.gambar.map((item, index) => (
-              <Dialog key={item.id}>
-                <DialogTrigger
-                  render={
-                    <Button
-                      className={cn(
-                        "relative w-full aspect-square rounded-md overflow-hidden shadow border border-gray-300/70 dark:border-gray-300/30 p-0 from-white to-white dark:from-black dark:to-black hover:from-white hover:to-white hover:dark:from-black hover:dark:to-black h-auto group",
-                        index === 0 && "col-span-2 row-span-2",
-                      )}
-                    >
-                      <div className="size-full bg-black/10 dark:bg-white/10 backdrop-blur-sm z-10 group-hover:flex items-center justify-center rounded-md hidden">
-                        <div className="size-8 rounded-full bg-white dark:bg-black dark:text-white flex items-center justify-center">
-                          <Eye className="size-4" />
-                        </div>
-                      </div>
-                      <Image
-                        src={item.gambar_url}
-                        alt={`${detail.nama_id}_${item.id}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </Button>
-                  }
-                />
-                <DialogContent
-                  showCloseButton={false}
-                  className={"h-[80vh] min-w-[80vh]"}
-                >
-                  <DialogHeader>
-                    <DialogTitle>Pratinjau Gambar Produk</DialogTitle>
-                  </DialogHeader>
-                  <div className="size-full relative aspect-square rounded-md overflow-hidden border shadow">
-                    <Image
-                      src={item.gambar_url}
-                      alt={`${detail.nama_id}_${item.id}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <DialogFooter>
-                    <DialogClose
+            {detail
+              ? detail.gambar.map((item, index) => (
+                  <Dialog key={item.id}>
+                    <DialogTrigger
                       render={
-                        <Button>
-                          <XIcon /> Tutup
+                        <Button
+                          className={cn(
+                            "relative w-full aspect-square rounded-md overflow-hidden shadow border border-gray-300/70 dark:border-gray-300/30 p-0 from-white to-white dark:from-black dark:to-black hover:from-white hover:to-white hover:dark:from-black hover:dark:to-black h-auto group",
+                            index === 0 && "col-span-2 row-span-2",
+                          )}
+                        >
+                          <div className="size-full bg-black/10 dark:bg-white/10 backdrop-blur-sm z-10 group-hover:flex items-center justify-center rounded-md hidden">
+                            <div className="size-8 rounded-full bg-white dark:bg-black dark:text-white flex items-center justify-center">
+                              <Eye className="size-4" />
+                            </div>
+                          </div>
+                          <Image
+                            src={item.gambar_url}
+                            alt={`${detail.nama_id}_${item.id}`}
+                            fill
+                            className="object-cover"
+                          />
                         </Button>
                       }
                     />
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            ))}
+                    <DialogContent
+                      showCloseButton={false}
+                      className={"h-[80vh] min-w-[80vh]"}
+                    >
+                      <DialogHeader>
+                        <DialogTitle>Pratinjau Gambar Produk</DialogTitle>
+                      </DialogHeader>
+                      <div className="size-full relative aspect-square rounded-md overflow-hidden border shadow">
+                        <Image
+                          src={item.gambar_url}
+                          alt={`${detail.nama_id}_${item.id}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <DialogFooter>
+                        <DialogClose
+                          render={
+                            <Button>
+                              <XIcon /> Tutup
+                            </Button>
+                          }
+                        />
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                ))
+              : Array.from({ length: 10 }, (_, i) => (
+                  <Skeleton
+                    key={i}
+                    className={cn(
+                      "w-full aspect-square",
+                      i === 0 && "col-span-2 row-span-2",
+                    )}
+                  />
+                ))}
           </div>
         </div>
         <div className="grid grid-cols-4 gap-6">

@@ -50,8 +50,18 @@ const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
 
 export const column = ({
   metaPage,
+  handleDelete,
+  handleChanngeStatus,
+  isDisabled,
 }: {
   metaPage: MetaPagination;
+  handleDelete: (id: string, value: string) => Promise<void>;
+  handleChanngeStatus: (
+    id: string,
+    value: string,
+    status: boolean,
+  ) => Promise<void>;
+  isDisabled: boolean;
 }): ColumnDef<ProductPartIType>[] => [
   {
     id: "id",
@@ -178,7 +188,7 @@ export const column = ({
         </Dialog>
         <DropdownMenu>
           <DropdownMenuTrigger
-            // disabled={disabled}
+            disabled={isDisabled}
             className={buttonVariants({ size: "icon-xs", variant: "ghost" })}
           >
             <MoreHorizontal />
@@ -189,15 +199,13 @@ export const column = ({
               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
               <DropdownMenuItem
                 className={"text-xs"}
-                // onClick={() =>
-                //   handleChangeStatus(
-                //     row.original.is_active
-                //       ? `Nonaktifkan ${row.original.nama.id}`
-                //       : `Aktifkan ${row.original.nama.id}`,
-                //     row.original.id,
-                //     row.original.is_active ? "destructive" : "default",
-                //   )
-                // }
+                onClick={() =>
+                  handleChanngeStatus(
+                    row.original.id,
+                    row.original.nama_id,
+                    !row.original.status,
+                  )
+                }
               >
                 {row.original.status ? (
                   <Circle className="size-3.5" />
@@ -220,9 +228,9 @@ export const column = ({
               </Link>
               <DropdownMenuItem
                 className={"text-xs"}
-                // onClick={() =>
-                //   handleDelete(row.original.nama.id, row.original.id)
-                // }
+                onClick={() =>
+                  handleDelete(row.original.id, row.original.nama_id)
+                }
                 variant="destructive"
               >
                 <Trash className="size-3.5" />

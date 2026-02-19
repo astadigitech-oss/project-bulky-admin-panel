@@ -4,10 +4,23 @@ import {
   ChangeStatusProductResponse,
   CreateProductBody,
   CreateProductResponse,
+  DeleteProductImageParams,
+  DeleteProductImageResponse,
+  DeleteProductParams,
+  DeleteProductResponse,
   ProductDetailRequest,
   ProductDetailResponse,
   ProductListRequest,
   ProductListResponse,
+  ReorderProductImageBody,
+  ReorderProductImageParams,
+  ReorderProductImageResponse,
+  UpdateProductBody,
+  UpdateProductParams,
+  UpdateProductResponse,
+  UploadProductImageBody,
+  UploadProductImageParams,
+  UploadProductImageResponse,
 } from "./types";
 import { keepPreviousData, QueryClient } from "@tanstack/react-query";
 import { UseMutateConfig } from "@/lib/query/types";
@@ -35,7 +48,7 @@ export const dataAPIProduct = {
       placeholderData: keepPreviousData,
     },
     show: {
-      key: [key[1], { id }],
+      key: [key[1], id],
       endpoint: `/produk/${id}`,
       enabled: !!id,
     },
@@ -44,10 +57,35 @@ export const dataAPIProduct = {
     queryClient?: QueryClient,
   ): {
     create: UseMutateConfig<CreateProductResponse, CreateProductBody>;
+    update: UseMutateConfig<
+      UpdateProductResponse,
+      UpdateProductBody,
+      UpdateProductParams
+    >;
+    delete: UseMutateConfig<
+      DeleteProductResponse,
+      undefined,
+      DeleteProductParams
+    >;
     changeStatus: UseMutateConfig<
       ChangeStatusProductResponse,
       undefined,
       ChangeStatusProductParams
+    >;
+    imageUpload: UseMutateConfig<
+      UploadProductImageResponse,
+      UploadProductImageBody,
+      UploadProductImageParams
+    >;
+    imageReorder: UseMutateConfig<
+      ReorderProductImageResponse,
+      ReorderProductImageBody,
+      ReorderProductImageParams
+    >;
+    imageDelete: UseMutateConfig<
+      DeleteProductImageResponse,
+      undefined,
+      DeleteProductImageParams
     >;
   } => ({
     create: {
@@ -59,9 +97,9 @@ export const dataAPIProduct = {
       },
       onError: { title: "CREATE_PRODUCT" },
     },
-    changeStatus: {
-      endpoint: "/produk/:id/toggle-status",
-      method: "post",
+    update: {
+      endpoint: "/produk/:id",
+      method: "put",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
         if (queryClient)
@@ -70,7 +108,53 @@ export const dataAPIProduct = {
             [key[1], data.data.id],
           ]);
       },
-      onError: { title: "CREATE_PRODUCT" },
+      onError: { title: "UPDATE_PRODUCT" },
+    },
+    delete: {
+      endpoint: "/produk/:id",
+      method: "delete",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
+      },
+      onError: { title: "DELETE_PRODUCT" },
+    },
+    changeStatus: {
+      endpoint: "/produk/:id/toggle-status",
+      method: "patch",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient)
+          await invalidateQuery(queryClient, [
+            [key[0]],
+            [key[1], data.data.id],
+          ]);
+      },
+      onError: { title: "CHANGE_PRODUCT_STATUS" },
+    },
+    imageUpload: {
+      endpoint: "/produk/:id/gambar",
+      method: "post",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+      },
+      onError: { title: "UPLOAD_PRODUCT_IMAGE" },
+    },
+    imageReorder: {
+      endpoint: "/produk/:id/gambar/:imageId/reorder",
+      method: "patch",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+      },
+      onError: { title: "REORDER_PRODUCT_IMAGE" },
+    },
+    imageDelete: {
+      endpoint: "/produk/:id/gambar/:imageId",
+      method: "delete",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+      },
+      onError: { title: "DELETE_PRODUCT_IMAGE" },
     },
   }),
 };

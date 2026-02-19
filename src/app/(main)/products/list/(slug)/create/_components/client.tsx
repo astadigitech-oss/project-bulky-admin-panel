@@ -50,6 +50,7 @@ import { useGetPackageConditionSelect } from "@api/product/conditions/package";
 import { useGetProductConditionSelect } from "@api/product/conditions/product";
 import { useGetSourceSelect } from "@api/product/sources";
 import { useCreateProduct } from "@api/product/list";
+import { Spinner } from "@/components/ui/spinner";
 
 const reference_ids = [
   {
@@ -107,7 +108,7 @@ const formSchema = z.object({
         .max(FILE_RULES.maxSize, "Ukuran maksimal 10MB")
         .mime(FILE_RULES.imageMimeTypes),
     )
-    .min(1, "Icon wajib diunggah")
+    .min(1, "Gambar wajib diunggah")
     .max(10, "Hanya boleh 10 file"),
 });
 
@@ -116,7 +117,7 @@ export const ProductIdClient = () => {
   const idFormProduct = useId();
   const router = useRouter();
 
-  const { mutate } = useCreateProduct();
+  const { mutate, isPending } = useCreateProduct();
 
   const { data: brandSelectData } = useGetBrandSelect();
   const { data: categorySelectData } = useGetCategorySelect();
@@ -1081,9 +1082,9 @@ export const ProductIdClient = () => {
               )}
             />
             <div className="bg-gray-100 dark:bg-gray-800 flex items-center h-20 rounded-lg w-full justify-end p-4">
-              <Button type="submit" className={"w-fit"}>
-                <Send />
-                Kirim
+              <Button type="submit" className={"w-fit"} disabled={isPending}>
+                {isPending ? <Spinner /> : <Send />}
+                {isPending ? "Mengirim..." : "Kirim"}
               </Button>
             </div>
           </div>

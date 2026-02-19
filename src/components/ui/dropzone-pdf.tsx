@@ -14,6 +14,7 @@ import {
 } from "./dialog";
 import dynamic from "next/dynamic";
 import { Spinner } from "./spinner";
+import { useState } from "react";
 const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
   ssr: false,
   loading: () => (
@@ -40,6 +41,7 @@ export const DropzonePDF = ({
   error,
   oldValue,
 }: DropzoneProps) => {
+  const [preview, setPreview] = useState(oldValue ?? "");
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     disabled,
     accept: { "application/pdf": [".pdf"] },
@@ -73,13 +75,13 @@ export const DropzonePDF = ({
 
   return (
     <div className="w-full">
-      {value.length > 0 || oldValue ? (
+      {value.length > 0 || preview ? (
         <div className="flex items-center border rounded-lg justify-between p-4 gap-4 transition border-gray-300 dark:border-gray-300/50">
           <div className="size-10 flex items-center justify-center dark:bg-red-500 bg-red-200 text-red-600 dark:text-red-100 rounded-md">
             <FileText className="size-5" />
           </div>
           <p className="text-sm font-semibold">
-            {value ? "File PDF Baru" : "File PDF Lama"}
+            {value.length > 0 ? "File PDF Baru" : "File PDF Lama"}
           </p>
           <div className="flex items-center gap-4">
             <Dialog>
@@ -102,7 +104,7 @@ export const DropzonePDF = ({
                   <DialogTitle>PDF Preview</DialogTitle>
                 </DialogHeader>
                 <div className="flex items-center justify-center rounded-md overflow-hidden shadow">
-                  <PDFViewer file={value ? value[0] : oldValue} />
+                  <PDFViewer file={value.length > 0 ? value[0] : preview} />
                 </div>
                 <DialogFooter>
                   <DialogClose
@@ -120,7 +122,13 @@ export const DropzonePDF = ({
               className={"size-10 rounded-md"}
               variant={"outlineDestructive"}
               type="button"
-              onClick={() => onChange([])}
+              onClick={() => {
+                if (preview) {
+                  setPreview("");
+                } else {
+                  onChange([]);
+                }
+              }}
             >
               <Trash />
             </Button>
