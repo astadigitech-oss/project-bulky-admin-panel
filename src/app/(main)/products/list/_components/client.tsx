@@ -14,13 +14,31 @@ import Link from "next/link";
 import { parseAsString, useQueryStates } from "nuqs";
 import React, { useEffect } from "react";
 import { column } from "./columns";
-import { useGetProductList } from "@api/product/list";
+import {
+  useChangeStatusProduct,
+  useDeleteProduct,
+  useGetProductList,
+} from "@api/product/list";
+import { useConfirm } from "@/hooks/use-confirm";
 
 export const ProductClient = () => {
   const [{ sort, order }, setQuery] = useQueryStates({
     sort: parseAsString.withDefault("created_at"),
     order: parseAsString.withDefault("desc"),
   });
+  const [DialogDelete, confirmDelete] = useConfirm(
+    "Hapus [name]",
+    "Apakah anda yakin? tindakan ini bersifat permanen",
+    "destructive",
+  );
+  const [DialogChangeStatus, confirmChangeStatus] = useConfirm(
+    "[command]",
+    "Tindakan tidak bersifat permanen, anda dapat mengubahnya lagi lain kali",
+  );
+
+  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
+  const { mutate: changeStatusProduct, isPending: isUpdating } =
+    useChangeStatusProduct();
 
   const { search, searchValue, setSearch } = useSearchQuery();
   const { page, limit, metaPage, setPage, setLimit, setPaginationData } =
@@ -29,6 +47,8 @@ export const ProductClient = () => {
     data: list,
     refetch,
     isRefetching,
+    isPending,
+    isLoading: isLoadList,
   } = useGetProductList({
     page,
     per_page: limit,
@@ -38,6 +58,28 @@ export const ProductClient = () => {
   });
 
   const productList = list?.data ?? [];
+
+  const isDisabled = isDeleting || isUpdating || isPending;
+
+  const handleDelete = async (id: string, value: string) => {
+    const ok = await confirmDelete(value, "name");
+    if (!ok) return;
+    deleteProduct({ params: { id } });
+  };
+
+  const handleChanngeStatus = async (
+    id: string,
+    value: string,
+    status: boolean,
+  ) => {
+    const ok = await confirmChangeStatus(
+      `${status ? "Publish" : "Draft"} ${value}`,
+      "command",
+      status ? "default" : "destructive",
+    );
+    if (!ok) return;
+    changeStatusProduct({ params: { id } });
+  };
 
   useEffect(() => {
     if (list) {
@@ -51,6 +93,8 @@ export const ProductClient = () => {
 
   return (
     <div className="flex flex-col gap-6 pt-4">
+      <DialogDelete />
+      <DialogChangeStatus />
       <div className="flex items-center justify-between">
         <h1 className="leading-none font-semibold text-2xl">Daftar Produk</h1>
         <div className="flex items-center gap-2">
@@ -66,7 +110,7 @@ export const ProductClient = () => {
               <Button
                 variant={"outline"}
                 size={"icon"}
-                // disabled={isDisabled}
+                disabled={isDisabled}
                 onClick={() => refetch()}
               >
                 <RefreshCw
@@ -80,13 +124,10 @@ export const ProductClient = () => {
             order={order}
             sort={sort}
             setSort={setQuery}
-            // disabled={isDisabled}
+            disabled={isDisabled}
           />
           <Link href="/products/list/create">
-            <Button
-              className={"text-xs"}
-              // disabled={isDisabled}
-            >
+            <Button className={"text-xs"} disabled={isDisabled}>
               <Plus className="size-3.5" />
               Tambah Produk
             </Button>
@@ -95,15 +136,20 @@ export const ProductClient = () => {
       </div>
       <div className="flex flex-col gap-4">
         <DataTable
-          columns={column({ metaPage })}
+          columns={column({
+            metaPage,
+            handleDelete,
+            handleChanngeStatus,
+            isDisabled,
+          })}
           data={productList}
-          // isInitialLoading={isLoadList}
+          isInitialLoading={isLoadList}
         />
         <Pagination
           pagination={{ ...metaPage, current_page: page, per_page: limit }}
           setPage={setPage}
           setLimit={setLimit}
-          // disabled={isDisabled}
+          disabled={isDisabled}
         />
       </div>
     </div>

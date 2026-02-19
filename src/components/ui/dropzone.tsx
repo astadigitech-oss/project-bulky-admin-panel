@@ -67,7 +67,7 @@ export const Dropzone = ({
   });
 
   const resetLogo = () => {
-    setPreview("");
+    onChange([]);
   };
 
   useEffect(() => {

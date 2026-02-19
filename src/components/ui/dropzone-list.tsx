@@ -54,16 +54,18 @@ export const DropzoneList = ({
             break;
           case "too-many-files":
             const files = fileRejections.map((i) => i.file);
+            console.log(files);
             selectedFiles.push(...files);
             break;
           default:
             toast.error("File tidak valid");
         }
       }
-
+      console.log(acceptedFiles, selectedFiles);
       selectedFiles.push(...acceptedFiles);
 
       if (selectedFiles.length > maxFiles) {
+        console.log(selectedFiles.length, maxFiles);
         toast.error(`Hanya boleh ${maxFiles} file`);
         const availableFiles = selectedFiles.slice(0, maxFiles);
         onChange(availableFiles);
@@ -75,6 +77,7 @@ export const DropzoneList = ({
 
   const handleReset = () => {
     setPreview([]);
+    onChange([]);
   };
 
   useEffect(() => {
