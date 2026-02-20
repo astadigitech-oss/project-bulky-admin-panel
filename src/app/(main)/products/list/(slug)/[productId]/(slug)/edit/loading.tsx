@@ -26,7 +26,7 @@ const Loading = () => {
         <Separator />
         <div className="grid gap-6 w-full max-w-5xl mx-auto">
           <div className="flex flex-col border rounded-lg border-gray-300 dark:border-gray-300/50 overflow-hidden">
-            <div className="flex items-center justify-between w-full px-4 bg-gray-100 h-16">
+            <div className="flex items-center justify-between w-full px-4 bg-gray-100 dark:bg-gray-800 h-16">
               <p className="font-semibold">Gambar</p>
             </div>
             <div className="grid grid-cols-7 gap-3 w-full p-4">
@@ -42,7 +42,7 @@ const Loading = () => {
             </div>
           </div>
           <div className="flex flex-col border rounded-lg border-gray-300 dark:border-gray-300/50 overflow-hidden gap-4">
-            <div className="flex items-center justify-between w-full py-2 px-4 bg-gray-100 h-16">
+            <div className="flex items-center justify-between w-full py-2 px-4 bg-gray-100 dark:bg-gray-800 h-16">
               <p className="font-semibold">Data</p>
             </div>
             <div className="max-w-3xl mx-auto grid w-full gap-6 px-4">

@@ -312,8 +312,8 @@ export const ProductIdClient = () => {
         <ImageSection detail={detail} setState={setState} />
       ) : (
         <FieldGroup className="grid gap-6 w-full max-w-5xl mx-auto">
-          <div className="flex flex-col border rounded-lg border-gray-300 dark:border-gray-300/50 overflow-hidden">
-            <div className="flex items-center justify-between w-full px-4 bg-gray-100 h-16">
+          <div className="flex flex-col border rounded-lg border-gray-300 dark:border-gray-800 overflow-hidden">
+            <div className="flex items-center justify-between w-full px-4 bg-gray-100 dark:bg-gray-800 h-16">
               <p className="font-semibold">Gambar</p>
               <Button
                 size={"sm"}
@@ -390,9 +390,9 @@ export const ProductIdClient = () => {
           </div>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col border rounded-lg border-gray-300 dark:border-gray-300/50 overflow-hidden gap-4"
+            className="flex flex-col border rounded-lg border-gray-300 dark:border-gray-800 overflow-hidden gap-4"
           >
-            <div className="flex items-center justify-between w-full py-2 px-4 bg-gray-100 h-16">
+            <div className="flex items-center justify-between w-full py-2 px-4 bg-gray-100 dark:bg-gray-800 h-16">
               <p className="font-semibold">Data</p>
             </div>
             {detail && isSuccessAllSelect ? (
@@ -1281,7 +1281,7 @@ export const ProductIdClient = () => {
               <Button
                 type="submit"
                 className={"w-fit"}
-                disabled={isPending || isSuccessAllSelect}
+                disabled={isPending || !isSuccessAllSelect}
               >
                 {isPending ? <Spinner /> : <Send />}
                 {isPending ? "Mengirim..." : "Kirim"}

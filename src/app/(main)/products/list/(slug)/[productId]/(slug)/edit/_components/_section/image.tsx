@@ -179,7 +179,7 @@ export const ImageSection = ({
                   </Field>
                 )}
               />
-              <div className="h-16 flex items-center w-full rounded-xl bg-gray-200 px-6 justify-end">
+              <div className="h-16 flex items-center w-full rounded-xl bg-gray-200 dark:bg-gray-800 px-6 justify-end">
                 <Button type="submit" disabled={isDisabled}>
                   {isUploading ? (
                     <Spinner className="size-3.5" />
@@ -193,11 +193,11 @@ export const ImageSection = ({
           )}
           <div className="flex gap-1 flex-col">
             <p className="text-xs font-medium">List Gambar</p>
-            <div className="grid grid-cols-5 p-2 xl:p-3 border border-gray-300 rounded-xl gap-1.5 xl:gap-3">
+            <div className="grid grid-cols-5 p-2 xl:p-3 border border-gray-300 dark:border-gray-700 rounded-xl gap-1.5 xl:gap-3">
               {detail?.gambar.map((item, idx) => (
                 <div
                   key={item.id}
-                  className="bg-gray-100 size-full rounded-lg p-2 flex flex-col gap-1 xl:gap-2 relative"
+                  className="bg-gray-100 dark:bg-gray-800 size-full rounded-lg p-2 flex flex-col gap-1 xl:gap-2 relative"
                 >
                   <div className="w-full aspect-square rounded-md relative overflow-hidden shadow">
                     <Image
@@ -217,8 +217,9 @@ export const ImageSection = ({
                         render={
                           <Crown
                             className={cn(
-                              "size-3.5 fill-gray-300 text-gray-300",
-                              idx === 0 && "fill-yellow-500 text-yellow-500",
+                              "size-3.5 fill-gray-300 text-gray-300 dark:fill-gray-600 dark:text-gray-600",
+                              idx === 0 &&
+                                "fill-yellow-500 text-yellow-500 dark:fill-yellow-300 dark:text-yellow-300",
                             )}
                           />
                         }
@@ -231,7 +232,9 @@ export const ImageSection = ({
                           <Button
                             size={"icon-sm"}
                             variant={"ghost"}
-                            className={"hover:bg-gray-200"}
+                            className={
+                              "hover:bg-gray-200 dark:hover:bg-gray-700"
+                            }
                             disabled={idx === 0 || isDisabled}
                             onClick={() => handleReorder(item.id, "up")}
                           >
@@ -249,7 +252,9 @@ export const ImageSection = ({
                           <Button
                             size={"icon-sm"}
                             variant={"ghost"}
-                            className={"hover:bg-gray-200"}
+                            className={
+                              "hover:bg-gray-200 dark:hover:bg-gray-700"
+                            }
                             disabled={
                               idx === detail.gambar.length - 1 || isDisabled
                             }
@@ -270,15 +275,17 @@ export const ImageSection = ({
                           <Button
                             size={"icon-sm"}
                             variant={"ghost"}
-                            className={"hover:bg-red-200"}
+                            className={
+                              "hover:bg-red-200 dark:hover:bg-red-500/30"
+                            }
                             onClick={() => handleDelete(item.id)}
                             disabled={isDisabled}
                             type="button"
                           >
                             {isDisabled ? (
-                              <Spinner className="size-3.5 text-red-500" />
+                              <Spinner className="size-3.5 text-red-500 dark:text-red-500" />
                             ) : (
-                              <Trash className="size-3.5 text-red-500" />
+                              <Trash className="size-3.5 text-red-500 dark:text-red-500" />
                             )}
                           </Button>
                         }
