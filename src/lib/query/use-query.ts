@@ -29,11 +29,11 @@ export function useApiQuery<T = any>({
   ...options
 }: UseApiQueryProps<T>) {
   const token = getCookie(cookiesKey);
-  const urlWithParams = buildUrl(endpoint, searchParams);
 
   return useQuery<T, AxiosError>({
     queryKey: key,
     queryFn: async () => {
+      const urlWithParams = buildUrl(endpoint, searchParams);
       const res = await axios.get(urlWithParams, {
         headers: { Authorization: `Bearer ${token}` },
         params,
