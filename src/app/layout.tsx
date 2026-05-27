@@ -21,6 +21,11 @@ export const metadata: Metadata = {
     template: "%s | Back Office Bulky",
     default: "Back Office Bulky",
   },
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({

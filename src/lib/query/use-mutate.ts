@@ -75,7 +75,9 @@ export const useMutate = <
           return axios.patch(url, body, axiosConfig);
       }
     },
-    onSuccess,
+    onSuccess: async (data, variables, context) => {
+      if (onSuccess) await onSuccess(data, variables, context);
+    },
     onError: (err, v, c) => {
       if (errorCustom) {
         errorCustom(err, v, c);

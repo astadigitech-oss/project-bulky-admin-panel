@@ -8,9 +8,10 @@ export function buildUrl(endpoint: string, searchParams?: Record<string, any>) {
     Object.entries(searchParams).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         value.forEach((v) => {
-          if (v !== undefined) url.searchParams.append(key, String(v));
+          if (v !== undefined && v !== null)
+            url.searchParams.append(key, String(v));
         });
-      } else if (value !== undefined) {
+      } else if (value !== undefined && value !== "" && value !== null) {
         url.searchParams.append(key, String(value));
       }
     });
