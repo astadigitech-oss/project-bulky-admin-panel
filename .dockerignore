@@ -1,0 +1,17 @@
+# .dockerignore
+.git
+.github
+.next
+.vscode
+node_modules
+npm-debug.log
+README.md
+.env*.local
+.DS_Store
+*.pem
+*.log
+
+# Ignore Bun files to force npm usage
+bun.lockb
+bun.lock
+.bun/
