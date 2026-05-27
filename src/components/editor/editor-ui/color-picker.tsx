@@ -1070,7 +1070,7 @@ function ColorPickerContent(props: ColorPickerContentProps) {
     return (
       <Tag
         data-slot="color-picker-content"
-        {...popoverContentProps}
+        {...(popoverContentProps as any)}
         className={cn("flex w-85 flex-col gap-4 p-4", className)}
       >
         {children}
