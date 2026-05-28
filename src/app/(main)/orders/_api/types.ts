@@ -9,6 +9,8 @@ import {
 
 export type OrderListRequest = BaseListParams & {
   status?: string;
+  payment_status?: string;
+  delivery_type?: string;
   tanggal_dari?: string;
   tanggal_sampai?: string;
 };
