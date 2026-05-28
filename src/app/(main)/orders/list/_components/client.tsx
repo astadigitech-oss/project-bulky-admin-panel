@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  ArrowDown,
+  ArrowUp,
   Download,
   PlusCircle,
   RefreshCw,
@@ -26,7 +28,6 @@ import {
 import { Item } from "@/components/ui/item";
 import { useSearchQuery } from "@/hooks/use-search";
 import { InputSearch } from "@/components/ui/input-search";
-import { SortTable } from "@/components/sort-table";
 import { parseAsString, useQueryStates } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { TooltipText } from "@/providers/tooltip-provider";
@@ -70,6 +71,21 @@ const ORDER_STATUSES = [
   { value: "CANCELLED", label: "Dibatalkan" },
 ] as const;
 
+const PAYMENT_STATUS_OPTIONS = [
+  { value: "PENDING", label: "Menunggu" },
+  { value: "PARTIAL", label: "Sebagian" },
+  { value: "PAID", label: "Lunas" },
+  { value: "EXPIRED", label: "Kadaluarsa" },
+  { value: "FAILED", label: "Gagal" },
+  { value: "REFUNDED", label: "Refund" },
+] as const;
+
+const DELIVERY_TYPE_OPTIONS = [
+  { value: "PICKUP", label: "Ambil Sendiri" },
+  { value: "DELIVEREE", label: "Deliveree" },
+  { value: "FORWARDER", label: "Forwarder" },
+] as const;
+
 const chartConfig = {
   total: {
     label: "Pesanan",
@@ -84,6 +100,12 @@ export const OrderListClient = () => {
   });
 
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedDeliveryType, setSelectedDeliveryType] = useState<
+    string | undefined
+  >(undefined);
 
   // Chart filter states
   const [filterType, setFilterType] = useState<"default" | "custom">("default");
@@ -115,6 +137,8 @@ export const OrderListClient = () => {
     sort_by: sort,
     order: order as "asc" | "desc",
     status: selectedStatuses.length === 1 ? selectedStatuses[0] : undefined,
+    payment_status: selectedPaymentStatus,
+    delivery_type: selectedDeliveryType,
     enabled: page !== null && limit !== null,
   });
 
@@ -150,6 +174,8 @@ export const OrderListClient = () => {
 
   const handleResetFilters = () => {
     setSelectedStatuses([]);
+    setSelectedPaymentStatus(undefined);
+    setSelectedDeliveryType(undefined);
     setSearch("");
   };
 
@@ -196,7 +222,11 @@ export const OrderListClient = () => {
   const completedOrders = stats?.per_status?.["COMPLETED"] ?? 0;
   const processingOrders = stats?.per_status?.["PROCESSING"] ?? 0;
 
-  const hasActiveFilters = selectedStatuses.length > 0 || !!search;
+  const hasActiveFilters =
+    selectedStatuses.length > 0 ||
+    !!selectedPaymentStatus ||
+    !!selectedDeliveryType ||
+    !!search;
 
   return (
     <div className="flex flex-col gap-6">
@@ -499,6 +529,168 @@ export const OrderListClient = () => {
               </PopoverContent>
             </Popover>
 
+            {/* Filter Pembayaran */}
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <button className="flex items-center border border-gray-300 dark:border-gray-300/50 border-dashed rounded-md h-8 hover:bg-yellow-200 dark:hover:bg-yellow-300/30 transition cursor-default group">
+                    <div className="text-xs font-medium h-full py-0 px-3 flex items-center gap-2">
+                      <PlusCircle className="size-3" />
+                      Pembayaran
+                    </div>
+                    {selectedPaymentStatus !== undefined && (
+                      <>
+                        <Separator
+                          orientation="vertical"
+                          className="data-[orientation=vertical]:h-full dark:bg-gray-500/50"
+                        />
+                        <div
+                          className={cn(
+                            "text-xs font-medium rounded-sm mx-2 px-2 py-0.5 flex items-center justify-center",
+                            "bg-yellow-200 dark:bg-yellow-300/30 dark:group-hover:bg-transparent",
+                          )}
+                        >
+                          {PAYMENT_STATUS_OPTIONS.find(
+                            (o) => o.value === selectedPaymentStatus,
+                          )?.label ?? selectedPaymentStatus}
+                        </div>
+                      </>
+                    )}
+                  </button>
+                }
+              />
+              <PopoverContent
+                portal={{ keepMounted: true }}
+                className="p-0 w-44"
+                align="start"
+              >
+                <Command className="p-0">
+                  <CommandGroup>
+                    {PAYMENT_STATUS_OPTIONS.map((opt) => {
+                      const isSelected = selectedPaymentStatus === opt.value;
+                      return (
+                        <CommandItem
+                          key={opt.value}
+                          className="text-xs"
+                          onSelect={() =>
+                            setSelectedPaymentStatus(
+                              isSelected ? undefined : opt.value,
+                            )
+                          }
+                        >
+                          <div
+                            className={cn(
+                              "flex h-4 w-4 items-center justify-center rounded-sm border",
+                              isSelected
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-gray-500/50 opacity-50 [&_svg]:invisible",
+                            )}
+                          >
+                            <Check className="text-primary-foreground size-3" />
+                          </div>
+                          {opt.label}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                  {selectedPaymentStatus !== undefined && (
+                    <>
+                      <CommandSeparator />
+                      <CommandGroup>
+                        <CommandItem
+                          className="text-xs font-medium justify-center"
+                          onSelect={() => setSelectedPaymentStatus(undefined)}
+                        >
+                          Clear filter
+                        </CommandItem>
+                      </CommandGroup>
+                    </>
+                  )}
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {/* Filter Pengiriman */}
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <button className="flex items-center border border-gray-300 dark:border-gray-300/50 border-dashed rounded-md h-8 hover:bg-yellow-200 dark:hover:bg-yellow-300/30 transition cursor-default group">
+                    <div className="text-xs font-medium h-full py-0 px-3 flex items-center gap-2">
+                      <PlusCircle className="size-3" />
+                      Pengiriman
+                    </div>
+                    {selectedDeliveryType !== undefined && (
+                      <>
+                        <Separator
+                          orientation="vertical"
+                          className="data-[orientation=vertical]:h-full dark:bg-gray-500/50"
+                        />
+                        <div
+                          className={cn(
+                            "text-xs font-medium rounded-sm mx-2 px-2 py-0.5 flex items-center justify-center",
+                            "bg-yellow-200 dark:bg-yellow-300/30 dark:group-hover:bg-transparent",
+                          )}
+                        >
+                          {DELIVERY_TYPE_OPTIONS.find(
+                            (o) => o.value === selectedDeliveryType,
+                          )?.label ?? selectedDeliveryType}
+                        </div>
+                      </>
+                    )}
+                  </button>
+                }
+              />
+              <PopoverContent
+                portal={{ keepMounted: true }}
+                className="p-0 w-40"
+                align="start"
+              >
+                <Command className="p-0">
+                  <CommandGroup>
+                    {DELIVERY_TYPE_OPTIONS.map((opt) => {
+                      const isSelected = selectedDeliveryType === opt.value;
+                      return (
+                        <CommandItem
+                          key={opt.value}
+                          className="text-xs"
+                          onSelect={() =>
+                            setSelectedDeliveryType(
+                              isSelected ? undefined : opt.value,
+                            )
+                          }
+                        >
+                          <div
+                            className={cn(
+                              "flex h-4 w-4 items-center justify-center rounded-sm border",
+                              isSelected
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-gray-500/50 opacity-50 [&_svg]:invisible",
+                            )}
+                          >
+                            <Check className="text-primary-foreground size-3" />
+                          </div>
+                          {opt.label}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                  {selectedDeliveryType !== undefined && (
+                    <>
+                      <CommandSeparator />
+                      <CommandGroup>
+                        <CommandItem
+                          className="text-xs font-medium justify-center"
+                          onSelect={() => setSelectedDeliveryType(undefined)}
+                        >
+                          Clear filter
+                        </CommandItem>
+                      </CommandGroup>
+                    </>
+                  )}
+                </Command>
+              </PopoverContent>
+            </Popover>
+
             {hasActiveFilters && (
               <Button
                 className="text-xs font-normal h-8 py-0 px-3"
@@ -531,14 +723,23 @@ export const OrderListClient = () => {
                 </Button>
               }
             />
-            <SortTable
-              data={[
-                { name: "Tanggal", value: "created_at" },
-                { name: "Total", value: "total_bayar" },
-              ]}
-              order={order}
-              sort={sort}
-              setSort={setQuery}
+            <TooltipText
+              value={order === "asc" ? "Urutan Menaik" : "Urutan Menurun"}
+              render={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() =>
+                    setQuery({ order: order === "asc" ? "desc" : "asc" })
+                  }
+                >
+                  {order === "asc" ? (
+                    <ArrowUp className="size-3.5" />
+                  ) : (
+                    <ArrowDown className="size-3.5" />
+                  )}
+                </Button>
+              }
             />
             <TooltipText
               value="Ekspor Data"
