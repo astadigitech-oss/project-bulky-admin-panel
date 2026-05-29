@@ -84,6 +84,7 @@ export const column = ({
               fill
               sizes={sizesImage}
               className="object-cover"
+              loading="eager"
             />
           </DialogTrigger>
           <DialogContent className={"min-w-[80vh]"} showCloseButton={false}>

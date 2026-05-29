@@ -29,7 +29,7 @@ export type ProductDetailResponse = BaseResponse & {
     berat: number;
     berat_volumetrik: number;
     created_at: string;
-    discrepancy: string;
+    discrepancy: string | null;
     dokumen: {
       file_url: string;
       id: string;

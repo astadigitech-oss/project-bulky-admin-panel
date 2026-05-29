@@ -105,6 +105,7 @@ export const Dropzone = ({
               fill
               sizes={sizesImage}
               className="object-cover"
+              loading="eager"
             />
           </div>
           <Button

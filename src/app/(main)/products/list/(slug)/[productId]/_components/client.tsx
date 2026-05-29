@@ -134,6 +134,7 @@ export const ProductDetailClient = () => {
                             alt={`${detail.nama_id}_${item.id}`}
                             fill
                             className="object-cover"
+                            loading="eager"
                           />
                         </Button>
                       }
@@ -151,6 +152,7 @@ export const ProductDetailClient = () => {
                           alt={`${detail.nama_id}_${item.id}`}
                           fill
                           className="object-cover"
+                          loading="eager"
                         />
                       </div>
                       <DialogFooter>
@@ -208,9 +210,7 @@ export const ProductDetailClient = () => {
                 </p>
                 <div className="flex flex-wrap gap-2 px-2 h-full items-center ">
                   <p className="py-2">
-                    {detail?.discrepancy && detail?.discrepancy.length > 0
-                      ? detail?.discrepancy.length
-                      : "-"}
+                    {detail?.discrepancy ?? "-"}
                   </p>
                 </div>
               </div>

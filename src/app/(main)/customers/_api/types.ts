@@ -24,11 +24,12 @@ export type BuyerChartRequest = {
 export type BuyerListResponse = BaseResponse & {
   data: {
     created_at: string;
-    email: string;
+    email: string | null;
     id: string;
     nama: string;
     telepon: string;
-    username: string;
+    username: string | null;
+    last_login_at: string | null;
   }[];
   meta: MetaPagination;
 };

@@ -184,6 +184,7 @@ export const BannerCard = ({
                       fill
                       sizes={sizesImage}
                       className="object-cover"
+                      loading="eager"
                     />
                   </div>
                 </CarouselItem>
