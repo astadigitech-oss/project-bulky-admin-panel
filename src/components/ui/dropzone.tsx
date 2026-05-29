@@ -1,7 +1,7 @@
 import { cn, sizesImage } from "@/lib/utils";
 import { UploadCloud, XIcon } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "./button";
 
@@ -33,13 +33,14 @@ export const Dropzone = ({
   maxSize = 10 * 1024 * 1024,
   maxFiles = 1,
 }: DropzoneProps & { ratio?: "square" | "banner" | "hero" }) => {
-  const [preview, setPreview] = useState("");
+  const [hiddenOldValue, setHiddenOldValue] = useState<string | null>(null);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     disabled,
     accept,
     maxFiles,
     maxSize,
     onDrop: (files) => {
+      setHiddenOldValue(oldValue ?? null);
       onChange(files); // ✅ langsung File[]
     },
     onDropRejected: (rejections) => {
@@ -67,18 +68,23 @@ export const Dropzone = ({
   });
 
   const resetLogo = () => {
+    setHiddenOldValue(oldValue ?? null);
     onChange([]);
   };
 
-  useEffect(() => {
-    if (value?.length) {
-      const url = URL.createObjectURL(value[0]);
-      setPreview(url);
+  const filePreview = useMemo(() => {
+    if (!value?.length) return "";
+    return URL.createObjectURL(value[0]);
+  }, [value]);
 
-      return () => URL.revokeObjectURL(url);
-    }
-    setPreview(oldValue ?? "");
-  }, [value, oldValue]);
+  useEffect(() => {
+    return () => {
+      if (filePreview) URL.revokeObjectURL(filePreview);
+    };
+  }, [filePreview]);
+
+  const preview =
+    filePreview || (hiddenOldValue === oldValue ? "" : (oldValue ?? ""));
 
   return (
     <div className={cn(ratio === "square" ? "h-32" : "w-full")}>

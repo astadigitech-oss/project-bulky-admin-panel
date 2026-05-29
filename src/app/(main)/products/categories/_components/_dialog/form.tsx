@@ -45,10 +45,7 @@ export const IMAGE_RULES = {
 const formSchema = z.object({
   nama_id: z.string().min(3, "Nama ID harus memiliki minimal 3 karakter"),
   nama_en: z.string().min(3, "Nama EN harus memiliki minimal 3 karakter"),
-  deskripsi: z
-    .string()
-    .min(3, "Deskripsi harus memiliki minimal 3 karakter")
-    .optional(),
+  deskripsi: z.string().nullable().optional(),
   teks_kondisi: z
     .string()
     .min(3, "Text Kondisi harus memiliki minimal 3 karakter")
@@ -145,7 +142,11 @@ const DialogFormCategory = ({
         const bodyCreate = new FormData();
         bodyCreate.append("nama_id", values.nama_id);
         bodyCreate.append("nama_en", values.nama_en);
-        bodyCreate.append("deskripsi", values.deskripsi ?? "");
+        const deskripsiCreate = values.deskripsi?.trim();
+        bodyCreate.append(
+          "deskripsi",
+          deskripsiCreate ? deskripsiCreate : "null",
+        );
         if (values.icon && values.icon.length > 0) {
           bodyCreate.append("icon", values.icon[0]);
         }
@@ -173,7 +174,11 @@ const DialogFormCategory = ({
         const bodyUpdate = new FormData();
         bodyUpdate.append("nama_id", values.nama_id);
         bodyUpdate.append("nama_en", values.nama_en);
-        bodyUpdate.append("deskripsi", values.deskripsi ?? "");
+        const deskripsiUpdate = values.deskripsi?.trim();
+        bodyUpdate.append(
+          "deskripsi",
+          deskripsiUpdate ? deskripsiUpdate : "null",
+        );
         if (values.icon && values.icon.length > 0) {
           bodyUpdate.append("icon", values.icon[0]);
         }
@@ -379,6 +384,7 @@ const DialogFormCategory = ({
                     </FieldLabel>
                     <Textarea
                       {...field}
+                      value={field.value ?? ""}
                       id={`${idFormStaff}-${field.name}`}
                       aria-invalid={fieldState.invalid}
                       placeholder="Deskripsi kategori..."
