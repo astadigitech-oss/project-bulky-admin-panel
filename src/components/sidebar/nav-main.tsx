@@ -138,7 +138,7 @@ export function NavMain({
         </Suspense>
       </SidebarGroup>
       <SidebarGroup>
-        <SidebarGroupLabel>Suber Daya</SidebarGroupLabel>
+        <SidebarGroupLabel>Sumber Daya</SidebarGroupLabel>
         <Suspense
           fallback={
             <SidebarMenu>
