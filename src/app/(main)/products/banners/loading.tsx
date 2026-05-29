@@ -1,7 +1,17 @@
-import React from "react";
+import { MainContainer } from "@/components/container/main-container";
+import { CenteredPageLoader } from "@/components/loaders/centered-page-loader";
 
 const Loading = () => {
-  return <div>Loading...</div>;
+  return (
+    <MainContainer
+      breadcrumbs={[
+        { label: "Produk", url: "/products/list" },
+        { label: "Banner Jenis Produk" },
+      ]}
+    >
+      <CenteredPageLoader label="Memuat banner jenis produk..." />
+    </MainContainer>
+  );
 };
 
 export default Loading;

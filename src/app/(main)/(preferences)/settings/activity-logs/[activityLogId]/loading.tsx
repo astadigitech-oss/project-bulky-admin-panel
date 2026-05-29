@@ -1,5 +1,5 @@
 import { MainContainer } from "@/components/container/main-container";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CenteredPageLoader } from "@/components/loaders/centered-page-loader";
 
 const Loading = () => {
   return (
@@ -10,9 +10,7 @@ const Loading = () => {
         { label: "Detail" },
       ]}
     >
-      <div className="pt-4">
-        <Skeleton className="h-72 w-full" />
-      </div>
+      <CenteredPageLoader label="Memuat detail log aktivitas..." />
     </MainContainer>
   );
 };

@@ -1,18 +1,12 @@
 import { MainContainer } from "@/components/container/main-container";
-import { HeaderLoader } from "@/components/loaders/header";
-import { PaginationLoader } from "@/components/loaders/pagination";
-import { TableLoader } from "@/components/loaders/table";
+import { CenteredPageLoader } from "@/components/loaders/centered-page-loader";
 
 const label = "Log Aktivitas";
 
 const Loading = () => {
   return (
     <MainContainer breadcrumbs={[{ label: "Pengaturan" }, { label }]}>
-      <div className="flex flex-col gap-6 pt-4">
-        <HeaderLoader title={label} />
-        <TableLoader />
-        <PaginationLoader />
-      </div>
+      <CenteredPageLoader label="Memuat log aktivitas..." />
     </MainContainer>
   );
 };
