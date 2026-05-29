@@ -15,7 +15,9 @@ const DashboardOverviewPage = async () => {
   if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
-    <MainContainer breadcrumbs={[{ label: "Dashbor" }, { label: "Ringkasan" }]}>
+    <MainContainer
+      breadcrumbs={[{ label: "Dashboard" }, { label: "Ringkasan" }]}
+    >
       <DashboardOverviewClient />
     </MainContainer>
   );
