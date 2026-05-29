@@ -240,6 +240,10 @@ const data = {
           title: "Pajak",
           url: "/settings/tax",
         },
+        {
+          title: "Log Aktivitas",
+          url: "/settings/activity-logs",
+        },
       ],
     },
   ],
