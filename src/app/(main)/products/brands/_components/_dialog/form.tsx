@@ -20,7 +20,7 @@ import { Send, X } from "lucide-react";
 import { ComponentProps, useEffect, useId } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-import { Dropzone } from "@/components/ui/dropzone";
+
 import {
   InputGroup,
   InputGroupAddon,
@@ -32,11 +32,6 @@ import { useCreateBrand, useUpdateBrand } from "../../_api";
 import { BrandType } from "../../_api/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-
-export const IMAGE_RULES = {
-  mimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
-  maxSize: 10 * 1024 * 1024, // 10MB
-};
 
 const formSchema = z.object({
   nama_id: z.string().min(3, "Nama harus memiliki minimal 3 karakter"),
@@ -56,34 +51,11 @@ const DialogFormBrand = ({
   isDisabled?: boolean;
 }) => {
   const idFormStaff = useId();
-  const finalSchema = formSchema.extend({
-    logo:
-      mode === "create"
-        ? z
-            .array(
-              z
-                .file()
-                .max(IMAGE_RULES.maxSize, "Ukuran maksimal 10MB")
-                .mime(IMAGE_RULES.mimeTypes),
-            )
-            .min(1, "Logo wajib diunggah")
-            .max(1, "Hanya boleh 1 file")
-        : z
-            .array(
-              z
-                .file()
-                .max(IMAGE_RULES.maxSize, "Ukuran maksimal 10MB")
-                .mime(IMAGE_RULES.mimeTypes),
-            )
-            .max(1, "Hanya boleh 1 file"),
-  });
-
-  const form = useForm<z.infer<typeof finalSchema>>({
-    resolver: zodResolver(finalSchema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     values: {
       nama_id: detail?.nama.id ?? "",
       nama_en: detail?.nama.en ?? "",
-      logo: [],
     },
   });
 
@@ -97,24 +69,18 @@ const DialogFormBrand = ({
     form.reset();
   };
 
-  const onSubmit = (values: z.infer<typeof finalSchema>) => {
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     switch (mode) {
       case "create":
         const bodyCreate = new FormData();
         bodyCreate.append("nama_id", values.nama_id);
         bodyCreate.append("nama_en", values.nama_en);
-        if (values.logo.length > 0) {
-          bodyCreate.append("logo", values.logo[0]);
-        }
         createBrand({ body: bodyCreate }, { onSuccess: () => handleClose() });
         break;
       case "edit":
         const bodyUpdate = new FormData();
         bodyUpdate.append("nama_id", values.nama_id);
         bodyUpdate.append("nama_en", values.nama_en);
-        if (values.logo.length > 0) {
-          bodyUpdate.append("logo", values.logo[0]);
-        }
         updateBrand(
           { body: bodyUpdate, params: { id: detail?.id ?? "" } },
           { onSuccess: () => handleClose() },
@@ -148,38 +114,6 @@ const DialogFormBrand = ({
             <Skeleton className="w-full h-64" />
           ) : (
             <FieldGroup className="grid md:grid-cols-6 gap-4">
-              <Controller
-                name="logo"
-                control={form.control}
-                disabled={isDisabled}
-                render={({ field, fieldState }) => (
-                  <Field
-                    data-invalid={fieldState.invalid}
-                    className="gap-1 col-span-full"
-                  >
-                    <FieldLabel
-                      required
-                      htmlFor={`${idFormStaff}-${field.name}`}
-                    >
-                      Logo
-                    </FieldLabel>
-                    <Dropzone
-                      value={field.value}
-                      onChange={field.onChange}
-                      error={fieldState.invalid}
-                      accept={Object.fromEntries(
-                        IMAGE_RULES.mimeTypes.map((m) => [m, []]),
-                      )}
-                      maxSize={IMAGE_RULES.maxSize}
-                      oldValue={detail?.logo_url}
-                    />
-
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
               <div className="grid md:grid-cols-6 gap-2 col-span-full">
                 <Controller
                   name="nama_id"
