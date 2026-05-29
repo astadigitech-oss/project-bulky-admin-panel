@@ -1,18 +1,22 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { auth } from "@/lib/action/auth";
+import { redirect } from "next/navigation";
+import { DashboardOverviewClient } from "./_components/client";
 
-// const pathname = "dashboard/overview";
+const pathname = "dashboard/overview";
 
 export const metadata: Metadata = {
   title: "Ringkasan Dasbor",
 };
 
 const DashboardOverviewPage = async () => {
-  // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  const isAuth = await auth();
+  if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer breadcrumbs={[{ label: "Dashbor" }, { label: "Ringkasan" }]}>
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <DashboardOverviewClient />
     </MainContainer>
   );
 };
