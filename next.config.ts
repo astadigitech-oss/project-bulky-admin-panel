@@ -4,14 +4,23 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   images: {
+    dangerouslyAllowLocalIP: true,
     localPatterns: [
       {
         pathname: "/assets/images/**",
       },
     ],
     remotePatterns: [
-      { hostname: "api.bulky.id" },
-      { hostname: "localhost" },
+      {
+        protocol: "https",
+        hostname: "api.bulky.id",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "8080",
+        pathname: "/uploads/**",
+      },
     ],
   },
 };
