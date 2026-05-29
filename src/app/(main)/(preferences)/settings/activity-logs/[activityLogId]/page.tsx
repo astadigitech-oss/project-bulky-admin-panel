@@ -25,7 +25,7 @@ const ActivityLogDetailPage = async ({
     <MainContainer
       breadcrumbs={[
         { label: "Pengaturan" },
-        { label: "Log Aktivitas", href: "/settings/activity-logs" },
+        { label: "Log Aktivitas", url: "/settings/activity-logs" },
         { label: "Detail" },
       ]}
     >
