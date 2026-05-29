@@ -36,7 +36,7 @@ export type SourceDetailResponse = BaseResponse & {
 };
 
 export type SourceSelectResponse = BaseResponse & {
-  data: { id: string; nama: string }[];
+  data: { id: string; nama: DuoLangType }[];
 };
 
 // ------mutation------

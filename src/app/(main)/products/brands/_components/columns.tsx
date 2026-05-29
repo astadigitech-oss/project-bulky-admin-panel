@@ -7,7 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn, formatImageAlt, sizesImage } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -17,7 +17,6 @@ import {
   CircleDot,
   Clock,
   Edit,
-  ImageOffIcon,
   MoreHorizontal,
   Trash,
 } from "lucide-react";
@@ -27,14 +26,6 @@ import { VariantProps } from "class-variance-authority";
 import { BrandType } from "../_api/types";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
-import Image from "next/image";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
 export const column = ({
   setOpen,
@@ -64,46 +55,7 @@ export const column = ({
       </div>
     ),
   },
-  {
-    accessorKey: "logo_url",
-    header: "Logo",
-    cell: ({ row }) => {
-      if (!row.original.logo_url) {
-        return (
-          <div className="size-12 border rounded-md flex items-center justify-center">
-            <ImageOffIcon className="size-6 stroke-[1.5]" />
-          </div>
-        );
-      }
-      return (
-        <Dialog>
-          <DialogTrigger className="relative size-12 overflow-hidden rounded-md border">
-            <Image
-              src={row.original.logo_url}
-              alt={formatImageAlt(row.original.nama.id)}
-              fill
-              sizes={sizesImage}
-              className="object-cover"
-            />
-          </DialogTrigger>
-          <DialogContent className={"min-w-[80vh]"} showCloseButton={false}>
-            <div className="relative w-full aspect-square overflow-hidden rounded-md border">
-              <Image
-                src={row.original.logo_url}
-                alt={formatImageAlt(row.original.nama.id)}
-                fill
-                sizes={sizesImage}
-                className="object-cover"
-              />
-            </div>
-            <DialogFooter>
-              <DialogClose render={<Button>Close</Button>} />
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      );
-    },
-  },
+
   {
     accessorKey: "nama.id",
     header: () => (

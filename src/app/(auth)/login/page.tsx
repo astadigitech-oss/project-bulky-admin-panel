@@ -34,6 +34,7 @@ const LoginPage = async () => {
                 alt="bulky_logo"
                 className="object-contain"
                 fill
+                loading="eager"
               />
             </Link>
             <CardHeader>

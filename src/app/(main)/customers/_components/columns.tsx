@@ -12,6 +12,8 @@ import { MoreHorizontal, ReceiptText, Trash } from "lucide-react";
 import { BuyerListResponse } from "../_api/types";
 import Link from "next/link";
 import { MetaPagination } from "@/lib/types";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 export const column = ({
   handleDelete,
@@ -36,12 +38,19 @@ export const column = ({
     header: "Nama",
   },
   {
-    accessorKey: "username",
-    header: "Username",
-  },
-  {
     accessorKey: "email",
     header: "Email",
+    cell: ({ row }) => row.original.email ?? <span className="text-muted-foreground text-xs">-</span>,
+  },
+  {
+    accessorKey: "last_login_at",
+    header: "Terakhir Login",
+    cell: ({ row }) =>
+      row.original.last_login_at
+        ? format(new Date(row.original.last_login_at), "dd MMM yyyy, HH:mm", {
+            locale: id,
+          })
+        : <span className="text-muted-foreground text-xs">Belum pernah login</span>,
   },
   {
     accessorKey: "telepon",

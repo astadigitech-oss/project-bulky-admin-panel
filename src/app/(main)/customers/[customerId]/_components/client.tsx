@@ -153,6 +153,7 @@ export const CustomerDetailClient = () => {
                   sizes={sizesImage}
                   className="object-cover"
                   fill
+                  loading="eager"
                 />
               </div>
             ) : (
@@ -318,27 +319,15 @@ export const CustomerDetailClient = () => {
         <div className="dark:bg-gray-950/60 p-4 grid grid-cols-3">
           <div className="flex flex-col gap-0.5">
             <p className="font-medium text-sm">Username</p>
-            {customer?.username ? (
-              <p className="text-xs font-light h-7 items-center flex">
-                {customer?.username}
-              </p>
-            ) : (
-              <div className="h-7 flex items-center w-32">
-                <Skeleton className="h-4 w-full" />
-              </div>
-            )}
+            <p className="text-xs font-light h-7 items-center flex">
+              {customer?.username ?? <span className="text-muted-foreground">-</span>}
+            </p>
           </div>
           <div className="flex flex-col gap-0.5">
             <p className="font-medium text-sm">Email</p>
-            {customer?.email ? (
-              <p className="text-xs font-light h-7 items-center flex">
-                {customer?.email}
-              </p>
-            ) : (
-              <div className="h-7 flex items-center w-32">
-                <Skeleton className="h-4 w-full" />
-              </div>
-            )}
+            <p className="text-xs font-light h-7 items-center flex">
+              {customer?.email ?? <span className="text-muted-foreground">-</span>}
+            </p>
           </div>
           <div className="flex flex-col gap-0.5">
             <p className="font-medium text-sm">No. Telepon</p>

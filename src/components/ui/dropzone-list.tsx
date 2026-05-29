@@ -156,6 +156,7 @@ export const DropzoneList = ({
                     fill
                     sizes={sizesImage}
                     className="object-cover"
+                    loading="eager"
                   />
                 </div>
               ))}

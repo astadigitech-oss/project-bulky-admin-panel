@@ -224,6 +224,7 @@ const DialogPreview = ({ url, alt }: { url: string; alt: string }) => {
           fill
           sizes={sizesImage}
           className="object-cover"
+          loading="eager"
         />
       </DialogTrigger>
       <DialogContent className={"min-w-[80vw]"} showCloseButton={false}>

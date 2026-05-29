@@ -94,6 +94,59 @@ const FILE_RULES = {
   maxSize: 10 * 1024 * 1024,
 };
 
+const getOptionLabel = (value: unknown) => {
+  if (typeof value === "string") return value;
+
+  if (value && typeof value === "object") {
+    const localized = value as {
+      nama_id?: unknown;
+      nama_en?: unknown;
+      id?: unknown;
+      en?: unknown;
+      nama?: unknown;
+    };
+
+    if (typeof localized.nama === "string" && localized.nama.trim()) {
+      return localized.nama;
+    }
+    if (typeof localized.nama_id === "string" && localized.nama_id.trim()) {
+      return localized.nama_id;
+    }
+    if (typeof localized.id === "string" && localized.id.trim()) {
+      return localized.id;
+    }
+    if (typeof localized.nama_en === "string" && localized.nama_en.trim()) {
+      return localized.nama_en;
+    }
+    if (typeof localized.en === "string" && localized.en.trim()) {
+      return localized.en;
+    }
+
+    if (localized.nama && typeof localized.nama === "object") {
+      return getOptionLabel(localized.nama);
+    }
+  }
+
+  return "";
+};
+
+const normalizeSelectOptions = <T extends { id?: unknown }>(items: T[]) =>
+  items.filter((item) => typeof item.id === "string" && item.id.trim());
+
+const getSelectId = (value: unknown) => {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    const obj = value as { id?: unknown };
+    if (typeof obj.id === "string") return obj.id;
+  }
+  return "";
+};
+
+const getSelectIds = (values: unknown[]) =>
+  values
+    .map((value) => getSelectId(value))
+    .filter((value) => typeof value === "string" && value.trim());
+
 export const formSchema = z.object({
   reference_id: z.string(),
   nama_id: z.string().min(1, "Nama ID tidak boleh kosong"),
@@ -156,18 +209,22 @@ export const ProductIdClient = () => {
     useGetSourceSelect();
 
   const selectProduct = {
-    brand: brandSelectData?.data ?? [],
-    category: categorySelectData?.data ?? [],
-    packageCondition: packageConditionSelectData?.data ?? [],
-    productCondition: productConditionSelectData?.data ?? [],
-    source: sourceSelectData?.data ?? [],
+    brand: normalizeSelectOptions(brandSelectData?.data ?? []),
+    category: normalizeSelectOptions(categorySelectData?.data ?? []),
+    packageCondition: normalizeSelectOptions(
+      packageConditionSelectData?.data ?? [],
+    ),
+    productCondition: normalizeSelectOptions(
+      productConditionSelectData?.data ?? [],
+    ),
+    source: normalizeSelectOptions(sourceSelectData?.data ?? []),
   };
 
   const isSuccessAllSelect =
-    isSuccessBrand ||
-    isSuccessCategory ||
-    isSuccessPackageCondition ||
-    isSuccessProductCondition ||
+    isSuccessBrand &&
+    isSuccessCategory &&
+    isSuccessPackageCondition &&
+    isSuccessProductCondition &&
     isSuccessSource;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -233,6 +290,11 @@ export const ProductIdClient = () => {
         body.append("dokumen[]", d);
       }
     }
+
+    console.log(
+      "[PRODUCT_EDIT][PUT] form-data payload:",
+      Array.from(body.entries()),
+    );
 
     mutate(
       { body, params: { id: productId } },
@@ -346,6 +408,7 @@ export const ProductIdClient = () => {
                               alt={`${detail.nama_id}_${item.id}`}
                               fill
                               className="object-cover"
+                              loading="eager"
                             />
                           </Button>
                         }
@@ -363,6 +426,7 @@ export const ProductIdClient = () => {
                             alt={`${detail.nama_id}_${item.id}`}
                             fill
                             className="object-cover"
+                            loading="eager"
                           />
                         </div>
                         <DialogFooter>
@@ -410,7 +474,7 @@ export const ProductIdClient = () => {
                         id={`${idFormProduct}_${field.name}`}
                         items={reference_ids}
                         value={field.value}
-                        onValueChange={field.onChange}
+                        onValueChange={(e) => field.onChange(getSelectId(e))}
                         isItemEqualToValue={(
                           itemValue: any,
                           selectedValue: any,
@@ -561,7 +625,7 @@ export const ProductIdClient = () => {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid} className="gap-1">
                       <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
-                        Discrepancy
+                        Discrepancy (Persen)
                       </FieldLabel>
                       <Textarea
                         {...field}
@@ -588,7 +652,9 @@ export const ProductIdClient = () => {
                     autoHighlight
                     items={selectProduct.brand}
                     value={fields.map((f) => f.data)}
-                    onValueChange={(e) => replace(e.map((i) => ({ data: i })))}
+                    onValueChange={(e) =>
+                      replace(getSelectIds(e).map((id) => ({ data: id })))
+                    }
                     isItemEqualToValue={(i: any, s: any) => {
                       if ((i as (typeof selectProduct.brand)[number]).id) {
                         return (
@@ -607,11 +673,11 @@ export const ProductIdClient = () => {
                           <React.Fragment>
                             {values.map((value: any) => (
                               <ComboboxChip key={value}>
-                                {
+                                {getOptionLabel(
                                   selectProduct.brand.find(
                                     (i) => i.id === value,
-                                  )?.nama
-                                }
+                                  )?.nama,
+                                )}
                               </ComboboxChip>
                             ))}
                             <ComboboxChipsInput
@@ -627,10 +693,10 @@ export const ProductIdClient = () => {
                       <ComboboxList>
                         {(item: (typeof selectProduct.brand)[number]) => (
                           <ComboboxItem key={item.id} value={item.id}>
-                            {
+                            {getOptionLabel(
                               selectProduct.brand.find((i) => i.id === item.id)
-                                ?.nama
-                            }
+                                ?.nama,
+                            )}
                           </ComboboxItem>
                         )}
                       </ComboboxList>
@@ -659,8 +725,7 @@ export const ProductIdClient = () => {
                             items={categories}
                             value={field.value}
                             onValueChange={(e) => {
-                              console.log(e);
-                              field.onChange(e);
+                              field.onChange(getSelectId(e));
                             }}
                             isItemEqualToValue={(
                               itemValue: any,
@@ -675,18 +740,16 @@ export const ProductIdClient = () => {
                               return itemValue === selectedValue;
                             }}
                             itemToStringLabel={(v: string) =>
-                              categories.find((i) => i.id === v)?.nama.id ?? ""
+                              getOptionLabel(
+                                categories.find((i) => i.id === v)?.nama,
+                              )
                             }
                             filter={(itemValue: any, query: any) => {
-                              if (
-                                (
-                                  itemValue as (typeof categories)[number]
-                                ).nama.id
-                                  .toLowerCase()
-                                  .includes(query.toLowerCase())
+                              return getOptionLabel(
+                                (itemValue as (typeof categories)[number]).nama,
                               )
-                                return true;
-                              return false;
+                                .toLowerCase()
+                                .includes(query.toLowerCase());
                             }}
                             aria-invalid={fieldState.invalid}
                           >
@@ -696,7 +759,7 @@ export const ProductIdClient = () => {
                               <ComboboxList>
                                 {(item: (typeof categories)[number]) => (
                                   <ComboboxItem key={item.id} value={item.id}>
-                                    {item.nama.id}
+                                    {getOptionLabel(item.nama)}
                                   </ComboboxItem>
                                 )}
                               </ComboboxList>
@@ -729,7 +792,9 @@ export const ProductIdClient = () => {
                             id={`${idFormProduct}_${field.name}`}
                             items={productCondition}
                             value={field.value}
-                            onValueChange={field.onChange}
+                            onValueChange={(e) =>
+                              field.onChange(getSelectId(e))
+                            }
                             isItemEqualToValue={(
                               itemValue: any,
                               selectedValue: any,
@@ -743,19 +808,17 @@ export const ProductIdClient = () => {
                               return itemValue === selectedValue;
                             }}
                             itemToStringLabel={(v: string) =>
-                              productCondition.find((i) => i.id === v)?.nama ??
-                              ""
+                              getOptionLabel(
+                                productCondition.find((i) => i.id === v),
+                              )
                             }
                             filter={(itemValue: any, query: any) => {
-                              if (
-                                (
-                                  itemValue as (typeof productCondition)[number]
-                                ).nama
-                                  .toLowerCase()
-                                  .includes(query.toLowerCase())
+                              return getOptionLabel(
+                                (itemValue as (typeof productCondition)[number])
+                                  .nama,
                               )
-                                return true;
-                              return false;
+                                .toLowerCase()
+                                .includes(query.toLowerCase());
                             }}
                             aria-invalid={fieldState.invalid}
                           >
@@ -765,7 +828,7 @@ export const ProductIdClient = () => {
                               <ComboboxList>
                                 {(item: (typeof productCondition)[number]) => (
                                   <ComboboxItem key={item.id} value={item.id}>
-                                    {item.nama}
+                                    {getOptionLabel(item.nama)}
                                   </ComboboxItem>
                                 )}
                               </ComboboxList>
@@ -798,7 +861,9 @@ export const ProductIdClient = () => {
                             id={`${idFormProduct}_${field.name}`}
                             items={packageCondition}
                             value={field.value}
-                            onValueChange={field.onChange}
+                            onValueChange={(e) =>
+                              field.onChange(getSelectId(e))
+                            }
                             isItemEqualToValue={(
                               itemValue: any,
                               selectedValue: any,
@@ -812,19 +877,17 @@ export const ProductIdClient = () => {
                               return itemValue === selectedValue;
                             }}
                             itemToStringLabel={(v: string) =>
-                              packageCondition.find((i) => i.id === v)?.nama ??
-                              ""
+                              getOptionLabel(
+                                packageCondition.find((i) => i.id === v),
+                              )
                             }
                             filter={(itemValue: any, query: any) => {
-                              if (
-                                (
-                                  itemValue as (typeof packageCondition)[number]
-                                ).nama
-                                  .toLowerCase()
-                                  .includes(query.toLowerCase())
+                              return getOptionLabel(
+                                (itemValue as (typeof packageCondition)[number])
+                                  .nama,
                               )
-                                return true;
-                              return false;
+                                .toLowerCase()
+                                .includes(query.toLowerCase());
                             }}
                             aria-invalid={fieldState.invalid}
                           >
@@ -834,7 +897,7 @@ export const ProductIdClient = () => {
                               <ComboboxList>
                                 {(item: (typeof packageCondition)[number]) => (
                                   <ComboboxItem key={item.id} value={item.id}>
-                                    {item.nama}
+                                    {getOptionLabel(item.nama)}
                                   </ComboboxItem>
                                 )}
                               </ComboboxList>
@@ -867,7 +930,9 @@ export const ProductIdClient = () => {
                             id={`${idFormProduct}_${field.name}`}
                             items={source}
                             value={field.value}
-                            onValueChange={field.onChange}
+                            onValueChange={(e) =>
+                              field.onChange(getSelectId(e))
+                            }
                             isItemEqualToValue={(
                               itemValue: any,
                               selectedValue: any,
@@ -881,16 +946,16 @@ export const ProductIdClient = () => {
                               return itemValue === selectedValue;
                             }}
                             itemToStringLabel={(v: string) =>
-                              source.find((i) => i.id === v)?.nama ?? ""
+                              getOptionLabel(
+                                source.find((i) => i.id === v)?.nama,
+                              )
                             }
                             filter={(itemValue: any, query: any) => {
-                              if (
-                                (itemValue as (typeof source)[number]).nama
-                                  .toLowerCase()
-                                  .includes(query.toLowerCase())
+                              return getOptionLabel(
+                                (itemValue as (typeof source)[number]).nama,
                               )
-                                return true;
-                              return false;
+                                .toLowerCase()
+                                .includes(query.toLowerCase());
                             }}
                             aria-invalid={fieldState.invalid}
                           >
@@ -900,7 +965,7 @@ export const ProductIdClient = () => {
                               <ComboboxList>
                                 {(item: (typeof source)[number]) => (
                                   <ComboboxItem key={item.id} value={item.id}>
-                                    {item.nama}
+                                    {getOptionLabel(item.nama)}
                                   </ComboboxItem>
                                 )}
                               </ComboboxList>

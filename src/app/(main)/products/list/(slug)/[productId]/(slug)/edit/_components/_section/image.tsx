@@ -206,6 +206,7 @@ export const ImageSection = ({
                       fill
                       sizes="100vw"
                       className="object-cover"
+                      loading="eager"
                     />
                   </div>
                   <div className="flex items-center justify-between gap-2">
