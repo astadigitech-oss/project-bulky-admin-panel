@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CenteredPageLoader } from "@/components/loaders/centered-page-loader";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import Link from "next/link";
@@ -24,7 +24,7 @@ export const ActivityLogDetailClient = ({
   const detail = data?.data;
 
   if (isLoading) {
-    return <Skeleton className="h-72 w-full" />;
+    return <CenteredPageLoader label="Memuat detail log aktivitas..." />;
   }
 
   if (!detail) {
