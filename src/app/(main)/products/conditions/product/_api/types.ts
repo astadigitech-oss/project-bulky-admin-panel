@@ -18,7 +18,7 @@ export type ProductConditionType = {
 
 export type ProductConditionPartIType = {
   created_at: string;
-  deskripsi: string;
+  deskripsi: string | null;
   slug: string;
 };
 
@@ -42,7 +42,7 @@ export type ProductConditionSelectResponse = BaseResponse & {
 
 // ------mutation------
 export type CreateProductConditionBody = {
-  deskripsi: string;
+  deskripsi: string | null;
   nama_en: string;
   nama_id: string;
 };
@@ -54,7 +54,7 @@ export type CreateProductConditionResponse = BaseResponse & {
 export type UpdateProductConditionParams = BaseParams;
 
 export type UpdateProductConditionBody = {
-  deskripsi: string;
+  deskripsi: string | null;
   nama_en: string;
   nama_id: string;
 };

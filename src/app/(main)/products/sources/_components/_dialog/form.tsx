@@ -36,7 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 const formSchema = z.object({
   nama_id: z.string().min(3, "Nama ID harus memiliki minimal 3 karakter"),
   nama_en: z.string().min(3, "Nama EN harus memiliki minimal 3 karakter"),
-  deskripsi: z.string().min(3, "Deskripsi harus memiliki minimal 3 karakter"),
+  deskripsi: z.string().nullable().optional(),
 });
 
 const DialogFormSource = ({
@@ -73,13 +73,18 @@ const DialogFormSource = ({
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const payload = {
+      ...values,
+      deskripsi: values.deskripsi?.trim() ? values.deskripsi.trim() : null,
+    };
+
     switch (mode) {
       case "create":
-        createSource({ body: values }, { onSuccess: () => handleClose() });
+        createSource({ body: payload }, { onSuccess: () => handleClose() });
         break;
       case "edit":
         updateSource(
-          { body: values, params: { id: detail?.id ?? "" } },
+          { body: payload, params: { id: detail?.id ?? "" } },
           { onSuccess: () => handleClose() },
         );
         break;
@@ -193,7 +198,6 @@ const DialogFormSource = ({
                     className="gap-1 col-span-full"
                   >
                     <FieldLabel
-                      required
                       htmlFor={`${idFormSourceProduct}-${field.name}`}
                     >
                       Deskripsi

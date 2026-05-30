@@ -73,6 +73,9 @@ export const DialogFormBannerTypeProduct = ({
   isDisabled?: boolean;
 }) => {
   const idFormStaff = useId();
+
+  const isPaletLoad = (nama: string) =>
+    nama.trim().toLowerCase() === "palet load";
   const finalSchema = formSchema.extend({
     file:
       mode === "create"
@@ -117,6 +120,17 @@ export const DialogFormBannerTypeProduct = ({
   };
 
   const onSubmit = (values: z.infer<typeof finalSchema>) => {
+    const selectedType = typeProductList.find(
+      (item) => item.id === values.tipe_produk_id,
+    );
+
+    if (!selectedType || !isPaletLoad(selectedType.nama)) {
+      form.setError("tipe_produk_id", {
+        message: "Saat ini hanya tipe produk Palet Load yang dapat dipilih",
+      });
+      return;
+    }
+
     const body = new FormData();
     body.append("nama", values.nama);
     body.append("tipe_produk_id", values.tipe_produk_id);
@@ -266,11 +280,24 @@ export const DialogFormBannerTypeProduct = ({
                           <SelectValue placeholder={"Pilih tipe produk..."} />
                         </SelectTrigger>
                         <SelectContent>
-                          {typeProductList.map((item) => (
-                            <SelectItem key={item.id} value={item.id}>
-                              {item.nama}
-                            </SelectItem>
-                          ))}
+                          {typeProductList.map((item) => {
+                            const disabledOption = !isPaletLoad(item.nama);
+
+                            return (
+                              <SelectItem
+                                key={item.id}
+                                value={item.id}
+                                disabled={disabledOption}
+                                className={
+                                  disabledOption
+                                    ? "text-muted-foreground"
+                                    : undefined
+                                }
+                              >
+                                {item.nama}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
 

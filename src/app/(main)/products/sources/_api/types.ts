@@ -17,7 +17,7 @@ export type SourceType = {
 
 export type SourcePartIType = {
   created_at: string;
-  deskripsi: string;
+  deskripsi: string | null;
   slug: string;
 };
 
@@ -41,7 +41,7 @@ export type SourceSelectResponse = BaseResponse & {
 
 // ------mutation------
 export type CreateSourceBody = {
-  deskripsi: string;
+  deskripsi: string | null;
   nama_en: string;
   nama_id: string;
 };
@@ -53,7 +53,7 @@ export type CreateSourceResponse = BaseResponse & {
 export type UpdateSourceParams = BaseParams;
 
 export type UpdateSourceBody = {
-  deskripsi: string;
+  deskripsi: string | null;
   nama_en: string;
   nama_id: string;
 };

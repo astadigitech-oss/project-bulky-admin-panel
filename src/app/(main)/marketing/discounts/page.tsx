@@ -1,7 +1,10 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
+import { auth } from "@/lib/action/auth";
+import { redirect } from "next/navigation";
+import { DiscountMarketingClient } from "./_components/client";
 
-// const pathname = "marketing/discounts";
+const pathname = "marketing/discounts";
 const labelPage = "Diskon";
 
 export const metadata: Metadata = {
@@ -9,11 +12,12 @@ export const metadata: Metadata = {
 };
 
 const DiscountPage = async () => {
-  // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  const isAuth = await auth();
+  if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer breadcrumbs={[{ label: "Pemasaran" }, { label: labelPage }]}>
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <DiscountMarketingClient />
     </MainContainer>
   );
 };

@@ -42,7 +42,7 @@ import { Textarea } from "@/components/ui/textarea";
 const formSchema = z.object({
   nama_id: z.string().min(3, "Nama ID harus memiliki minimal 3 karakter"),
   nama_en: z.string().min(3, "Nama EN harus memiliki minimal 3 karakter"),
-  deskripsi: z.string().min(3, "Deskripsi harus memiliki minimal 3 karakter"),
+  deskripsi: z.string().nullable().optional(),
 });
 
 const DialogFormPackageCondition = ({
@@ -81,16 +81,21 @@ const DialogFormPackageCondition = ({
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const payload = {
+      ...values,
+      deskripsi: values.deskripsi?.trim() ? values.deskripsi.trim() : null,
+    };
+
     switch (mode) {
       case "create":
         createPackageCondition(
-          { body: values },
+          { body: payload },
           { onSuccess: () => handleClose() },
         );
         break;
       case "edit":
         updatePackageCondition(
-          { body: values, params: { id: detail?.id ?? "" } },
+          { body: payload, params: { id: detail?.id ?? "" } },
           { onSuccess: () => handleClose() },
         );
         break;
@@ -204,7 +209,6 @@ const DialogFormPackageCondition = ({
                     className="gap-1 col-span-full"
                   >
                     <FieldLabel
-                      required
                       htmlFor={`${idFormPackageCondition}-${field.name}`}
                     >
                       Deskripsi
