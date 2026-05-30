@@ -49,6 +49,16 @@ const Editor = dynamic(() => import("@/components/blocks/editor-00/editor"), {
   loading: () => <Skeleton className="w-full h-40" />,
 });
 
+const getTextLabel = (value: unknown) => {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    if (typeof obj.id === "string") return obj.id;
+    if (typeof obj.en === "string") return obj.en;
+  }
+  return "-";
+};
+
 const formSchema = z.object({
   judul_id: z.string().min(3, "Judul ID harus memiliki minimal 3 karakter"),
   judul_en: z.string().min(3, "Judul EN harus memiliki minimal 3 karakter"),
@@ -330,10 +340,10 @@ export const DialogFormBlog = ({
                             <>
                               {values.map((value: any) => (
                                 <ComboboxChip key={value}>
-                                  {
+                                  {getTextLabel(
                                     labels.find((i: any) => i.id === value)
-                                      ?.nama?.id
-                                  }
+                                      ?.nama,
+                                  )}
                                 </ComboboxChip>
                               ))}
                             </>
@@ -346,7 +356,7 @@ export const DialogFormBlog = ({
                         <ComboboxList>
                           {labels.map((item: any) => (
                             <ComboboxItem key={item.id} value={item.id}>
-                              {item.nama?.id}
+                              {getTextLabel(item.nama)}
                             </ComboboxItem>
                           ))}
                         </ComboboxList>
