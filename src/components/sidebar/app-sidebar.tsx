@@ -158,10 +158,6 @@ const data = {
           title: "Kategori",
           url: "/videos/categories",
         },
-        {
-          title: "Tag",
-          url: "/videos/tags",
-        },
       ],
     },
   ],
