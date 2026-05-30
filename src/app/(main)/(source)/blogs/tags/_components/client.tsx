@@ -5,7 +5,7 @@ import { useSearchQuery } from "@/hooks/use-search";
 import { InputSearch } from "@/components/ui/input-search";
 import { SortTable } from "@/components/sort-table";
 import { parseAsString, useQueryStates } from "nuqs";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { TooltipText } from "@/providers/tooltip-provider";
 import DataTable from "@/components/ui/data-table";
 import { column } from "./columns";
@@ -14,9 +14,8 @@ import Pagination from "@/components/pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useEffect, useState } from "react";
 import { useConfirm } from "@/hooks/use-confirm";
-import { VariantProps } from "class-variance-authority";
+
 import {
-  useChangeStatusTagBlog,
   useDeleteTagBlog,
   useGetTagBlogDetail,
   useGetTagBlogList,
@@ -41,14 +40,7 @@ export const TagBlogClient = () => {
     "destructive",
   );
 
-  const [DialogStatus, confirmStatus] = useConfirm(
-    "[command]",
-    "Tindakan tidak bersifat permanen, anda dapat mengubahnya lagi lain kali",
-  );
-
   const { mutate: deleteTagBlog, isPending: isDeleting } = useDeleteTagBlog();
-  const { mutate: updateStatus, isPending: isUpdatingStatus } =
-    useChangeStatusTagBlog();
   const { mutate: reorderStatus, isPending: isReordering } =
     useReorderTagBlog();
 
@@ -72,22 +64,12 @@ export const TagBlogClient = () => {
   });
 
   const packageContionList = list?.data ?? [];
-  const isDisabled = isDeleting || isUpdatingStatus || isReordering;
+  const isDisabled = isDeleting || isReordering;
 
   const handleDelete = async (user: string, id: string) => {
     const ok = await confirmDelete(user, "name");
     if (!ok) return;
     deleteTagBlog({ params: { id } });
-  };
-
-  const handleChangeStatus = async (
-    command: string,
-    id: string,
-    variant: VariantProps<typeof buttonVariants>["variant"],
-  ) => {
-    const ok = await confirmStatus(command, "command", variant);
-    if (!ok) return;
-    updateStatus({ params: { id } });
   };
 
   const handleReorder = (id: string, direction: "up" | "down") => {
@@ -106,7 +88,6 @@ export const TagBlogClient = () => {
 
   return (
     <div className="flex flex-col gap-6 pt-4">
-      <DialogStatus />
       <DialogDelete />
       <DialogFormTagBlog
         open={!!open}
@@ -168,7 +149,7 @@ export const TagBlogClient = () => {
             setOpen,
             setQuery,
             handleDelete,
-            handleChangeStatus,
+
             handleReorder,
             disabled: isDisabled,
           })}
