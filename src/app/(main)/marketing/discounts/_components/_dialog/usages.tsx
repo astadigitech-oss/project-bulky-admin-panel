@@ -12,6 +12,7 @@ import { useGetCouponUsages } from "../../_api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
+import { formatRupiah } from "@/lib/utils";
 
 export const DialogCouponUsages = ({
   open,
@@ -63,10 +64,14 @@ export const DialogCouponUsages = ({
                     <tr key={usage.id} className="border-t">
                       <td className="p-3">
                         <div className="font-medium">{usage.buyer.nama}</div>
-                        <div className="text-xs text-muted-foreground">{usage.buyer.email}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {usage.buyer.email}
+                        </div>
                       </td>
                       <td className="p-3">{usage.pesanan.kode}</td>
-                      <td className="p-3">{usage.nilai_potongan}</td>
+                      <td className="p-3">
+                        {formatRupiah(usage.nilai_potongan)}
+                      </td>
                       <td className="p-3">
                         {format(usage.created_at, "PPpp", { locale: localeId })}
                       </td>

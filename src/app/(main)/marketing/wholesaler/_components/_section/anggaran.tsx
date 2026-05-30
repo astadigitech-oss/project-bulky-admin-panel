@@ -292,7 +292,7 @@ export const AnggaranSection = ({
                   )}
                 />
               </FieldGroup>
-              <div className="flex items-center justify-center gap-1 h-8 border rounded-md text-xs bg-gray-100">
+              <div className="flex items-center justify-center gap-1 h-8 border rounded-md text-xs bg-muted text-foreground">
                 {minimumType === "nominal" ? (
                   <p>{formatRupiah(minimumNominal)} -</p>
                 ) : (

@@ -15,12 +15,17 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { RefreshCw, Send, X } from "lucide-react";
 import { ComponentProps, useEffect, useId } from "react";
+import { formatRupiah } from "@/lib/utils";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import z from "zod";
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,19 +60,6 @@ import {
   useComboboxAnchor,
 } from "@/components/ui/combobox";
 
-const formSchema = z.object({
-  kode: z.string().min(3, "Kode harus memiliki minimal 3 karakter"),
-  nama: z.string().min(3, "Nama harus memiliki minimal 3 karakter"),
-  deskripsi: z.string().nullable().optional(),
-  jenis_diskon: z.enum(["persentase", "jumlah_tetap"]),
-  nilai_diskon: z.coerce.number().min(1, "Nilai diskon wajib diisi"),
-  minimal_pembelian: z.coerce.number().min(0, "Minimal pembelian wajib diisi"),
-  limit_pemakaian: z.coerce.number().min(0).nullable().optional(),
-  tanggal_kedaluarsa: z.string().min(1, "Tanggal kedaluarsa wajib diisi"),
-  is_all_kategori: z.boolean(),
-  kategori: z.array(z.string()).optional(),
-});
-
 export const DialogFormCoupon = ({
   open,
   onOpenChange,
@@ -85,8 +77,7 @@ export const DialogFormCoupon = ({
   const idForm = useId();
   const anchor = useComboboxAnchor();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm({
     values: {
       kode: detail?.kode ?? "",
       nama: detail?.nama ?? "",
@@ -115,6 +106,26 @@ export const DialogFormCoupon = ({
     name: "is_all_kategori",
   });
 
+  const jenisDiskon = useWatch({
+    control: form.control,
+    name: "jenis_diskon",
+  });
+
+  const nilaiDiskon = useWatch({
+    control: form.control,
+    name: "nilai_diskon",
+  });
+
+  const minimalPembelian = useWatch({
+    control: form.control,
+    name: "minimal_pembelian",
+  });
+
+  const limitPemakaian = useWatch({
+    control: form.control,
+    name: "limit_pemakaian",
+  });
+
   const handleClose = () => {
     onOpenChange(false);
     form.reset();
@@ -131,7 +142,14 @@ export const DialogFormCoupon = ({
     );
   };
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: any) => {
+    if (values.jenis_diskon === "persentase" && values.nilai_diskon > 100) {
+      form.setError("nilai_diskon", {
+        message: "Untuk diskon persentase, nilai maksimal adalah 100%",
+      });
+      return;
+    }
+
     const payload = {
       ...values,
       deskripsi: values.deskripsi?.trim() ? values.deskripsi.trim() : "",
@@ -275,15 +293,40 @@ export const DialogFormCoupon = ({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="gap-1">
                     <FieldLabel required htmlFor={`${idForm}-${field.name}`}>
-                      Nilai Diskon
+                      {jenisDiskon === "persentase"
+                        ? "Nilai Diskon (%)"
+                        : "Nilai Diskon (Rp)"}
                     </FieldLabel>
-                    <Input
-                      {...field}
-                      type="number"
-                      id={`${idForm}-${field.name}`}
-                      aria-invalid={fieldState.invalid}
-                      placeholder="0"
-                    />
+                    <InputGroup>
+                      <InputGroupAddon>
+                        {jenisDiskon === "persentase" ? "%" : "Rp"}
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        value={field.value}
+                        onChange={(e) =>
+                          field.onChange(Number(e.target.value || 0))
+                        }
+                        type="number"
+                        id={`${idForm}-${field.name}`}
+                        aria-invalid={fieldState.invalid}
+                        placeholder={
+                          jenisDiskon === "persentase"
+                            ? "Contoh: 10"
+                            : "Contoh: 50000"
+                        }
+                        max={jenisDiskon === "persentase" ? 100 : undefined}
+                      />
+                    </InputGroup>
+                    <p className="text-xs text-muted-foreground">
+                      {jenisDiskon === "persentase"
+                        ? "Masukkan angka persen. Contoh: 10 = 10%"
+                        : `Masukkan nominal rupiah. Contoh: 50000 = ${formatRupiah(50000)}`}
+                    </p>
+                    {jenisDiskon === "jumlah_tetap" && (
+                      <p className="text-xs text-muted-foreground">
+                        Preview: {formatRupiah(nilaiDiskon ?? 0)}
+                      </p>
+                    )}
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -301,12 +344,18 @@ export const DialogFormCoupon = ({
                       Minimal Pembelian
                     </FieldLabel>
                     <Input
-                      {...field}
+                      value={field.value}
+                      onChange={(e) =>
+                        field.onChange(Number(e.target.value || 0))
+                      }
                       type="number"
                       id={`${idForm}-${field.name}`}
                       aria-invalid={fieldState.invalid}
                       placeholder="0"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Preview: {formatRupiah(minimalPembelian ?? 0)}
+                    </p>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -335,6 +384,13 @@ export const DialogFormCoupon = ({
                       aria-invalid={fieldState.invalid}
                       placeholder="Kosongkan untuk tanpa batas"
                     />
+                    {limitPemakaian !== null &&
+                      limitPemakaian !== undefined && (
+                        <p className="text-xs text-muted-foreground">
+                          Preview:{" "}
+                          {Number(limitPemakaian).toLocaleString("id-ID")} kali
+                        </p>
+                      )}
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
