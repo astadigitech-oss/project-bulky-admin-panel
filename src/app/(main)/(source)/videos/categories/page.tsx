@@ -1,7 +1,10 @@
 import { MainContainer } from "@/components/container/main-container";
+import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { VideoCategoriesClient } from "./_components/client";
 
-// const pathname = "videos/categories";
+const pathname = "videos/categories";
 const labelPage = "Kategori";
 
 export const metadata: Metadata = {
@@ -9,11 +12,12 @@ export const metadata: Metadata = {
 };
 
 const VideoCategoriesPage = async () => {
-  // if (!auth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
+  const isAuth = await auth();
+  if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer breadcrumbs={[{ label: "Video" }, { label: labelPage }]}>
-      <div className="h-[200vh] bg-gray-400 rounded-md"></div>
+      <VideoCategoriesClient />
     </MainContainer>
   );
 };
