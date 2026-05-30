@@ -383,12 +383,16 @@ const DialogFormCategory = ({
                       Deskripsi
                     </FieldLabel>
                     <Textarea
-                      {...field}
+                      name={field.name}
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      onChange={field.onChange}
                       value={field.value ?? ""}
                       id={`${idFormStaff}-${field.name}`}
                       aria-invalid={fieldState.invalid}
-                      placeholder="Deskripsi kategori..."
+                      placeholder="Deskripsi kategori produk..."
                       autoComplete="off"
+                      className="min-h-20"
                     />
 
                     {fieldState.invalid && (

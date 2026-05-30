@@ -214,7 +214,11 @@ const DialogFormProductCondition = ({
                       Deskripsi
                     </FieldLabel>
                     <Textarea
-                      {...field}
+                      name={field.name}
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      onChange={field.onChange}
+                      value={field.value ?? ""}
                       id={`${idFormProductCondition}-${field.name}`}
                       aria-invalid={fieldState.invalid}
                       placeholder="Deskripsi kondisi paket..."
