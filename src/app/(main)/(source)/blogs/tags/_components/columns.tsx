@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+
 import { TooltipText } from "@/providers/tooltip-provider";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -16,8 +16,6 @@ import { id } from "date-fns/locale";
 import {
   ArrowDown,
   ArrowUp,
-  Circle,
-  CircleDot,
   Clock,
   Edit,
   MoreHorizontal,
@@ -25,7 +23,21 @@ import {
 } from "lucide-react";
 import { MetaPagination } from "@/lib/types";
 import { Dispatch, SetStateAction } from "react";
-import { VariantProps } from "class-variance-authority";
+
+const getLangText = (row: Record<string, unknown>, lang: "id" | "en") => {
+  const flatKey = lang === "id" ? "nama_id" : "nama_en";
+  const flatVal = row[flatKey];
+  if (typeof flatVal === "string" && flatVal.length > 0) return flatVal;
+
+  const nama = row.nama;
+  if (typeof nama === "string") return nama;
+  if (nama && typeof nama === "object") {
+    const val = (nama as Record<string, unknown>)[lang];
+    if (typeof val === "string") return val;
+  }
+  return "-";
+};
+
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
 
@@ -34,7 +46,6 @@ export const column = ({
   metaPage,
   setQuery,
   handleDelete,
-  handleChangeStatus,
   disabled,
   handleReorder,
 }: {
@@ -44,11 +55,6 @@ export const column = ({
   disabled: boolean;
   handleReorder: (id: string, direction: "up" | "down") => void;
   handleDelete: (user: string, userId: string) => Promise<void>;
-  handleChangeStatus: (
-    command: string,
-    userId: string,
-    variant: VariantProps<typeof buttonVariants>["variant"],
-  ) => Promise<void>;
 }): ColumnDef<any>[] => [
   {
     id: "id",
@@ -60,47 +66,30 @@ export const column = ({
     ),
   },
   {
-    accessorKey: "nama.id",
+    id: "nama_id",
     header: () => (
       <div className="flex items-center gap-2">
         Nama <ID className="h-3 aspect-3/2 rounded shadow" />
       </div>
     ),
+    cell: ({ row }) =>
+      getLangText(row.original as Record<string, unknown>, "id"),
   },
   {
-    accessorKey: "nama.en",
+    id: "nama_en",
     header: () => (
       <div className="flex items-center gap-2">
         Nama <GB className="h-3 aspect-3/2 rounded shadow" />
       </div>
     ),
+    cell: ({ row }) =>
+      getLangText(row.original as Record<string, unknown>, "en"),
   },
   {
     accessorKey: "urutan",
     header: "Urutan",
   },
-  {
-    accessorKey: "isActive",
-    header: "Status",
-    cell: ({ row }) => (
-      <div
-        className={cn(
-          "flex items-center gap-2 text-xs bg-green-500/20 px-2 py-0.5 rounded-full font-medium w-fit",
-          row.original.is_active
-            ? "bg-green-500/20 dark:bg-green-500/30 dark:text-emerald-100 text-emerald-600"
-            : "bg-red-500/10 dark:bg-red-500/30 dark:text-red-200 text-red-600",
-        )}
-      >
-        <div
-          className={cn(
-            "size-2 rounded-full",
-            row.original.is_active ? "bg-green-500" : "bg-red-500",
-          )}
-        />
-        {row.original.is_active ? "Aktif" : "Tidak Aktif"}
-      </div>
-    ),
-  },
+
   {
     id: "actions",
     enableHiding: false,
@@ -152,28 +141,9 @@ export const column = ({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className={"text-xs"}
-                onClick={() =>
-                  handleChangeStatus(
-                    row.original.is_active
-                      ? `Nonaktifkan ${row.original.nama.id}`
-                      : `Aktifkan ${row.original.nama.id}`,
-                    row.original.id,
-                    row.original.is_active ? "destructive" : "default",
-                  )
-                }
-              >
-                {row.original.is_active ? (
-                  <Circle className="size-3.5" />
-                ) : (
-                  <CircleDot className="size-3.5" />
-                )}
-                {row.original.is_active ? "Nonaktifkan" : "Aktifkan"}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className={"text-xs"}
                 onClick={() => {
                   setOpen("edit");
-                  setQuery({ packageConditionId: row.original.id });
+                  setQuery({ tagBlogId: row.original.id });
                 }}
               >
                 <Edit className="size-3.5" />
@@ -182,7 +152,10 @@ export const column = ({
               <DropdownMenuItem
                 className={"text-xs"}
                 onClick={() =>
-                  handleDelete(row.original.nama.id, row.original.id)
+                  handleDelete(
+                    getLangText(row.original as Record<string, unknown>, "id"),
+                    row.original.id,
+                  )
                 }
                 variant="destructive"
               >

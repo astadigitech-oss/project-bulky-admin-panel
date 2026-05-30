@@ -143,7 +143,7 @@ export const dataAPITagBlog = {
             [key[0]],
             [key[2]],
             [key[1], data.data.item.id],
-            [key[1], data.data.swapped_with.id],
+            [key[1], data.data.swapped.id],
           ]);
       },
       onError: { title: "REORDER_PACKAGE_CONDITION" },

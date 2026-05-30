@@ -31,12 +31,27 @@ import { useCreateTagBlog, useUpdateTagBlog } from "../../_api";
 import { TagBlogPartIType, TagBlogType } from "../../_api/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+
+const getFieldText = (
+  detail: (TagBlogType & TagBlogPartIType) | undefined,
+  lang: "id" | "en",
+) => {
+  const key = lang === "id" ? "nama_id" : "nama_en";
+  const flat = detail?.[key as "nama_id" | "nama_en"];
+  if (typeof flat === "string") return flat;
+
+  const nama = detail?.nama;
+  if (typeof nama === "string") return nama;
+  if (nama && typeof nama === "object") {
+    const val = (nama as Record<string, unknown>)[lang];
+    if (typeof val === "string") return val;
+  }
+  return "";
+};
 
 const formSchema = z.object({
   nama_id: z.string().min(3, "Nama ID harus memiliki minimal 3 karakter"),
   nama_en: z.string().min(3, "Nama EN harus memiliki minimal 3 karakter"),
-  deskripsi: z.string().min(3, "Deskripsi harus memiliki minimal 3 karakter"),
 });
 
 export const DialogFormTagBlog = ({
@@ -56,9 +71,8 @@ export const DialogFormTagBlog = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     values: {
-      nama_id: detail?.nama.id ?? "",
-      nama_en: detail?.nama.en ?? "",
-      deskripsi: detail?.deskripsi ?? "",
+      nama_id: getFieldText(detail, "id"),
+      nama_en: getFieldText(detail, "en"),
     },
   });
 
@@ -95,14 +109,12 @@ export const DialogFormTagBlog = ({
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>
-            {mode === "edit"
-              ? "Ubah Data Kondisi Paket Produk"
-              : "Tambah Kondisi Paket Produk Baru"}
+            {mode === "edit" ? "Ubah Tag Berita" : "Tambah Tag Berita Baru"}
           </DialogTitle>
           <DialogDescription>
             {mode === "edit"
-              ? "Kelola informasi kondisi paket produk"
-              : "Tambahkan kondisi paket produk baru"}
+              ? "Kelola informasi tag berita"
+              : "Tambahkan tag berita baru"}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -127,7 +139,7 @@ export const DialogFormTagBlog = ({
                         required
                         htmlFor={`${idFormTagBlog}-${field.name}`}
                       >
-                        Nama
+                        Nama (ID)
                       </FieldLabel>
                       <InputGroup>
                         <InputGroupInput
@@ -135,7 +147,7 @@ export const DialogFormTagBlog = ({
                           id={`${idFormTagBlog}-${field.name}`}
                           type="text"
                           aria-invalid={fieldState.invalid}
-                          placeholder="Nama kondisi paket..."
+                          placeholder="Nama tag berita..."
                           autoComplete="off"
                         />
                         <InputGroupAddon>
@@ -166,7 +178,7 @@ export const DialogFormTagBlog = ({
                           id={`${idFormTagBlog}-${field.name}`}
                           type="text"
                           aria-invalid={fieldState.invalid}
-                          placeholder="Package condition name..."
+                          placeholder="Tag name..."
                           autoComplete="off"
                         />
                         <InputGroupAddon>
@@ -183,36 +195,6 @@ export const DialogFormTagBlog = ({
                   )}
                 />
               </div>
-              <Controller
-                name="deskripsi"
-                control={form.control}
-                disabled={isDisabled}
-                render={({ field, fieldState }) => (
-                  <Field
-                    data-invalid={fieldState.invalid}
-                    className="gap-1 col-span-full"
-                  >
-                    <FieldLabel
-                      required
-                      htmlFor={`${idFormTagBlog}-${field.name}`}
-                    >
-                      Deskripsi
-                    </FieldLabel>
-                    <Textarea
-                      {...field}
-                      id={`${idFormTagBlog}-${field.name}`}
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Deskripsi kondisi paket..."
-                      autoComplete="off"
-                      className="min-h-20"
-                    />
-
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
             </FieldGroup>
           )}
           <DialogFooter>
