@@ -84,6 +84,13 @@ export const DialogFormPromo = ({
 }) => {
   const idFormStaff = useId();
   const anchor = useComboboxAnchor();
+
+  const getCategoryName = (category?: CategorySelectType) => {
+    if (!category) return "-";
+    const nama = category.nama as unknown;
+    if (typeof nama === "string") return nama;
+    return (nama as { id?: string; en?: string })?.id ?? "-";
+  };
   const [isEndDate, setIsEndDate] = useState(false);
 
   const finalSchema = formSchema.extend({
@@ -356,7 +363,9 @@ export const DialogFormPromo = ({
                         <React.Fragment>
                           {values.map((value: any) => (
                             <ComboboxChip key={value}>
-                              {categories.find((i) => i.id === value)?.nama.id}
+                              {getCategoryName(
+                                categories.find((i) => i.id === value),
+                              )}
                             </ComboboxChip>
                           ))}
                           <ComboboxChipsInput
@@ -372,7 +381,9 @@ export const DialogFormPromo = ({
                     <ComboboxList>
                       {(item: CategorySelectType) => (
                         <ComboboxItem key={item.id} value={item.id}>
-                          {categories.find((i) => i.id === item.id)?.nama.id}
+                          {getCategoryName(
+                            categories.find((i) => i.id === item.id),
+                          )}
                         </ComboboxItem>
                       )}
                     </ComboboxList>

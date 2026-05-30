@@ -25,6 +25,7 @@ import { Dispatch, SetStateAction } from "react";
 import { VariantProps } from "class-variance-authority";
 import { CouponType } from "../_api/types";
 import { Badge } from "@/components/ui/badge";
+import { formatRupiah } from "@/lib/utils";
 
 export const column = ({
   setOpen,
@@ -77,6 +78,13 @@ export const column = ({
   {
     accessorKey: "nilai_diskon",
     header: "Nilai",
+    cell: ({ row }) => {
+      if (row.original.jenis_diskon === "persentase") {
+        return `${row.original.nilai_diskon}%`;
+      }
+
+      return formatRupiah(row.original.nilai_diskon);
+    },
   },
   {
     accessorKey: "status",
