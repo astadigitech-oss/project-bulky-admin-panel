@@ -214,7 +214,10 @@ const DialogFormPackageCondition = ({
                       Deskripsi
                     </FieldLabel>
                     <Textarea
-                      {...field}
+                      name={field.name}
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      onChange={field.onChange}
                       value={field.value ?? ""}
                       id={`${idFormPackageCondition}-${field.name}`}
                       aria-invalid={fieldState.invalid}
