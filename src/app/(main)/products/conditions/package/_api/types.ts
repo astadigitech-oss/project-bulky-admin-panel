@@ -18,7 +18,7 @@ export type PackageConditionType = {
 
 export type PackageConditionPartIType = {
   created_at: string;
-  deskripsi: string;
+  deskripsi: string | null;
   slug: string;
 };
 
@@ -42,7 +42,7 @@ export type PackageConditionSelectResponse = BaseResponse & {
 
 // ------mutation------
 export type CreatePackageConditionBody = {
-  deskripsi: string;
+  deskripsi: string | null;
   nama_en: string;
   nama_id: string;
 };
@@ -54,7 +54,7 @@ export type CreatePackageConditionResponse = BaseResponse & {
 export type UpdatePackageConditionParams = BaseParams;
 
 export type UpdatePackageConditionBody = {
-  deskripsi: string;
+  deskripsi: string | null;
   nama_en: string;
   nama_id: string;
 };

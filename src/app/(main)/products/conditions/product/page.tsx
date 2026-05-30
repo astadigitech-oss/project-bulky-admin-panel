@@ -5,7 +5,7 @@ import { auth } from "@/lib/action/auth";
 import { redirect } from "next/navigation";
 
 const pathname = "products/conditions/product";
-const labelPage = "KOndisi Produk";
+const labelPage = "Kondisi Produk";
 
 export const metadata: Metadata = {
   title: labelPage,
