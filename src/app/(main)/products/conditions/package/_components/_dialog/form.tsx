@@ -215,6 +215,7 @@ const DialogFormPackageCondition = ({
                     </FieldLabel>
                     <Textarea
                       {...field}
+                      value={field.value ?? ""}
                       id={`${idFormPackageCondition}-${field.name}`}
                       aria-invalid={fieldState.invalid}
                       placeholder="Deskripsi kondisi paket..."
