@@ -210,7 +210,7 @@ export const ProductDetailClient = () => {
                 </p>
                 <div className="flex flex-wrap gap-2 px-2 h-full items-center ">
                   <p className="py-2">
-                    {detail?.discrepancy ?? "-"}
+                    {detail?.discrepancy != null && detail.discrepancy !== "" ? `${detail.discrepancy}%` : "-"}
                   </p>
                 </div>
               </div>

@@ -477,13 +477,24 @@ export const ProductIdClient = () => {
                   <FieldLabel htmlFor={`${idFormProduct}_${field.name}`}>
                     Discrepancy
                   </FieldLabel>
-                  <Textarea
-                    {...field}
-                    id={`${idFormProduct}_${field.name}`}
-                    aria-invalid={fieldState.invalid}
-                    className="min-h-28"
-                    placeholder="Kekurangan produk..."
-                  />
+                  <InputGroup>
+                    <InputGroupInput
+                      {...field}
+                      id={`${idFormProduct}_${field.name}`}
+                      type="number"
+                      min={0}
+                      max={100}
+                      onChange={(e) =>
+                        field.onChange(numericString(e.target.value))
+                      }
+                      aria-invalid={fieldState.invalid}
+                      placeholder="cth. 10"
+                      autoComplete="off"
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupText>%</InputGroupText>
+                    </InputGroupAddon>
+                  </InputGroup>
 
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
