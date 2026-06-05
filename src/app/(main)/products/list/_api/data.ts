@@ -37,14 +37,15 @@ export const dataAPIProduct = {
     search,
     sort_by,
     order,
+    is_sold,
   }: ProductListRequest & ProductDetailRequest): {
     list: UseApiQueryProps<ProductListResponse>;
     show: UseApiQueryProps<ProductDetailResponse>;
   } => ({
     list: {
-      key: [key[0], { page, per_page, search, sort_by, order }],
+      key: [key[0], { page, per_page, search, sort_by, order, is_sold }],
       endpoint: `/produk`,
-      searchParams: { page, per_page, search, sort_by, order },
+      searchParams: { page, per_page, search, sort_by, order, is_sold },
       placeholderData: keepPreviousData,
     },
     show: {
