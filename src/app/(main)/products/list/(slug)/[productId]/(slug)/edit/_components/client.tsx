@@ -1088,7 +1088,7 @@ export const ProductIdClient = () => {
                           required
                           htmlFor={`${idFormProduct}_${field.name}`}
                         >
-                          Kuantitas
+                          Jumlah Item dalam Palet
                         </FieldLabel>
                         <InputGroup>
                           <InputGroupInput

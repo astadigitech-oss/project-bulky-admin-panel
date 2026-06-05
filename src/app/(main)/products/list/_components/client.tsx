@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { parseAsString, useQueryStates } from "nuqs";
+import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import React, { useEffect } from "react";
 import { column } from "./columns";
 import {
@@ -22,9 +22,10 @@ import {
 import { useConfirm } from "@/hooks/use-confirm";
 
 export const ProductClient = () => {
-  const [{ sort, order }, setQuery] = useQueryStates({
+  const [{ sort, order, is_sold }, setQuery] = useQueryStates({
     sort: parseAsString.withDefault("created_at"),
     order: parseAsString.withDefault("desc"),
+    is_sold: parseAsStringLiteral(["true", "false"] as const).withDefault(null as unknown as "true" | "false"),
   });
   const [DialogDelete, confirmDelete] = useConfirm(
     "Hapus [name]",
@@ -55,6 +56,7 @@ export const ProductClient = () => {
     search: searchValue,
     sort_by: sort,
     order: order as "asc" | "desc",
+    is_sold: is_sold === "true" ? true : is_sold === "false" ? false : undefined,
   });
 
   const productList = list?.data ?? [];
@@ -104,6 +106,18 @@ export const ProductClient = () => {
             value={search}
             setValue={setSearch}
           />
+          <select
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            value={is_sold ?? ""}
+            onChange={(e) =>
+              setQuery({ is_sold: (e.target.value as "true" | "false") || null })
+            }
+            disabled={isDisabled}
+          >
+            <option value="">Semua Status</option>
+            <option value="false">Tersedia</option>
+            <option value="true">Terjual</option>
+          </select>
           <TooltipText
             value="Perbarui Data"
             render={

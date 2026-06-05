@@ -290,7 +290,7 @@ export const ProductDetailClient = () => {
               <div className="grid grid-cols-2 w-full min-h-8 ">
                 <div className="flex w-full">
                   <p className="w-32 bg-gray-100 dark:bg-gray-800 h-full flex items-center px-2 font-semibold flex-none">
-                    Qty
+                    Jml. Item Palet
                   </p>
                   <div className="flex flex-wrap gap-2 px-2 h-full items-center py-1.25">
                     {detail?.quantity}
@@ -298,10 +298,10 @@ export const ProductDetailClient = () => {
                 </div>
                 <div className="flex w-full">
                   <p className="w-32 bg-gray-100 dark:bg-gray-800 h-full flex items-center px-2 font-semibold flex-none">
-                    Qty Terjual
+                    Status Terjual
                   </p>
                   <div className="flex flex-wrap gap-2 px-2 h-full items-center py-1.25">
-                    {detail?.quantity_terjual}
+                    {detail?.is_sold ? "Terjual" : "Tersedia"}
                   </div>
                 </div>
               </div>

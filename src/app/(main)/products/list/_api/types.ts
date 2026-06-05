@@ -15,7 +15,9 @@ export type ProductPartIType = {
   status: boolean;
 };
 
-export type ProductListRequest = BaseListParams;
+export type ProductListRequest = BaseListParams & {
+  is_sold?: boolean;
+};
 
 export type ProductListResponse = BaseResponse & {
   data: ProductPartIType[];
@@ -48,6 +50,7 @@ export type ProductDetailResponse = BaseResponse & {
     id: string;
     id_cargo: string;
     is_active: boolean;
+    is_sold: boolean;
     kategori: { id: string; nama: string };
     kondisi: { id: string; nama: string };
     kondisi_paket: { id: string; nama: string };
@@ -57,7 +60,6 @@ export type ProductDetailResponse = BaseResponse & {
     nama_id: string;
     panjang: number;
     quantity: number;
-    quantity_terjual: number;
     reference_id: null;
     slug: string;
     sumber: { id: string; nama: string };
