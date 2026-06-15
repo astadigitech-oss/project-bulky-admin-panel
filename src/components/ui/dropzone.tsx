@@ -134,7 +134,7 @@ export const Dropzone = ({
             ratio === "square"
               ? "h-full"
               : ratio === "hero"
-                ? "w-full aspect-2/1"
+                ? "w-full aspect-2/1 max-h-56"
                 : ratio === "portrait"
                   ? "w-full aspect-9/16"
                   : "w-full aspect-4/1",

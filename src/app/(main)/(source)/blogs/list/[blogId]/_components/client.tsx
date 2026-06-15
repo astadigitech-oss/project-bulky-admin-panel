@@ -368,7 +368,7 @@ export const BlogFormPageClient = () => {
               render={({ field, fieldState }) => (
                 <Field
                   data-invalid={fieldState.invalid}
-                  className="gap-1 col-span-full"
+                  className="gap-1"
                 >
                   <FieldLabel required>Kategori</FieldLabel>
                   <select
@@ -396,7 +396,7 @@ export const BlogFormPageClient = () => {
               control={form.control}
               disabled={isLoading}
               render={({ field }) => (
-                <Field className="gap-1 col-span-full">
+                <Field className="gap-1">
                   <FieldLabel>Label</FieldLabel>
                   <Combobox
                     multiple
@@ -448,7 +448,7 @@ export const BlogFormPageClient = () => {
               render={({ field, fieldState }) => (
                 <Field
                   data-invalid={fieldState.invalid}
-                  className="gap-1 col-span-full"
+                  className="gap-1"
                 >
                   <FieldLabel required className="flex items-center gap-2">
                     Konten{" "}
@@ -476,7 +476,7 @@ export const BlogFormPageClient = () => {
               render={({ field, fieldState }) => (
                 <Field
                   data-invalid={fieldState.invalid}
-                  className="gap-1 col-span-full"
+                  className="gap-1"
                 >
                   <FieldLabel required className="flex items-center gap-2">
                     Konten{" "}
@@ -502,7 +502,7 @@ export const BlogFormPageClient = () => {
               control={form.control}
               disabled={isLoading}
               render={({ field }) => (
-                <Field className="gap-1 col-span-full">
+                <Field className="gap-1">
                   <div className="flex items-center justify-between">
                     <FieldLabel className="flex items-center gap-2">
                       Highlight{" "}
@@ -543,7 +543,7 @@ export const BlogFormPageClient = () => {
               control={form.control}
               disabled={isLoading}
               render={({ field }) => (
-                <Field className="gap-1 col-span-full">
+                <Field className="gap-1">
                   <div className="flex items-center justify-between">
                     <FieldLabel className="flex items-center gap-2">
                       Highlight{" "}

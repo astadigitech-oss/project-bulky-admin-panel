@@ -308,7 +308,7 @@ export const DialogFormBlog = ({
                 render={({ field, fieldState }) => (
                   <Field
                     data-invalid={fieldState.invalid}
-                    className="gap-1 col-span-full"
+                    className="gap-1"
                   >
                     <FieldLabel required>Kategori</FieldLabel>
                     <select
@@ -336,7 +336,7 @@ export const DialogFormBlog = ({
                 control={form.control}
                 disabled={isDisabled}
                 render={({ field }) => (
-                  <Field className="gap-1 col-span-full">
+                  <Field className="gap-1">
                     <FieldLabel>Label</FieldLabel>
                     <Combobox
                       multiple
@@ -389,7 +389,7 @@ export const DialogFormBlog = ({
                 render={({ field, fieldState }) => (
                   <Field
                     data-invalid={fieldState.invalid}
-                    className="gap-1 col-span-full"
+                    className="gap-1"
                   >
                     <FieldLabel required>Konten (ID)</FieldLabel>
                     <Editor
@@ -412,7 +412,7 @@ export const DialogFormBlog = ({
                 render={({ field, fieldState }) => (
                   <Field
                     data-invalid={fieldState.invalid}
-                    className="gap-1 col-span-full"
+                    className="gap-1"
                   >
                     <FieldLabel required>Konten (EN)</FieldLabel>
                     <Editor
@@ -433,7 +433,7 @@ export const DialogFormBlog = ({
                 control={form.control}
                 disabled={isDisabled}
                 render={({ field }) => (
-                  <Field className="gap-1 col-span-full">
+                  <Field className="gap-1">
                     <FieldLabel>Highlight (ID)</FieldLabel>
                     <Textarea {...field} className="min-h-20" />
                   </Field>
@@ -445,7 +445,7 @@ export const DialogFormBlog = ({
                 control={form.control}
                 disabled={isDisabled}
                 render={({ field }) => (
-                  <Field className="gap-1 col-span-full">
+                  <Field className="gap-1">
                     <FieldLabel>Highlight (EN)</FieldLabel>
                     <Textarea {...field} className="min-h-20" />
                   </Field>
