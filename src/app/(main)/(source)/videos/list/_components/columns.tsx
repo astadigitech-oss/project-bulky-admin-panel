@@ -63,6 +63,14 @@ export const column = ({
     cell: ({ row }) => Number(row.original.view_count ?? 0).toLocaleString("id-ID"),
   },
   {
+    accessorKey: "transcode_status",
+    header: "Status Konversi",
+    cell: ({ row }) => {
+      const status = row.original.transcode_status;
+      return status ? <Badge variant="outline">{status}</Badge> : <span className="text-muted-foreground">-</span>;
+    },
+  },
+  {
     accessorKey: "is_active",
     header: "Status",
     cell: ({ row }) => (
