@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/field";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send, Upload, X } from "lucide-react";
-import { ComponentProps, useEffect, useId } from "react";
+import { ComponentProps, useEffect, useId, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,12 @@ import { VideoDetailType } from "../../_api/types";
 import { Dropzone } from "@/components/ui/dropzone";
 import { Switch } from "@/components/ui/switch";
 import { useGetVideoCategorySelect } from "@/app/(main)/(source)/videos/categories/_api";
+import axios from "axios";
+import { getCookie } from "cookies-next/client";
+import { apiUrl } from "@/config";
+import { toast } from "sonner";
+
+const CHUNK_SIZE = 20 * 1024 * 1024; // 20MB per chunk
 
 const formSchema = z.object({
   judul_id: z.string().min(3, "Judul ID harus memiliki minimal 3 karakter"),
@@ -83,9 +89,11 @@ export const DialogFormVideo = ({
   const { mutate: createVideo, isPending: isCreating } = useCreateVideo();
   const { mutate: updateVideo, isPending: isUpdating } = useUpdateVideo();
   const { data: categoriesSelect } = useGetVideoCategorySelect();
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const abortRef = useRef(false);
 
   const categories = categoriesSelect?.data ?? [];
-  const isLoading = isCreating || isUpdating || isDisabled;
+  const isLoading = isCreating || isUpdating || isDisabled || uploadProgress !== null;
 
   const judulId = useWatch({ control: form.control, name: "judul_id" });
   const judulEn = useWatch({ control: form.control, name: "judul_en" });
@@ -103,11 +111,74 @@ export const DialogFormVideo = ({
   }, [judulEn]);
 
   const handleClose = () => {
+    abortRef.current = true;
+    setUploadProgress(null);
     onOpenChange(false);
     form.reset();
   };
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const videoFile = values.video_file?.[0];
+
+    // Chunk upload: dipakai saat create dengan video file
+    if (isCreate && videoFile) {
+      abortRef.current = false;
+      setUploadProgress(0);
+
+      try {
+        const uploadId = crypto.randomUUID();
+        const ext = videoFile.name.substring(videoFile.name.lastIndexOf("."));
+        const totalChunks = Math.ceil(videoFile.size / CHUNK_SIZE);
+        const headers = { Authorization: `Bearer ${getCookie("ACCESS_TOKEN")}` };
+
+        for (let i = 0; i < totalChunks; i++) {
+          if (abortRef.current) return;
+
+          const start = i * CHUNK_SIZE;
+          const chunk = videoFile.slice(start, Math.min(start + CHUNK_SIZE, videoFile.size));
+
+          const chunkForm = new FormData();
+          chunkForm.append("upload_id", uploadId);
+          chunkForm.append("chunk_index", String(i));
+          chunkForm.append("total_chunks", String(totalChunks));
+          chunkForm.append("chunk_data", chunk);
+
+          await axios.post(`${apiUrl}/video/upload-chunk`, chunkForm, { headers });
+          setUploadProgress(Math.round(((i + 1) / totalChunks) * 90));
+        }
+
+        if (abortRef.current) return;
+        setUploadProgress(95);
+
+        const finalForm = new FormData();
+        finalForm.append("upload_id", uploadId);
+        finalForm.append("total_chunks", String(totalChunks));
+        finalForm.append("original_ext", ext);
+        finalForm.append("judul_id", values.judul_id);
+        finalForm.append("judul_en", values.judul_en);
+        finalForm.append("slug_id", values.slug_id ?? "");
+        finalForm.append("slug_en", values.slug_en ?? "");
+        finalForm.append("deskripsi_id", values.deskripsi_id);
+        finalForm.append("deskripsi_en", values.deskripsi_en);
+        finalForm.append("kategori_id", values.kategori_id);
+        finalForm.append("is_active", String(values.is_active));
+        if (values.thumbnail_file?.[0]) {
+          finalForm.append("thumbnail_file", values.thumbnail_file[0]);
+        }
+
+        await axios.post(`${apiUrl}/video/finalize-chunk`, finalForm, { headers });
+
+        toast.success("Video berhasil diupload dan sedang diproses");
+        handleClose();
+      } catch {
+        toast.error("Gagal mengupload video. Silakan coba lagi.");
+      } finally {
+        setUploadProgress(null);
+      }
+      return;
+    }
+
+    // Upload biasa (update, atau create tanpa video file)
     const body = new FormData();
     body.append("judul_id", values.judul_id);
     body.append("judul_en", values.judul_en);
@@ -449,7 +520,11 @@ export const DialogFormVideo = ({
               ) : (
                 <Send className="size-3.5" />
               )}
-              {isLoading ? "Mengirim..." : "Kirim"}
+              {uploadProgress !== null
+                ? `Mengupload ${uploadProgress}%...`
+                : isLoading
+                  ? "Mengirim..."
+                  : "Kirim"}
             </Button>
           </DialogFooter>
         </form>
