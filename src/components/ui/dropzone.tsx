@@ -32,7 +32,7 @@ export const Dropzone = ({
   },
   maxSize = 10 * 1024 * 1024,
   maxFiles = 1,
-}: DropzoneProps & { ratio?: "square" | "banner" | "hero" }) => {
+}: DropzoneProps & { ratio?: "square" | "banner" | "hero" | "portrait" }) => {
   const [hiddenOldValue, setHiddenOldValue] = useState<string | null>(null);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     disabled,
@@ -102,7 +102,9 @@ export const Dropzone = ({
                 ? "aspect-square"
                 : ratio === "hero"
                   ? "aspect-2/1"
-                  : "aspect-4/1",
+                  : ratio === "portrait"
+                    ? "aspect-9/16"
+                    : "aspect-4/1",
             )}
           >
             <Image
@@ -121,7 +123,7 @@ export const Dropzone = ({
             type="button"
           >
             <XIcon />
-            Ganti {ratio === "square" ? "Logo" : "Banner"}
+            Ganti {ratio === "square" ? "Logo" : ratio === "portrait" ? "Thumbnail" : "Banner"}
           </Button>
         </div>
       ) : (
@@ -133,7 +135,9 @@ export const Dropzone = ({
               ? "h-full"
               : ratio === "hero"
                 ? "w-full aspect-2/1"
-                : "w-full aspect-4/1",
+                : ratio === "portrait"
+                  ? "w-full aspect-9/16"
+                  : "w-full aspect-4/1",
             isDragActive
               ? "animate-pulse border-yellow-600 dark:border-yellow-300"
               : "border-gray-300 dark:border-gray-300/50",
@@ -150,7 +154,7 @@ export const Dropzone = ({
               <p>Klik atau seret & lepas file di sini</p>
               <p className="text-xs text-gray-400">
                 Rekomendasi ratio{" "}
-                {ratio === "square" ? "1:1" : ratio === "hero" ? "2:1" : "4:1"}{" "}
+                {ratio === "square" ? "1:1" : ratio === "hero" ? "2:1" : ratio === "portrait" ? "9:16" : "4:1"}{" "}
                 (.jpg, .jpeg, .png, .webp)
               </p>
             </div>

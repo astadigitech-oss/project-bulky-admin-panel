@@ -16,13 +16,15 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Send, X } from "lucide-react";
+import { Send, Upload, X } from "lucide-react";
 import { ComponentProps, useEffect, useId } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { generateSlug } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateVideo, useUpdateVideo } from "../../_api";
 import { VideoDetailType } from "../../_api/types";
@@ -33,6 +35,8 @@ import { useGetVideoCategorySelect } from "@/app/(main)/(source)/videos/categori
 const formSchema = z.object({
   judul_id: z.string().min(3, "Judul ID harus memiliki minimal 3 karakter"),
   judul_en: z.string().min(3, "Judul EN harus memiliki minimal 3 karakter"),
+  slug_id: z.string().optional(),
+  slug_en: z.string().optional(),
   deskripsi_id: z
     .string()
     .min(3, "Deskripsi ID harus memiliki minimal 3 karakter"),
@@ -65,6 +69,8 @@ export const DialogFormVideo = ({
     values: {
       judul_id: detail?.judul_id ?? "",
       judul_en: detail?.judul_en ?? "",
+      slug_id: detail?.slug_id ?? "",
+      slug_en: detail?.slug_en ?? "",
       deskripsi_id: detail?.deskripsi_id ?? "",
       deskripsi_en: detail?.deskripsi_en ?? "",
       kategori_id: detail?.kategori_id ?? "",
@@ -81,6 +87,21 @@ export const DialogFormVideo = ({
   const categories = categoriesSelect?.data ?? [];
   const isLoading = isCreating || isUpdating || isDisabled;
 
+  const judulId = useWatch({ control: form.control, name: "judul_id" });
+  const judulEn = useWatch({ control: form.control, name: "judul_en" });
+
+  useEffect(() => {
+    if (mode === "create") {
+      form.setValue("slug_id", generateSlug(judulId ?? ""));
+    }
+  }, [judulId]);
+
+  useEffect(() => {
+    if (mode === "create") {
+      form.setValue("slug_en", generateSlug(judulEn ?? ""));
+    }
+  }, [judulEn]);
+
   const handleClose = () => {
     onOpenChange(false);
     form.reset();
@@ -90,6 +111,8 @@ export const DialogFormVideo = ({
     const body = new FormData();
     body.append("judul_id", values.judul_id);
     body.append("judul_en", values.judul_en);
+    body.append("slug_id", values.slug_id ?? "");
+    body.append("slug_en", values.slug_en ?? "");
     body.append("deskripsi_id", values.deskripsi_id);
     body.append("deskripsi_en", values.deskripsi_en);
     body.append("kategori_id", values.kategori_id);
@@ -139,6 +162,112 @@ export const DialogFormVideo = ({
             <Skeleton className="w-full h-64" />
           ) : (
             <FieldGroup className="grid md:grid-cols-2 gap-4 max-h-[70vh] overflow-auto pr-1">
+              {/* Upload video & thumbnail — paling atas, 2 kolom */}
+              <Controller
+                name="video_file"
+                control={form.control}
+                disabled={isLoading}
+                render={({ field, fieldState }) => {
+                  const selectedFile = field.value?.[0];
+                  const previewUrl = selectedFile
+                    ? URL.createObjectURL(selectedFile)
+                    : null;
+                  return (
+                    <Field
+                      data-invalid={fieldState.invalid}
+                      className="gap-1"
+                    >
+                      <FieldLabel required={isCreate}>File Video</FieldLabel>
+                      {previewUrl ? (
+                        <div className="flex flex-col gap-2">
+                          <video
+                            src={previewUrl}
+                            controls
+                            className="w-full rounded-md border border-gray-300 dark:border-gray-300/50 max-h-52 object-contain bg-black"
+                          />
+                          <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                            <span className="truncate max-w-[80%]">{selectedFile?.name}</span>
+                            <span>{((selectedFile?.size ?? 0) / (1024 * 1024)).toFixed(2)} MB</span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={field.disabled}
+                            onClick={() => field.onChange([])}
+                          >
+                            <X className="size-3.5" />
+                            Ganti Video
+                          </Button>
+                        </div>
+                      ) : (
+                        <label
+                          className={cn(
+                            "flex flex-col items-center justify-center gap-2 w-full border rounded-md p-4 cursor-pointer transition aspect-9/16",
+                            "border-gray-300 dark:border-gray-300/50 hover:border-primary",
+                            fieldState.invalid && "border-red-500",
+                            field.disabled && "opacity-50 cursor-not-allowed",
+                          )}
+                        >
+                          <input
+                            type="file"
+                            accept="video/*"
+                            disabled={field.disabled}
+                            className="hidden"
+                            onChange={(e) =>
+                              field.onChange(Array.from(e.target.files ?? []))
+                            }
+                          />
+                          <Upload className="size-8 text-muted-foreground" />
+                          <div className="flex flex-col items-center text-sm">
+                            <span>Klik untuk pilih file video</span>
+                            <span className="text-xs text-muted-foreground">Rekomendasi ratio 9:16 (MP4, MOV, AVI, WEBM, dll.) </span>
+                          </div>
+                          {!!detail?.video_url && (
+                            <a
+                              href={detail.video_url}
+                              target="_blank"
+                              className="text-xs text-primary underline"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Lihat video saat ini
+                            </a>
+                          )}
+                        </label>
+                      )}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  );
+                }}
+              />
+
+              <Controller
+                name="thumbnail_file"
+                control={form.control}
+                disabled={isLoading}
+                render={({ field, fieldState }) => (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className="gap-1"
+                  >
+                    <FieldLabel>Thumbnail (9:16)</FieldLabel>
+                    <Dropzone
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={fieldState.invalid}
+                      ratio="portrait"
+                      oldValue={detail?.thumbnail_url}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
               <Controller
                 name="judul_id"
                 control={form.control}
@@ -177,6 +306,44 @@ export const DialogFormVideo = ({
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="slug_id"
+                control={form.control}
+                disabled={isLoading}
+                render={({ field }) => (
+                  <Field className="gap-1">
+                    <FieldLabel htmlFor={`${idForm}-${field.name}`}>
+                      Slug (ID)
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={`${idForm}-${field.name}`}
+                      placeholder="Otomatis dari Judul ID..."
+                      autoComplete="off"
+                    />
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="slug_en"
+                control={form.control}
+                disabled={isLoading}
+                render={({ field }) => (
+                  <Field className="gap-1">
+                    <FieldLabel htmlFor={`${idForm}-${field.name}`}>
+                      Slug (EN)
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={`${idForm}-${field.name}`}
+                      placeholder="Auto-generated from Title EN..."
+                      autoComplete="off"
+                    />
                   </Field>
                 )}
               />
@@ -240,66 +407,6 @@ export const DialogFormVideo = ({
                   >
                     <FieldLabel required>Deskripsi (EN)</FieldLabel>
                     <Textarea {...field} className="min-h-24" />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="video_file"
-                control={form.control}
-                disabled={isLoading}
-                render={({ field, fieldState }) => (
-                  <Field
-                    data-invalid={fieldState.invalid}
-                    className="gap-1 col-span-full"
-                  >
-                    <FieldLabel required={isCreate}>File Video</FieldLabel>
-                    <Input
-                      id={`${idForm}-${field.name}`}
-                      type="file"
-                      accept="video/*"
-                      disabled={field.disabled}
-                      onChange={(e) =>
-                        field.onChange(Array.from(e.target.files ?? []))
-                      }
-                    />
-                    {!!detail?.video_url && (
-                      <a
-                        href={detail.video_url}
-                        target="_blank"
-                        className="text-xs text-primary underline"
-                        rel="noreferrer"
-                      >
-                        Lihat video saat ini
-                      </a>
-                    )}
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="thumbnail_file"
-                control={form.control}
-                disabled={isLoading}
-                render={({ field, fieldState }) => (
-                  <Field
-                    data-invalid={fieldState.invalid}
-                    className="gap-1 col-span-full"
-                  >
-                    <FieldLabel>Thumbnail</FieldLabel>
-                    <Dropzone
-                      value={field.value}
-                      onChange={field.onChange}
-                      error={fieldState.invalid}
-                      ratio="hero"
-                      oldValue={detail?.thumbnail_url}
-                    />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}

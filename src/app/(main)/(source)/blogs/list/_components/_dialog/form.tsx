@@ -18,7 +18,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send, X } from "lucide-react";
 import { ComponentProps, useEffect, useId } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import dynamic from "next/dynamic";
 import { useCreateBlog, useUpdateBlog } from "../../_api";
 import { BlogDetailType } from "../../_api/types";
+import { generateSlug } from "@/lib/utils";
 import { Dropzone } from "@/components/ui/dropzone";
 import { useGetBlogCategorySelect } from "@/app/(main)/(source)/blogs/categories/_api";
 import { useGetTagBlogSelect } from "@/app/(main)/(source)/blogs/tags/_api";
@@ -120,6 +121,21 @@ export const DialogFormBlog = ({
   const labels = labelSelect?.data ?? [];
 
   const isLoading = isCreating || isUpdating || isDisabled;
+
+  const judulId = useWatch({ control: form.control, name: "judul_id" });
+  const judulEn = useWatch({ control: form.control, name: "judul_en" });
+
+  useEffect(() => {
+    if (mode === "create") {
+      form.setValue("slug_id", generateSlug(judulId ?? ""));
+    }
+  }, [judulId]);
+
+  useEffect(() => {
+    if (mode === "create") {
+      form.setValue("slug_en", generateSlug(judulEn ?? ""));
+    }
+  }, [judulEn]);
 
   const handleClose = () => {
     onOpenChange(false);

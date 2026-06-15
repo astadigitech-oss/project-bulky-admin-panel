@@ -33,6 +33,8 @@ import { CategoryPartIIType, CategoryPartIType } from "../../_api/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { generateSlug } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
@@ -45,6 +47,8 @@ export const IMAGE_RULES = {
 const formSchema = z.object({
   nama_id: z.string().min(3, "Nama ID harus memiliki minimal 3 karakter"),
   nama_en: z.string().min(3, "Nama EN harus memiliki minimal 3 karakter"),
+  slug_id: z.string().optional(),
+  slug_en: z.string().optional(),
   deskripsi: z.string().nullable().optional(),
   teks_kondisi: z
     .string()
@@ -104,6 +108,8 @@ const DialogFormCategory = ({
     values: {
       nama_id: detail?.nama.id ?? "",
       nama_en: detail?.nama.en ?? "",
+      slug_id: detail?.slug_id ?? detail?.slug ?? "",
+      slug_en: detail?.slug_en ?? "",
       deskripsi: detail?.deskripsi ?? "",
       tipe_kondisi_tambahan: detail?.tipe_kondisi_tambahan ?? undefined,
       teks_kondisi: undefined,
@@ -116,6 +122,21 @@ const DialogFormCategory = ({
   const { mutate: updateCategory, isPending: isUpdating } = useUpdateCategory();
 
   const isLoading = isCreating || isUpdating || isDisabled;
+
+  const namaId = useWatch({ control: form.control, name: "nama_id" });
+  const namaEn = useWatch({ control: form.control, name: "nama_en" });
+
+  useEffect(() => {
+    if (mode === "create") {
+      form.setValue("slug_id", generateSlug(namaId ?? ""));
+    }
+  }, [namaId]);
+
+  useEffect(() => {
+    if (mode === "create") {
+      form.setValue("slug_en", generateSlug(namaEn ?? ""));
+    }
+  }, [namaEn]);
 
   const handleClose = () => {
     onOpenChange(false);
@@ -142,6 +163,8 @@ const DialogFormCategory = ({
         const bodyCreate = new FormData();
         bodyCreate.append("nama_id", values.nama_id);
         bodyCreate.append("nama_en", values.nama_en);
+        bodyCreate.append("slug_id", values.slug_id ?? "");
+        bodyCreate.append("slug_en", values.slug_en ?? "");
         const deskripsiCreate = values.deskripsi?.trim();
         bodyCreate.append(
           "deskripsi",
@@ -174,6 +197,8 @@ const DialogFormCategory = ({
         const bodyUpdate = new FormData();
         bodyUpdate.append("nama_id", values.nama_id);
         bodyUpdate.append("nama_en", values.nama_en);
+        bodyUpdate.append("slug_id", values.slug_id ?? "");
+        bodyUpdate.append("slug_en", values.slug_en ?? "");
         const deskripsiUpdate = values.deskripsi?.trim();
         bodyUpdate.append(
           "deskripsi",
@@ -363,6 +388,44 @@ const DialogFormCategory = ({
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
                       )}
+                    </Field>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2 col-span-full">
+                <Controller
+                  name="slug_id"
+                  control={form.control}
+                  disabled={isDisabled}
+                  render={({ field }) => (
+                    <Field className="gap-1">
+                      <FieldLabel htmlFor={`${idFormStaff}-${field.name}`}>
+                        Slug (ID)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id={`${idFormStaff}-${field.name}`}
+                        placeholder="Otomatis dari Nama ID..."
+                        autoComplete="off"
+                      />
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="slug_en"
+                  control={form.control}
+                  disabled={isDisabled}
+                  render={({ field }) => (
+                    <Field className="gap-1">
+                      <FieldLabel htmlFor={`${idFormStaff}-${field.name}`}>
+                        Slug (EN)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id={`${idFormStaff}-${field.name}`}
+                        placeholder="Auto-generated from Name EN..."
+                        autoComplete="off"
+                      />
                     </Field>
                   )}
                 />
