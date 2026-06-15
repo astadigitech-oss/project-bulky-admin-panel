@@ -35,6 +35,7 @@ import axios from "axios";
 import { getCookie } from "cookies-next/client";
 import { apiUrl } from "@/config";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CHUNK_SIZE = 20 * 1024 * 1024; // 20MB per chunk
 
@@ -89,6 +90,7 @@ export const DialogFormVideo = ({
   const { mutate: createVideo, isPending: isCreating } = useCreateVideo();
   const { mutate: updateVideo, isPending: isUpdating } = useUpdateVideo();
   const { data: categoriesSelect } = useGetVideoCategorySelect();
+  const queryClient = useQueryClient();
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const abortRef = useRef(false);
 
@@ -168,6 +170,7 @@ export const DialogFormVideo = ({
 
         await axios.post(`${apiUrl}/video/finalize-chunk`, finalForm, { headers });
 
+        queryClient.invalidateQueries({ queryKey: ["video-list"] });
         toast.success("Video berhasil diupload dan sedang diproses");
         handleClose();
       } catch {

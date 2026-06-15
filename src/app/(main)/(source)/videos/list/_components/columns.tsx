@@ -64,7 +64,7 @@ export const column = ({
   },
   {
     accessorKey: "transcode_status",
-    header: "Status Konversi",
+    header: "Status Tayang",
     cell: ({ row }) => {
       const status = row.original.transcode_status;
       return status ? <Badge variant="outline">{status}</Badge> : <span className="text-muted-foreground">-</span>;
