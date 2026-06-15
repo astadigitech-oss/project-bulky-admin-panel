@@ -1,4 +1,1 @@
-# .nixpacksignore - Force Nixpacks to ignore Bun
-bun.lockb
-bun.lock
-.bun/
+

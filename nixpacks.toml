@@ -1,13 +1,16 @@
 # nixpacks.toml
 [phases.setup]
-nixPkgs = ["nodejs_20"]
+nixPkgs = ["nodejs_20", "curl", "bash"]
 aptPkgs = []
+cmds = [
+  "which bun || curl -fsSL https://bun.sh/install | bash",
+]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["bun install --frozen-lockfile"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["bun run build"]
 
 [start]
-cmd = "npm start"
+cmd = "bun run start"
