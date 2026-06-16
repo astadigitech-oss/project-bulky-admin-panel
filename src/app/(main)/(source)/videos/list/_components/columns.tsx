@@ -48,10 +48,16 @@ export const column = ({
   {
     accessorKey: "judul_id",
     header: "Judul (ID)",
+    cell: ({ row }) => (
+      <div className="line-clamp-2 max-w-56 text-sm">{row.original.judul_id}</div>
+    ),
   },
   {
     accessorKey: "judul_en",
     header: "Judul (EN)",
+    cell: ({ row }) => (
+      <div className="line-clamp-2 max-w-56 text-sm">{row.original.judul_en}</div>
+    ),
   },
   {
     accessorKey: "kategori.nama_id",

@@ -16,7 +16,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Send, X } from "lucide-react";
+import { Info, Send, X } from "lucide-react";
 import {
   ComponentProps,
   Dispatch,
@@ -221,6 +221,12 @@ export const DialogFormBannerTypeProduct = ({
                   </Field>
                 )}
               />
+              <div className="col-span-full px-2 lg:px-3 py-2 border rounded-md flex text-xs items-start gap-2 bg-blue-50 dark:bg-blue-400/10 border-blue-200 dark:border-blue-300/30">
+                <Info className="size-3.5 flex-none mt-0.5 text-blue-500" />
+                <p className="text-blue-700 dark:text-blue-300">
+                  Gunakan rasio <strong>~4.2:1</strong> — contoh: <strong>1276 × 302 px</strong> (atau 2x lipatnya <strong>2552 × 604 px</strong> untuk layar retina/HiDPI). Format JPG/PNG/<strong>WebP</strong>, maks 2MB.
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-6 col-span-full">
                 <Controller
                   name="nama"
