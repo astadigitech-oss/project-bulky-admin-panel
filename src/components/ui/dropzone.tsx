@@ -155,7 +155,7 @@ export const Dropzone = ({
               <p className="text-xs text-gray-400">
                 Rekomendasi ratio{" "}
                 {ratio === "square" ? "1:1" : ratio === "hero" ? "2:1" : ratio === "portrait" ? "9:16" : "4:1"}{" "}
-                (.jpg, .jpeg, .png, .webp)
+                ({Object.keys(accept).map((m) => `.${m.split("/")[1].replace("svg+xml", "svg")}`).join(", ")})
               </p>
             </div>
           )}
