@@ -44,7 +44,7 @@ import { id } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 
 export const IMAGE_RULES = {
-  mimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
+  mimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/svg+xml"],
   maxSize: 10 * 1024 * 1024,
 };
 
