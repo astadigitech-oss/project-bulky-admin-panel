@@ -223,12 +223,12 @@ export const DialogFormPromo = ({
       >
         <DialogHeader>
           <DialogTitle>
-            {mode === "edit" ? "Ubah Data Merek" : "Tambah Merek Baru"}
+            {mode === "edit" ? "Ubah Data Banner Promo" : "Tambah Banner Promo Baru"}
           </DialogTitle>
           <DialogDescription>
             {mode === "edit"
-              ? "Kelola informasi merek"
-              : "Tambahkan merek baru"}
+              ? "Kelola informasi banner promo"
+              : "Tambahkan banner promo baru"}
           </DialogDescription>
         </DialogHeader>
         <form
