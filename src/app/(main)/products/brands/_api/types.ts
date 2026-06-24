@@ -15,6 +15,8 @@ export type BrandType = {
   is_active: boolean;
   logo_url: string;
   slug: string;
+  slug_id?: string;
+  slug_en?: string;
   updated_at: string;
 };
 

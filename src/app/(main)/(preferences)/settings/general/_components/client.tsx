@@ -7,6 +7,7 @@ import { WhatsappServiceClient } from "./_section/whastapp-service";
 import { PickupClient } from "./_section/pickup";
 import { Settings } from "lucide-react";
 import { PaymentSetting } from "./_section/payment";
+import { AssetMigrationSection } from "./_section/asset-migration";
 
 export const GeneralSettingsClient = () => {
   return (
@@ -29,6 +30,8 @@ export const GeneralSettingsClient = () => {
       <PickupClient />
       <Separator />
       <PaymentSetting />
+      <Separator />
+      <AssetMigrationSection />
     </div>
   );
 };

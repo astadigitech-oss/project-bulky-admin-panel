@@ -20,6 +20,8 @@ export type PackageConditionPartIType = {
   created_at: string;
   deskripsi: string | null;
   slug: string;
+  slug_id?: string;
+  slug_en?: string;
 };
 
 export type PackageConditionListRequest = BaseListParams;

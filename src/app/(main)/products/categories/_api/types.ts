@@ -17,6 +17,8 @@ export type CategoryPartIType = {
 };
 export type CategoryPartIIType = {
   slug: string;
+  slug_id?: string;
+  slug_en?: string;
   deskripsi: string;
   teks_kondisi: string;
   gambar_kondisi_url: string;

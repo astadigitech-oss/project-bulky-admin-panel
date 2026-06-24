@@ -18,7 +18,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send, X } from "lucide-react";
 import { ComponentProps, useEffect, useId } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 import {
   InputGroup,
@@ -32,10 +32,14 @@ import { SourcePartIType, SourceType } from "../../_api/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { generateSlug } from "@/lib/utils";
 
 const formSchema = z.object({
   nama_id: z.string().min(3, "Nama ID harus memiliki minimal 3 karakter"),
   nama_en: z.string().min(3, "Nama EN harus memiliki minimal 3 karakter"),
+  slug_id: z.string().optional(),
+  slug_en: z.string().optional(),
   deskripsi: z.string().nullable().optional(),
 });
 
@@ -58,6 +62,8 @@ const DialogFormSource = ({
     values: {
       nama_id: detail?.nama.id ?? "",
       nama_en: detail?.nama.en ?? "",
+      slug_id: detail?.slug_id ?? detail?.slug ?? "",
+      slug_en: detail?.slug_en ?? "",
       deskripsi: detail?.deskripsi ?? "",
     },
   });
@@ -66,6 +72,21 @@ const DialogFormSource = ({
   const { mutate: updateSource, isPending: isUpdating } = useUpdateSource();
 
   const isLoading = isCreating || isUpdating || isDisabled;
+
+  const namaId = useWatch({ control: form.control, name: "nama_id" });
+  const namaEn = useWatch({ control: form.control, name: "nama_en" });
+
+  useEffect(() => {
+    if (mode === "create") {
+      form.setValue("slug_id", generateSlug(namaId ?? ""));
+    }
+  }, [namaId]);
+
+  useEffect(() => {
+    if (mode === "create") {
+      form.setValue("slug_en", generateSlug(namaEn ?? ""));
+    }
+  }, [namaEn]);
 
   const handleClose = () => {
     onOpenChange(false);
@@ -184,6 +205,44 @@ const DialogFormSource = ({
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
                       )}
+                    </Field>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2 col-span-full">
+                <Controller
+                  name="slug_id"
+                  control={form.control}
+                  disabled={isDisabled}
+                  render={({ field }) => (
+                    <Field className="gap-1">
+                      <FieldLabel htmlFor={`${idFormSourceProduct}-${field.name}`}>
+                        Slug (ID)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id={`${idFormSourceProduct}-${field.name}`}
+                        placeholder="Otomatis dari Nama ID..."
+                        autoComplete="off"
+                      />
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="slug_en"
+                  control={form.control}
+                  disabled={isDisabled}
+                  render={({ field }) => (
+                    <Field className="gap-1">
+                      <FieldLabel htmlFor={`${idFormSourceProduct}-${field.name}`}>
+                        Slug (EN)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id={`${idFormSourceProduct}-${field.name}`}
+                        placeholder="Auto-generated from Name EN..."
+                        autoComplete="off"
+                      />
                     </Field>
                   )}
                 />

@@ -20,6 +20,8 @@ export type ProductConditionPartIType = {
   created_at: string;
   deskripsi: string | null;
   slug: string;
+  slug_id?: string;
+  slug_en?: string;
 };
 
 export type ProductConditionListRequest = BaseListParams;

@@ -20,6 +20,7 @@ export type VideoType = {
   kategori: VideoCategoryRefType;
   is_active: boolean;
   view_count: number;
+  transcode_status: string | null;
   published_at: string | null;
   created_at: string;
 };

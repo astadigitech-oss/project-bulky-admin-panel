@@ -92,6 +92,17 @@ export const formatImageAlt = (str: string) => {
   return str.split(" ").join("_").toLowerCase();
 };
 
+export const generateSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+};
+
 export const typeMaintenances = [
   { label: "Big Update", value: "BIG_UPDATE" },
   { label: "Bug", value: "BUG" },
