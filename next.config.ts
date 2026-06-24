@@ -13,7 +13,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "api.bulky.id",
+        hostname: "**.bulky.id",
+      },
+      {
+        protocol: "https",
+        hostname: "**.astadigitalagency.com",
       },
       {
         protocol: "http",
