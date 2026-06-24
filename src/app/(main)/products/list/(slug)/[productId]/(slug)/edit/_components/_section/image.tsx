@@ -87,7 +87,7 @@ export const ImageSection = ({
   const handleUpload = (values: z.infer<typeof formSchema>) => {
     const body = new FormData();
     for (const g of values.gambar) {
-      body.append("gamabr", g);
+      body.append("gambar", g);
     }
     uploadImage(
       { body, params: { id: detail?.id } },
