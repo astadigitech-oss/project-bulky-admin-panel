@@ -1,11 +1,12 @@
 import { useApiQuery } from "@/lib/query/use-query";
 import { useMutate } from "@/lib/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { dataAPIOrder } from "./data";
+import { dataAPIOrder, dataAPIOrderTracking } from "./data";
 import {
   OrderDetailRequest,
   OrderListRequest,
   OrderStatisticsRequest,
+  OrderTrackingRequest,
 } from "./types";
 
 // ─── Query ───────────────────────────────────────────────────────────────────
@@ -23,10 +24,17 @@ export const useGetOrderDetail = ({ id }: OrderDetailRequest) =>
 export const useGetOrderStatistics = (params: OrderStatisticsRequest) =>
   useApiQuery(dataAPIOrder.query(params as any).statistics);
 
+export const useGetOrderTracking = (
+  params: OrderTrackingRequest & { enabled?: boolean },
+) => useApiQuery(dataAPIOrderTracking(params));
+
 // ─── Mutation ────────────────────────────────────────────────────────────────
 
 export const useUpdateOrderStatus = () =>
   useMutate(dataAPIOrder.mutation(useQueryClient()).updateStatus);
+
+export const useRetryBooking = () =>
+  useMutate(dataAPIOrder.mutation(useQueryClient()).retryBooking);
 
 export const useDeleteOrder = () =>
   useMutate(dataAPIOrder.mutation(useQueryClient()).delete);

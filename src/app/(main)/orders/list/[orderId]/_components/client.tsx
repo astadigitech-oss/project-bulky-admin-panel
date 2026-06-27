@@ -2,6 +2,8 @@
 
 import {
   useGetOrderDetail,
+  useGetOrderTracking,
+  useRetryBooking,
   useUpdateOrderStatus,
 } from "@/app/(main)/orders/_api";
 import type {
@@ -14,19 +16,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
@@ -38,10 +32,13 @@ import {
   User,
   Clock,
   RefreshCw,
+  Truck,
+  AlertCircle,
+  ArrowRight,
 } from "lucide-react";
 import { useState } from "react";
 
-const statusConfig: Record<string, { label: string; className: string }> = {
+const BASE_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   PENDING: {
     label: "Menunggu",
     className:
@@ -82,6 +79,21 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   },
 };
 
+const getStatusConfig = (
+  deliveryType?: string,
+): Record<string, { label: string; className: string }> => {
+  if (deliveryType === "PICKUP") {
+    return {
+      ...BASE_STATUS_CONFIG,
+      READY: {
+        label: "Siap Diambil",
+        className: BASE_STATUS_CONFIG.READY.className,
+      },
+    };
+  }
+  return BASE_STATUS_CONFIG;
+};
+
 const formatRupiah = (val: string | number) =>
   Number(val).toLocaleString("id-ID", {
     style: "currency",
@@ -89,44 +101,92 @@ const formatRupiah = (val: string | number) =>
     minimumFractionDigits: 0,
   });
 
-// Status yang bisa dipilih untuk update, berurutan sesuai alur
-const NEXT_STATUSES: Record<string, UpdateOrderStatusBody["order_status"][]> = {
-  PENDING: ["PROCESSING", "CANCELLED"],
-  PROCESSING: ["READY", "CANCELLED"],
-  READY: ["SHIPPED", "CANCELLED"],
-  SHIPPED: ["COMPLETED"],
-  COMPLETED: [],
-  CANCELLED: [],
+// Status berikutnya berdasarkan delivery_type
+const getNextStatuses = (
+  currentStatus: string,
+  deliveryType: string,
+): UpdateOrderStatusBody["order_status"][] => {
+  const isPickup = deliveryType === "PICKUP";
+  const flow: Record<string, UpdateOrderStatusBody["order_status"][]> = {
+    PENDING: ["PROCESSING"],
+    PROCESSING: ["READY"],
+    READY: isPickup ? ["COMPLETED"] : ["SHIPPED"],
+    SHIPPED: ["COMPLETED"],
+    COMPLETED: [],
+    CANCELLED: [],
+  };
+  return flow[currentStatus] ?? [];
+};
+
+const bookingStatusConfig: Record<
+  string,
+  { label: string; className: string }
+> = {
+  NOT_APPLICABLE: {
+    label: "Tidak berlaku",
+    className:
+      "bg-gray-500/10 border-gray-500/20 text-gray-600 dark:text-gray-300",
+  },
+  PENDING: {
+    label: "Menunggu",
+    className:
+      "bg-yellow-500/10 border-yellow-500/20 text-yellow-600 dark:text-yellow-400",
+  },
+  IN_PROGRESS: {
+    label: "Sedang diproses",
+    className:
+      "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400",
+  },
+  BOOKED: {
+    label: "Berhasil dipesan",
+    className:
+      "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400",
+  },
+  FAILED: {
+    label: "Gagal",
+    className: "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400",
+  },
 };
 
 export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
   const { data, isLoading, refetch } = useGetOrderDetail({ id: orderId });
   const { mutate: updateStatus, isPending: isUpdating } =
     useUpdateOrderStatus();
+  const { mutate: retryBooking, isPending: isRetrying } = useRetryBooking();
 
   const [openDialog, setOpenDialog] = useState(false);
-  const [newStatus, setNewStatus] = useState<
-    UpdateOrderStatusBody["order_status"] | ""
-  >("");
   const [note, setNote] = useState("");
+  const [trackingEnabled, setTrackingEnabled] = useState(false);
 
-  const handleUpdateStatus = () => {
-    if (!newStatus) return;
+  const {
+    data: trackingData,
+    isFetching: isLoadingTracking,
+    refetch: refetchTracking,
+  } = useGetOrderTracking({ id: orderId, enabled: trackingEnabled });
+
+  const handleUpdateStatus = (targetStatus: UpdateOrderStatusBody["order_status"]) => {
     updateStatus(
       {
         params: { id: orderId },
-        body: { order_status: newStatus, note: note || undefined },
+        body: { order_status: targetStatus, note: note || undefined },
       },
       {
         onSuccess: async () => {
           await refetch();
           setOpenDialog(false);
           setNote("");
-          setNewStatus("");
         },
       },
     );
   };
+
+  const handleRetryBooking = () => {
+    retryBooking(
+      { params: { id: orderId } },
+      { onSuccess: async () => { await refetch(); } },
+    );
+  };
+
   const order = data?.data;
 
   if (isLoading) {
@@ -145,6 +205,8 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
     );
   }
 
+  const statusConfig = getStatusConfig(order.delivery_type);
+
   const statusOrder = statusConfig[order.order_status] ?? {
     label: order.order_status,
     className: "",
@@ -154,72 +216,63 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
     className: "",
   };
 
-  const nextStatuses = NEXT_STATUSES[order.order_status] ?? [];
+  const nextStatuses = getNextStatuses(order.order_status, order.delivery_type);
   const alamat = order.alamat_pengiriman;
 
   return (
     <div className="flex flex-col gap-6">
       {/* Dialog Update Status */}
-      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent>
+      <Dialog open={openDialog} onOpenChange={(open) => { if (!open) setNote(""); setOpenDialog(open); }}>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Update Status Pesanan</DialogTitle>
-            <DialogDescription>
-              Pesanan{" "}
-              <span className="font-medium text-foreground">{order.kode}</span>{" "}
-              — status saat ini:{" "}
-              <span className="font-medium text-foreground">
-                {statusOrder.label}
-              </span>
-            </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label>Status Baru</Label>
-              <Select
-                value={newStatus}
-                onValueChange={(v) =>
-                  setNewStatus(v as UpdateOrderStatusBody["order_status"])
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih status..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {nextStatuses.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {statusConfig[s]?.label ?? s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+          {/* Visualisasi transisi status */}
+          <div className="flex items-center justify-center gap-3 py-2">
+            <div className="flex flex-col items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">Saat ini</span>
+              <Badge className={statusOrder.className}>{statusOrder.label}</Badge>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label>
-                Catatan{" "}
-                <span className="text-muted-foreground font-normal">
-                  (opsional)
-                </span>
-              </Label>
-              <Textarea
-                placeholder="Tambahkan catatan untuk perubahan status ini..."
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={3}
-              />
-            </div>
+            <ArrowRight className="size-4 text-muted-foreground shrink-0 mt-4" />
+            {nextStatuses.map((s) => {
+              const cfg = statusConfig[s] ?? { label: s, className: "" };
+              return (
+                <div key={s} className="flex flex-col items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">Berikutnya</span>
+                  <Badge className={cfg.className}>{cfg.label}</Badge>
+                </div>
+              );
+            })}
           </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>
+              Catatan{" "}
+              <span className="text-muted-foreground font-normal">(opsional)</span>
+            </Label>
+            <Textarea
+              placeholder="Tambahkan catatan untuk perubahan status ini..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+            />
+          </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenDialog(false)}>
+            <Button variant="outline" onClick={() => { setNote(""); setOpenDialog(false); }}>
               Batal
             </Button>
-            <Button
-              onClick={handleUpdateStatus}
-              disabled={!newStatus || isUpdating}
-            >
-              {isUpdating && <RefreshCw className="size-3.5 animate-spin" />}
-              Simpan
-            </Button>
+            {nextStatuses.map((s) => (
+              <Button
+                key={s}
+                onClick={() => handleUpdateStatus(s)}
+                disabled={isUpdating}
+              >
+                {isUpdating && <RefreshCw className="size-3.5 animate-spin" />}
+                Konfirmasi
+              </Button>
+            ))}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -244,7 +297,8 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
           </Badge>
           {nextStatuses.length > 0 && (
             <Button size="sm" onClick={() => setOpenDialog(true)}>
-              Update Status
+              <ArrowRight className="size-3.5" />
+              {statusConfig[nextStatuses[0]]?.label ?? nextStatuses[0]}
             </Button>
           )}
         </div>
@@ -310,6 +364,14 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                   <span className="text-muted-foreground">PPN</span>
                   <span>{formatRupiah(order.biaya_ppn)}</span>
                 </div>
+                {Number(order.biaya_lainnya) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      Premi Asuransi
+                    </span>
+                    <span>{formatRupiah(order.biaya_lainnya)}</span>
+                  </div>
+                )}
                 {Number(order.potongan_kupon) > 0 && (
                   <div className="flex justify-between text-emerald-600">
                     <span>Potongan Kupon</span>
@@ -420,6 +482,149 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Info Pengiriman */}
+          {order.delivery_type !== "PICKUP" && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Truck className="size-4" />
+                  Info Pengiriman
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2 text-sm">
+                {(() => {
+                  const si = order.shipping_info;
+                  const bsCfg = bookingStatusConfig[si.booking_status] ?? {
+                    label: si.booking_status,
+                    className: "",
+                  };
+                  const canRetry =
+                    (order.order_status === "PROCESSING" || order.order_status === "SHIPPED") &&
+                    (si.booking_status === "FAILED" || (si.booking_status === "PENDING" && !si.booking_id && !si.tracking_no));
+
+                  return (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">
+                          Status Booking
+                        </span>
+                        <Badge className={bsCfg.className}>
+                          {bsCfg.label}
+                        </Badge>
+                      </div>
+
+                      {si.booking_id && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Booking ID
+                          </span>
+                          <span className="font-mono text-xs">
+                            {si.booking_id}
+                          </span>
+                        </div>
+                      )}
+                      {si.tracking_no && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            No. Resi
+                          </span>
+                          <span className="font-mono text-xs">
+                            {si.tracking_no}
+                          </span>
+                        </div>
+                      )}
+
+                      {si.booking_error && (
+                        <div className="flex gap-2 mt-1 p-2 rounded-md bg-red-500/10 text-red-600 dark:text-red-400 text-xs">
+                          <AlertCircle className="size-3.5 mt-0.5 shrink-0" />
+                          <span>{si.booking_error}</span>
+                        </div>
+                      )}
+
+                      {canRetry && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full mt-1"
+                          onClick={handleRetryBooking}
+                          disabled={isRetrying}
+                        >
+                          {isRetrying ? (
+                            <RefreshCw className="size-3.5 animate-spin" />
+                          ) : (
+                            <RefreshCw className="size-3.5" />
+                          )}
+                          Retry Booking
+                        </Button>
+                      )}
+
+                      {(si.booking_id || si.tracking_no) && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full mt-1"
+                            onClick={() => {
+                              if (trackingEnabled) {
+                                refetchTracking();
+                              } else {
+                                setTrackingEnabled(true);
+                              }
+                            }}
+                            disabled={isLoadingTracking}
+                          >
+                            {isLoadingTracking ? (
+                              <RefreshCw className="size-3.5 animate-spin" />
+                            ) : (
+                              <Truck className="size-3.5" />
+                            )}
+                            {trackingEnabled ? "Refresh Tracking" : "Cek Tracking"}
+                          </Button>
+
+                          {trackingData?.data && (
+                            <div className="mt-2 rounded-md border border-border p-3 flex flex-col gap-2 text-xs">
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Provider</span>
+                                <span className="font-medium">{trackingData.data.provider}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Status</span>
+                                <span className="font-medium">{trackingData.data.status}</span>
+                              </div>
+                              {trackingData.data.tracking_url && (
+                                <a
+                                  href={trackingData.data.tracking_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 dark:text-blue-400 underline text-xs truncate"
+                                >
+                                  Lihat Tracking URL
+                                </a>
+                              )}
+                              {trackingData.data.history.length > 0 && (
+                                <div className="mt-1 flex flex-col gap-1.5">
+                                  <p className="text-muted-foreground font-medium">Riwayat</p>
+                                  {trackingData.data.history.map((evt, i) => (
+                                    <div key={i} className="flex gap-2 items-start">
+                                      <span className="text-muted-foreground shrink-0">
+                                        {evt.date} {evt.time}
+                                      </span>
+                                      <span>{evt.status}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Catatan */}
           {(order.catatan_buyer || order.catatan_admin) && (

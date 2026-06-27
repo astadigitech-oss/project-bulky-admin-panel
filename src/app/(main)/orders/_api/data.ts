@@ -12,13 +12,17 @@ import {
   OrderListResponse,
   OrderStatisticsRequest,
   OrderStatisticsResponse,
+  OrderTrackingRequest,
+  RetryBookingParams,
+  RetryBookingResponse,
+  TrackingResponse,
   UpdateOrderStatusBody,
   UpdateOrderStatusParams,
   UpdateOrderStatusResponse,
 } from "./types";
 
 // query-key
-const key = ["order-list", "order-detail", "order-statistics"];
+const key = ["order-list", "order-detail", "order-statistics", "order-tracking"];
 
 export const dataAPIOrder = {
   query: ({
@@ -93,6 +97,11 @@ export const dataAPIOrder = {
       UpdateOrderStatusBody,
       UpdateOrderStatusParams
     >;
+    retryBooking: UseMutateConfig<
+      RetryBookingResponse,
+      undefined,
+      RetryBookingParams
+    >;
     delete: UseMutateConfig<DeleteOrderResponse, undefined, DeleteOrderParams>;
   } => ({
     updateStatus: {
@@ -107,6 +116,19 @@ export const dataAPIOrder = {
           );
       },
       onError: { title: "UPDATE_STATUS_ORDER" },
+    },
+    retryBooking: {
+      endpoint: "/pesanan/:id/retry-booking",
+      method: "post",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient)
+          await invalidateQuery(
+            queryClient,
+            key.map((k) => [k]),
+          );
+      },
+      onError: { title: "RETRY_BOOKING_ORDER" },
     },
     delete: {
       endpoint: "/pesanan/:id",
@@ -132,4 +154,15 @@ export const dataAPIOrderStatistics = (
   endpoint: `/pesanan/statistics`,
   searchParams: params,
   placeholderData: keepPreviousData,
+});
+
+export const dataAPIOrderTracking = ({
+  id,
+  enabled,
+}: OrderTrackingRequest & { enabled?: boolean }): UseApiQueryProps<TrackingResponse> => ({
+  key: [key[3], id],
+  endpoint: `/pesanan/${id}/tracking`,
+  enabled: !!id && enabled,
+  staleTime: 0,
+  refetchOnWindowFocus: false,
 });
