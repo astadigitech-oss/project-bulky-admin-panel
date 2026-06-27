@@ -32,6 +32,8 @@ export type UpdateOrderStatusBody = {
 
 export type UpdateOrderStatusParams = BaseParams;
 
+export type RetryBookingParams = BaseParams;
+
 export type DeleteOrderParams = BaseParams;
 
 // ─── Response ───────────────────────────────────────────────────────────────
@@ -82,6 +84,13 @@ export type OrderDetailResponse = BaseResponse & {
       kode_pos: string;
     } | null;
     delivery_type: string;
+    shipping_info: {
+      delivery_type: string;
+      booking_id: string | null;
+      tracking_no: string | null;
+      booking_status: "NOT_APPLICABLE" | "PENDING" | "IN_PROGRESS" | "BOOKED" | "FAILED";
+      booking_error: string | null;
+    };
     payment_type: string;
     payment_status: string;
     order_status: string;
@@ -123,6 +132,7 @@ export type OrderDetailResponse = BaseResponse & {
     biaya_produk: string;
     biaya_pengiriman: string;
     biaya_ppn: string;
+    biaya_lainnya: string;
     potongan_kupon: string;
     total_bayar: string;
     catatan_buyer: string | null;
@@ -159,3 +169,30 @@ export type UpdateOrderStatusResponse = BaseResponse & {
 };
 
 export type DeleteOrderResponse = BaseResponse;
+
+export type RetryBookingResponse = BaseResponse & {
+  data: {
+    pesanan_id: string;
+    delivery_type: string;
+    booking_id: string | null;
+    tracking_no: string | null;
+  };
+};
+
+export type OrderTrackingRequest = BaseParams;
+
+export type TrackingEvent = {
+  date: string;
+  time: string;
+  status: string;
+};
+
+export type TrackingResponse = BaseResponse & {
+  data: {
+    provider: string;
+    booking_ref: string;
+    status: string;
+    tracking_url: string | null;
+    history: TrackingEvent[];
+  };
+};
