@@ -35,6 +35,7 @@ import {
   Truck,
   AlertCircle,
   ArrowRight,
+  ExternalLink,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -400,17 +401,17 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                 (p: OrderDetailResponse["data"]["pembayaran"][number]) => (
                   <div key={p.id} className="flex flex-col gap-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Metode</span>
+                      <span className="text-muted-foreground">Metode Pembayaran</span>
                       <span className="font-medium">
                         {p.metode_pembayaran.nama}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Jumlah</span>
+                      <span className="text-muted-foreground">Jumlah Bayar</span>
                       <span>{formatRupiah(p.jumlah)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status</span>
+                      <span className="text-muted-foreground">Status Pembayaran</span>
                       <Badge
                         className={statusConfig[p.status]?.className ?? ""}
                       >
@@ -419,7 +420,7 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                     </div>
                     {p.paid_at && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Dibayar</span>
+                        <span className="text-muted-foreground">Tanggal Pembayaran</span>
                         <span>
                           {format(new Date(p.paid_at), "dd MMM yyyy, HH:mm")}
                         </span>
@@ -583,38 +584,97 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                           </Button>
 
                           {trackingData?.data && (
-                            <div className="mt-2 rounded-md border border-border p-3 flex flex-col gap-2 text-xs">
-                              <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Provider</span>
-                                <span className="font-medium">{trackingData.data.provider}</span>
+                            <div className="mt-2 rounded-md border border-border overflow-hidden text-xs">
+                              {/* Header */}
+                              <div className="px-3 py-2 bg-muted/40 border-b border-border">
+                                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+                                  {trackingData.data.provider}
+                                </span>
                               </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Status</span>
-                                <span className="font-medium">{trackingData.data.status}</span>
+
+                              {/* Body */}
+                              <div className="p-3">
+                                {trackingData.data.provider === "DELIVEREE" ? (
+                                  <div className="flex flex-col gap-2">
+                                    <p className="text-muted-foreground text-[11px]">
+                                      Tracking pengiriman tersedia melalui portal Deliveree.
+                                    </p>
+                                    {trackingData.data.tracking_url ? (
+                                      <a
+                                        href={trackingData.data.tracking_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-1.5 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-2 font-medium hover:bg-blue-500/20 transition-colors"
+                                      >
+                                        <ExternalLink className="size-3.5" />
+                                        Lacak Pengiriman
+                                      </a>
+                                    ) : (
+                                      <p className="text-muted-foreground italic text-[11px]">
+                                        URL tracking belum tersedia.
+                                      </p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <>
+                                    {trackingData.data.tracking_url && (
+                                      <a
+                                        href={trackingData.data.tracking_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 text-blue-600 dark:text-blue-400 underline mb-3"
+                                      >
+                                        <ExternalLink className="size-3" />
+                                        Lihat Tracking URL
+                                      </a>
+                                    )}
+                                    {trackingData.data.history.length > 0 ? (
+                                      <div className="flex flex-col">
+                                        {trackingData.data.history.map((evt, i) => (
+                                          <div key={i} className="flex gap-2.5 items-start">
+                                            <div className="flex flex-col items-center shrink-0">
+                                              <div
+                                                className={`size-2 rounded-full mt-1 shrink-0 ${
+                                                  i === 0
+                                                    ? "bg-primary"
+                                                    : "bg-muted-foreground/40"
+                                                }`}
+                                              />
+                                              {i < trackingData.data.history.length - 1 && (
+                                                <div className="w-px flex-1 bg-border mt-1 min-h-[20px]" />
+                                              )}
+                                            </div>
+                                            <div className="pb-3 min-w-0">
+                                              <p
+                                                className={`leading-tight ${
+                                                  i === 0
+                                                    ? "font-semibold text-foreground"
+                                                    : "font-normal text-muted-foreground/80"
+                                                }`}
+                                              >
+                                                {evt.status}
+                                              </p>
+                                              <p
+                                                className={`text-[11px] mt-0.5 ${
+                                                  i === 0
+                                                    ? "text-muted-foreground"
+                                                    : "text-muted-foreground/60"
+                                                }`}
+                                              >
+                                                {evt.date} {evt.time}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-muted-foreground italic text-[11px]">
+                                        Belum ada riwayat pengiriman.
+                                      </p>
+                                    )}
+                                  </>
+                                )}
                               </div>
-                              {trackingData.data.tracking_url && (
-                                <a
-                                  href={trackingData.data.tracking_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 dark:text-blue-400 underline text-xs truncate"
-                                >
-                                  Lihat Tracking URL
-                                </a>
-                              )}
-                              {trackingData.data.history.length > 0 && (
-                                <div className="mt-1 flex flex-col gap-1.5">
-                                  <p className="text-muted-foreground font-medium">Riwayat</p>
-                                  {trackingData.data.history.map((evt, i) => (
-                                    <div key={i} className="flex gap-2 items-start">
-                                      <span className="text-muted-foreground shrink-0">
-                                        {evt.date} {evt.time}
-                                      </span>
-                                      <span>{evt.status}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           )}
                         </>
