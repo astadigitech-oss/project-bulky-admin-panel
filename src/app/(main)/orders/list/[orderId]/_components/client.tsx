@@ -2,6 +2,7 @@
 
 import {
   useGetOrderDetail,
+  useGetOrderInvoice,
   useGetOrderTracking,
   useRetryBooking,
   useUpdateOrderStatus,
@@ -36,6 +37,8 @@ import {
   AlertCircle,
   ArrowRight,
   ExternalLink,
+  FileText,
+  Download,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -93,6 +96,13 @@ const getStatusConfig = (
     };
   }
   return BASE_STATUS_CONFIG;
+};
+
+const DELIVERY_TYPE_LABEL: Record<string, string> = {
+  PICKUP: "Ambil Sendiri",
+  DELIVEREE: "Deliveree",
+  FORWARDER: "Forwarder (Darat)",
+  FORWARDER_LCL: "Forwarder (LCL)",
 };
 
 const formatRupiah = (val: string | number) =>
@@ -158,12 +168,19 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [note, setNote] = useState("");
   const [trackingEnabled, setTrackingEnabled] = useState(false);
+  const [invoiceEnabled, setInvoiceEnabled] = useState(false);
 
   const {
     data: trackingData,
     isFetching: isLoadingTracking,
     refetch: refetchTracking,
   } = useGetOrderTracking({ id: orderId, enabled: trackingEnabled });
+
+  const {
+    data: invoiceData,
+    isFetching: isLoadingInvoice,
+    refetch: refetchInvoice,
+  } = useGetOrderInvoice({ id: orderId, enabled: invoiceEnabled });
 
   const handleUpdateStatus = (targetStatus: UpdateOrderStatusBody["order_status"]) => {
     updateStatus(
@@ -478,7 +495,7 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
               )}
               <div className="flex items-center gap-2 mt-1">
                 <Badge className="bg-gray-500/10 border-gray-500/20 text-gray-600 dark:text-gray-300 text-xs">
-                  {order.delivery_type}
+                  {DELIVERY_TYPE_LABEL[order.delivery_type] ?? order.delivery_type}
                 </Badge>
               </div>
             </CardContent>
@@ -685,6 +702,105 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
               </CardContent>
             </Card>
           )}
+
+          {/* Invoice Forwarder */}
+          {(order.delivery_type === "FORWARDER" || order.delivery_type === "FORWARDER_LCL") &&
+            order.shipping_info.tracking_no && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <FileText className="size-4" />
+                    Invoice Forwarder
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      if (invoiceEnabled) {
+                        refetchInvoice();
+                      } else {
+                        setInvoiceEnabled(true);
+                      }
+                    }}
+                    disabled={isLoadingInvoice}
+                  >
+                    {isLoadingInvoice ? (
+                      <RefreshCw className="size-3.5 animate-spin" />
+                    ) : (
+                      <FileText className="size-3.5" />
+                    )}
+                    {invoiceEnabled ? "Refresh Invoice" : "Lihat Invoice"}
+                  </Button>
+
+                  {invoiceEnabled && invoiceData?.data && (
+                    invoiceData.data.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic text-center py-2">
+                        Belum ada invoice tersedia.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-3 mt-1">
+                        {invoiceData.data.map((inv) => (
+                          <div
+                            key={inv.invoice_id}
+                            className="rounded-md border border-border text-xs overflow-hidden"
+                          >
+                            <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between gap-2">
+                              <div className="flex flex-col gap-0.5 min-w-0">
+                                <span className="font-semibold truncate">{inv.invoice_no}</span>
+                                <span className="text-muted-foreground">{inv.booking_no}</span>
+                              </div>
+                              <Badge
+                                className={
+                                  inv.status === "PAID"
+                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0"
+                                    : "bg-yellow-500/10 border-yellow-500/20 text-yellow-600 dark:text-yellow-400 shrink-0"
+                                }
+                              >
+                                {inv.status}
+                              </Badge>
+                            </div>
+                            <div className="p-3 flex flex-col gap-1.5">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Tgl Invoice</span>
+                                <span>{inv.invoice_date}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Jatuh Tempo</span>
+                                <span>{inv.due_date}</span>
+                              </div>
+                              {inv.data_detail.map((d, i) => (
+                                <div key={i} className="flex justify-between">
+                                  <span className="text-muted-foreground truncate mr-2">{d.freight_element_name}</span>
+                                  <span className="shrink-0">
+                                    {Number(d.total_idr).toLocaleString("id-ID", {
+                                      style: "currency",
+                                      currency: "IDR",
+                                      minimumFractionDigits: 0,
+                                    })}
+                                  </span>
+                                </div>
+                              ))}
+                              <a
+                                href={inv.download_invoice_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-1.5 mt-1 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1.5 font-medium hover:bg-blue-500/20 transition-colors"
+                              >
+                                <Download className="size-3" />
+                                Download PDF
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
           {/* Catatan */}
           {(order.catatan_buyer || order.catatan_admin) && (

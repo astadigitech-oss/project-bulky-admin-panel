@@ -8,6 +8,8 @@ import {
   DeleteOrderResponse,
   OrderDetailRequest,
   OrderDetailResponse,
+  OrderInvoiceRequest,
+  OrderInvoiceResponse,
   OrderListRequest,
   OrderListResponse,
   OrderStatisticsRequest,
@@ -145,6 +147,17 @@ export const dataAPIOrder = {
     },
   }),
 };
+
+export const dataAPIOrderInvoice = ({
+  id,
+  enabled,
+}: OrderInvoiceRequest & { enabled?: boolean }): UseApiQueryProps<OrderInvoiceResponse> => ({
+  key: ["order-invoice", id],
+  endpoint: `/pesanan/${id}/invoice`,
+  enabled: !!id && enabled,
+  staleTime: 0,
+  refetchOnWindowFocus: false,
+});
 
 // statistik query terpisah karena param berbeda
 export const dataAPIOrderStatistics = (
