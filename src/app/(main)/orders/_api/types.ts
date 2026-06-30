@@ -179,6 +179,42 @@ export type RetryBookingResponse = BaseResponse & {
   };
 };
 
+export type OrderInvoiceRequest = BaseParams;
+
+export type ForwarderInvoiceDetail = {
+  freight_element_name: string;
+  basis_name: string;
+  total_idr: string;
+  amount: string;
+  total: string;
+  subtotal: string;
+  invoice_no: string;
+  qty: string;
+  container_type: string;
+  currency: string;
+  tax: string;
+  remark: string;
+};
+
+export type ForwarderInvoice = {
+  booking_no: string;
+  invoice_no: string;
+  due_date: string;
+  invoice_id: string;
+  currency: string;
+  remark: string;
+  create_date: string;
+  download_invoice_url: string;
+  data_detail: ForwarderInvoiceDetail[];
+  invoice_date: string;
+  quotation_no: string;
+  status: string;
+};
+
+export type OrderInvoiceResponse = BaseResponse & {
+  data: ForwarderInvoice[];
+};
+
 export type OrderTrackingRequest = BaseParams;
 
 export type TrackingEvent = {
