@@ -6,6 +6,11 @@ import { ErrorResposeType } from "./types";
  * Handles error response and shows a toast notification.
  */
 export const errorResponse = ({ err, title }: ErrorResposeType) => {
-  toast.error(`ERROR ${err?.status}: ${(err?.response?.data as any)?.message}`);
+  const status = err?.response?.status;
+  const message =
+    (err?.response?.data as any)?.message ??
+    err?.message ??
+    "Terjadi kesalahan, silakan coba lagi";
+  toast.error(status ? `[${status}] ${message}` : message);
   console.log(`ERROR_${title}:`, err);
 };
