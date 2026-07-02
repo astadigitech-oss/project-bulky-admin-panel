@@ -1,8 +1,9 @@
 import { useApiQuery } from "@/lib/query/use-query";
 import { useMutate } from "@/lib/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { dataAPIOrder, dataAPIOrderInvoice, dataAPIOrderTracking } from "./data";
+import { dataAPIOrder, dataAPIOrderDelivereeDetail, dataAPIOrderInvoice, dataAPIOrderTracking } from "./data";
 import {
+  OrderDelivereeDetailRequest,
   OrderDetailRequest,
   OrderInvoiceRequest,
   OrderListRequest,
@@ -32,6 +33,10 @@ export const useGetOrderTracking = (
 export const useGetOrderInvoice = (
   params: OrderInvoiceRequest & { enabled?: boolean },
 ) => useApiQuery(dataAPIOrderInvoice(params));
+
+export const useGetOrderDelivereeDetail = (
+  params: OrderDelivereeDetailRequest & { enabled?: boolean },
+) => useApiQuery(dataAPIOrderDelivereeDetail(params));
 
 // ─── Mutation ────────────────────────────────────────────────────────────────
 

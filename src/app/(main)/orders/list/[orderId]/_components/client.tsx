@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useGetOrderDelivereeDetail,
   useGetOrderDetail,
   useGetOrderInvoice,
   useGetOrderTracking,
@@ -169,6 +170,7 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
   const [note, setNote] = useState("");
   const [trackingEnabled, setTrackingEnabled] = useState(false);
   const [invoiceEnabled, setInvoiceEnabled] = useState(false);
+  const [delivereeDetailEnabled, setDelivereeDetailEnabled] = useState(false);
 
   const {
     data: trackingData,
@@ -181,6 +183,12 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
     isFetching: isLoadingInvoice,
     refetch: refetchInvoice,
   } = useGetOrderInvoice({ id: orderId, enabled: invoiceEnabled });
+
+  const {
+    data: delivereeDetailData,
+    isFetching: isLoadingDelivereeDetail,
+    refetch: refetchDelivereeDetail,
+  } = useGetOrderDelivereeDetail({ id: orderId, enabled: delivereeDetailEnabled });
 
   const handleUpdateStatus = (targetStatus: UpdateOrderStatusBody["order_status"]) => {
     updateStatus(
@@ -518,7 +526,7 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                     className: "",
                   };
                   const canRetry =
-                    (order.order_status === "PROCESSING" || order.order_status === "SHIPPED") &&
+                    (order.order_status === "PROCESSING" || order.order_status === "READY" || order.order_status === "SHIPPED") &&
                     (si.booking_status === "FAILED" || (si.booking_status === "PENDING" && !si.booking_id && !si.tracking_no));
 
                   return (
@@ -697,6 +705,121 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                         </>
                       )}
                     </>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Deliveree Detail */}
+          {order.delivery_type === "DELIVEREE" && order.shipping_info.booking_id && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Truck className="size-4" />
+                  Detail Deliveree
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    if (delivereeDetailEnabled) {
+                      refetchDelivereeDetail();
+                    } else {
+                      setDelivereeDetailEnabled(true);
+                    }
+                  }}
+                  disabled={isLoadingDelivereeDetail}
+                >
+                  {isLoadingDelivereeDetail ? (
+                    <RefreshCw className="size-3.5 animate-spin" />
+                  ) : (
+                    <Package className="size-3.5" />
+                  )}
+                  {delivereeDetailEnabled ? "Refresh Detail" : "Lihat Detail"}
+                </Button>
+
+                {delivereeDetailEnabled && delivereeDetailData?.data && (() => {
+                  const d = delivereeDetailData.data;
+                  const formatRp = (val: number) =>
+                    val.toLocaleString("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 });
+
+                  const deliveryStatusLabel: Record<string, string> = {
+                    locating_driver: "Mencari Driver",
+                    driver_accept_booking: "Driver Diterima",
+                    delivery_in_progress: "Dalam Perjalanan",
+                    delivery_completed: "Selesai",
+                    canceled: "Dibatalkan",
+                    locating_driver_timeout: "Timeout",
+                  };
+
+                  return (
+                    <div className="rounded-md border border-border overflow-hidden text-xs mt-1">
+                      {/* Header */}
+                      <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between gap-2">
+                        <span className="font-semibold text-[11px]">ID #{d.id}</span>
+                        <span className="text-muted-foreground">{deliveryStatusLabel[d.status] ?? d.status}</span>
+                      </div>
+
+                      <div className="p-3 flex flex-col gap-2">
+                        {/* Kendaraan */}
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Kendaraan</span>
+                          <span>{d.vehicle_type_info.name}</span>
+                        </div>
+
+                        {/* Total biaya */}
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Total Biaya</span>
+                          <span className="font-semibold">{formatRp(d.total_fees)}</span>
+                        </div>
+
+                        {/* Driver */}
+                        {d.driver && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Driver</span>
+                            <span>{d.driver.name} · {d.driver.phone}</span>
+                          </div>
+                        )}
+
+                        {/* Tracking URL */}
+                        {d.tracking_url && (
+                          <a
+                            href={d.tracking_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-1.5 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-2 font-medium hover:bg-blue-500/20 transition-colors mt-1"
+                          >
+                            <ExternalLink className="size-3.5" />
+                            Lacak Pengiriman
+                          </a>
+                        )}
+
+                        {/* Lokasi */}
+                        {d.locations.length > 0 && (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+                              Lokasi
+                            </span>
+                            {d.locations.map((loc, i) => (
+                              <div key={loc.id} className="flex flex-col gap-0.5 pl-2 border-l-2 border-border">
+                                <span className="text-[10px] text-muted-foreground">
+                                  {i === 0 ? "Pickup" : `Drop-off ${i}`}
+                                </span>
+                                <span className="font-medium leading-tight">{loc.name}</span>
+                                <span className="text-muted-foreground">{loc.recipient_name} · {loc.recipient_phone}</span>
+                                <span className={`mt-0.5 ${loc.delivery_status === "delivered" ? "text-emerald-600" : "text-muted-foreground"}`}>
+                                  {loc.delivery_status}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   );
                 })()}
               </CardContent>

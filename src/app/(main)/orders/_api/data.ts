@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import {
   DeleteOrderParams,
   DeleteOrderResponse,
+  OrderDelivereeDetailRequest,
+  OrderDelivereeDetailResponse,
   OrderDetailRequest,
   OrderDetailResponse,
   OrderInvoiceRequest,
@@ -175,6 +177,17 @@ export const dataAPIOrderTracking = ({
 }: OrderTrackingRequest & { enabled?: boolean }): UseApiQueryProps<TrackingResponse> => ({
   key: [key[3], id],
   endpoint: `/pesanan/${id}/tracking`,
+  enabled: !!id && enabled,
+  staleTime: 0,
+  refetchOnWindowFocus: false,
+});
+
+export const dataAPIOrderDelivereeDetail = ({
+  id,
+  enabled,
+}: OrderDelivereeDetailRequest & { enabled?: boolean }): UseApiQueryProps<OrderDelivereeDetailResponse> => ({
+  key: ["order-deliveree-detail", id],
+  endpoint: `/pesanan/${id}/deliveree-detail`,
   enabled: !!id && enabled,
   staleTime: 0,
   refetchOnWindowFocus: false,
