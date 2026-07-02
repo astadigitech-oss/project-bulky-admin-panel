@@ -217,6 +217,76 @@ export type OrderInvoiceResponse = BaseResponse & {
 
 export type OrderTrackingRequest = BaseParams;
 
+export type OrderDelivereeDetailRequest = BaseParams;
+
+export type DelivereeVehicleTypeInfo = {
+  id: number;
+  name: string;
+  cargo_length: number;
+  cargo_height: number;
+  cargo_width: number;
+  cargo_weight: number;
+  cargo_cubic_meter: number;
+};
+
+export type DelivereeDriver = {
+  id: number;
+  name: string;
+  phone: string;
+  driver_image_url: string;
+  last_known_position_lat: number;
+  last_known_position_lng: number;
+};
+
+export type DelivereeDeliveryLocation = {
+  id: number;
+  name: string;
+  driver_note: string;
+  note: string;
+  recipient_name: string;
+  recipient_phone: string;
+  delivery_status: string;
+  failed_delivery_reason: string;
+  signature_url: string;
+  arrived_at: string;
+  leaved_at: string;
+  latitude: number;
+  longitude: number;
+  parking_fees: number;
+  tolls_fees: number;
+  waiting_time_fees: number;
+  tracking_sharing: string;
+};
+
+export type DelivereeDeliveryDetail = {
+  id: number;
+  customer_name: string;
+  driver_id: number;
+  vehicle_type_info: DelivereeVehicleTypeInfo;
+  time_type: string;
+  status: string;
+  note: string;
+  total_fees: number;
+  currency: string;
+  tracking_url: string;
+  job_order_number: string;
+  created_at: string;
+  pickup_time: string;
+  completed_at: string;
+  driver: DelivereeDriver | null;
+  locations: DelivereeDeliveryLocation[];
+  require_signatures: boolean;
+  distance_fees: number;
+  cod_pod_fees: number;
+  cod_pod: boolean;
+  surcharges_fees: number;
+  way_point_fees: number;
+};
+
+export type OrderDelivereeDetailResponse = BaseResponse & {
+  data: DelivereeDeliveryDetail;
+};
+
 export type TrackingEvent = {
   date: string;
   time: string;
