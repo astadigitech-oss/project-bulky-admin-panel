@@ -41,7 +41,7 @@ import {
   FileText,
   Download,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const BASE_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   PENDING: {
@@ -168,9 +168,38 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
 
   const [openDialog, setOpenDialog] = useState(false);
   const [note, setNote] = useState("");
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
+
+  const startPolling = () => {
+    stopPolling();
+    pollingRef.current = setInterval(async () => {
+      const result = await refetch();
+      const bookingStatus = result.data?.data?.shipping_info?.booking_status;
+      if (bookingStatus !== "IN_PROGRESS") stopPolling();
+    }, 3000);
+  };
+
+  useEffect(() => {
+    const bookingStatus = data?.data?.shipping_info?.booking_status;
+    if (bookingStatus === "IN_PROGRESS") {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+    return () => stopPolling();
+  }, [data?.data?.shipping_info?.booking_status]);
+
   const [trackingEnabled, setTrackingEnabled] = useState(false);
   const [invoiceEnabled, setInvoiceEnabled] = useState(false);
   const [delivereeDetailEnabled, setDelivereeDetailEnabled] = useState(false);
+  const [delivereeDetailModalOpen, setDelivereeDetailModalOpen] = useState(false);
 
   const {
     data: trackingData,
@@ -302,6 +331,187 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Detail Deliveree */}
+      {order.delivery_type === "DELIVEREE" && order.shipping_info.booking_id && (
+        <Dialog open={delivereeDetailModalOpen} onOpenChange={setDelivereeDetailModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Truck className="size-4" />
+                Detail Deliveree
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="flex justify-end -mt-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => refetchDelivereeDetail()}
+                disabled={isLoadingDelivereeDetail}
+              >
+                <RefreshCw className={`size-3.5 ${isLoadingDelivereeDetail ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+            </div>
+
+            {isLoadingDelivereeDetail && !delivereeDetailData && (
+              <div className="text-sm text-muted-foreground text-center py-6">
+                Memuat detail...
+              </div>
+            )}
+
+            {delivereeDetailData?.data && (() => {
+              const d = delivereeDetailData.data;
+              const formatRp = (val: number) =>
+                val.toLocaleString("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 });
+
+              const deliveryStatusLabel: Record<string, string> = {
+                locating_driver: "Mencari Driver",
+                driver_accept_booking: "Driver Diterima",
+                delivery_in_progress: "Dalam Perjalanan",
+                delivery_complete: "Selesai",
+                delivery_completed: "Selesai",
+                canceled: "Dibatalkan",
+                locating_driver_timeout: "Timeout",
+              };
+
+              const deliveryStatusClass: Record<string, string> = {
+                delivery_complete: "text-emerald-600",
+                canceled: "text-red-500",
+                locating_driver_timeout: "text-red-500",
+                delivery_in_progress: "text-blue-500",
+                locating_driver: "text-yellow-500",
+                driver_accept_booking: "text-blue-500",
+              };
+
+              const locationStatusClass: Record<string, string> = {
+                delivered: "text-emerald-600",
+                failed: "text-red-500",
+              };
+
+              return (
+                <div className="flex flex-col gap-4 overflow-y-auto max-h-[75vh] pr-1">
+                  {/* ID + Status */}
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm font-semibold">ID #{d.id}</span>
+                    <span className={`text-sm font-medium ${deliveryStatusClass[d.status] ?? "text-muted-foreground"}`}>
+                      {deliveryStatusLabel[d.status] ?? d.status}
+                    </span>
+                  </div>
+
+                  {/* Info grid: 2 kolom */}
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs text-muted-foreground">Kendaraan</span>
+                      <span className="font-medium">{d.vehicle_type_info.name}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs text-muted-foreground">Total Biaya</span>
+                      <span className="font-semibold">{formatRp(d.total_fees)}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs text-muted-foreground">Dibuat</span>
+                      <span>{d.created_at ? format(new Date(d.created_at), "dd MMM yyyy, HH:mm") : "-"}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs text-muted-foreground">Pickup</span>
+                      <span>{d.pickup_time ? format(new Date(d.pickup_time), "dd MMM yyyy, HH:mm") : "-"}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs text-muted-foreground">Selesai</span>
+                      <span>{d.completed_at ? format(new Date(d.completed_at), "dd MMM yyyy, HH:mm") : "-"}</span>
+                    </div>
+                    {d.driver && (
+                      <>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs text-muted-foreground">Driver</span>
+                          <span>{d.driver.name}</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs text-muted-foreground">Telepon Driver</span>
+                          <span>{d.driver.phone}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Retry — hanya saat Deliveree cancel */}
+                  {(d.status === "canceled" || d.status === "locating_driver_timeout") && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full border-orange-500/30 text-orange-600 hover:bg-orange-500/10"
+                      onClick={() => {
+                        setDelivereeDetailModalOpen(false);
+                        retryBooking(
+                          { params: { id: orderId } },
+                          { onSuccess: async () => { await refetch(); } },
+                        );
+                      }}
+                      disabled={isRetrying}
+                    >
+                      {isRetrying ? (
+                        <RefreshCw className="size-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="size-3.5" />
+                      )}
+                      Booking Ulang
+                    </Button>
+                  )}
+
+                  {/* Tracking URL */}
+                  {d.tracking_url && (
+                    <a
+                      href={d.tracking_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-2 text-sm font-medium hover:bg-blue-500/20 transition-colors"
+                    >
+                      <ExternalLink className="size-3.5" />
+                      Lacak Pengiriman
+                    </a>
+                  )}
+
+                  {/* Lokasi — status only, no address */}
+                  {d.locations.length > 0 && (
+                    <>
+                      <Separator />
+                      <div className="flex flex-col gap-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Status Per Lokasi</p>
+                        {d.locations.map((loc, i) => (
+                          <div key={loc.id} className="flex flex-col gap-1 pl-3 border-l-2 border-border text-sm">
+                            <span className="text-xs text-muted-foreground">
+                              {i === 0 ? "Pickup" : `Drop-off ${i}`}
+                            </span>
+                            <span className="font-medium leading-snug">{loc.name}</span>
+                            <span className={`text-xs ${locationStatusClass[loc.delivery_status] ?? "text-muted-foreground"}`}>
+                              {(deliveryStatusLabel[loc.delivery_status] ?? loc.delivery_status) || "Belum ada status"}
+                            </span>
+                            {loc.arrived_at && (
+                              <span className="text-xs text-muted-foreground">
+                                Tiba: {format(new Date(loc.arrived_at), "dd MMM yyyy, HH:mm")}
+                              </span>
+                            )}
+                            {loc.leaved_at && (
+                              <span className="text-xs text-muted-foreground">
+                                Keluar: {format(new Date(loc.leaved_at), "dd MMM yyyy, HH:mm")}
+                              </span>
+                            )}
+                            {loc.failed_delivery_reason && (
+                              <span className="text-xs text-red-500">{loc.failed_delivery_reason}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -720,7 +930,7 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                   Detail Deliveree
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-2">
+              <CardContent>
                 <Button
                   size="sm"
                   variant="outline"
@@ -731,6 +941,7 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                     } else {
                       setDelivereeDetailEnabled(true);
                     }
+                    setDelivereeDetailModalOpen(true);
                   }}
                   disabled={isLoadingDelivereeDetail}
                 >
@@ -739,89 +950,8 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                   ) : (
                     <Package className="size-3.5" />
                   )}
-                  {delivereeDetailEnabled ? "Refresh Detail" : "Lihat Detail"}
+                  Lihat Detail
                 </Button>
-
-                {delivereeDetailEnabled && delivereeDetailData?.data && (() => {
-                  const d = delivereeDetailData.data;
-                  const formatRp = (val: number) =>
-                    val.toLocaleString("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 });
-
-                  const deliveryStatusLabel: Record<string, string> = {
-                    locating_driver: "Mencari Driver",
-                    driver_accept_booking: "Driver Diterima",
-                    delivery_in_progress: "Dalam Perjalanan",
-                    delivery_completed: "Selesai",
-                    canceled: "Dibatalkan",
-                    locating_driver_timeout: "Timeout",
-                  };
-
-                  return (
-                    <div className="rounded-md border border-border overflow-hidden text-xs mt-1">
-                      {/* Header */}
-                      <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between gap-2">
-                        <span className="font-semibold text-[11px]">ID #{d.id}</span>
-                        <span className="text-muted-foreground">{deliveryStatusLabel[d.status] ?? d.status}</span>
-                      </div>
-
-                      <div className="p-3 flex flex-col gap-2">
-                        {/* Kendaraan */}
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Kendaraan</span>
-                          <span>{d.vehicle_type_info.name}</span>
-                        </div>
-
-                        {/* Total biaya */}
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Total Biaya</span>
-                          <span className="font-semibold">{formatRp(d.total_fees)}</span>
-                        </div>
-
-                        {/* Driver */}
-                        {d.driver && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Driver</span>
-                            <span>{d.driver.name} · {d.driver.phone}</span>
-                          </div>
-                        )}
-
-                        {/* Tracking URL */}
-                        {d.tracking_url && (
-                          <a
-                            href={d.tracking_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-1.5 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-2 font-medium hover:bg-blue-500/20 transition-colors mt-1"
-                          >
-                            <ExternalLink className="size-3.5" />
-                            Lacak Pengiriman
-                          </a>
-                        )}
-
-                        {/* Lokasi */}
-                        {d.locations.length > 0 && (
-                          <div className="flex flex-col gap-1.5 mt-1">
-                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                              Lokasi
-                            </span>
-                            {d.locations.map((loc, i) => (
-                              <div key={loc.id} className="flex flex-col gap-0.5 pl-2 border-l-2 border-border">
-                                <span className="text-[10px] text-muted-foreground">
-                                  {i === 0 ? "Pickup" : `Drop-off ${i}`}
-                                </span>
-                                <span className="font-medium leading-tight">{loc.name}</span>
-                                <span className="text-muted-foreground">{loc.recipient_name} · {loc.recipient_phone}</span>
-                                <span className={`mt-0.5 ${loc.delivery_status === "delivered" ? "text-emerald-600" : "text-muted-foreground"}`}>
-                                  {loc.delivery_status}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
               </CardContent>
             </Card>
           )}
