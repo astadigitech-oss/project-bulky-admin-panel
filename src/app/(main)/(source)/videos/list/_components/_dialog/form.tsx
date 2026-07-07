@@ -122,8 +122,8 @@ export const DialogFormVideo = ({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const videoFile = values.video_file?.[0];
 
-    // Chunk upload: dipakai saat create dengan video file
-    if (isCreate && videoFile) {
+    // Chunk upload: dipakai saat ada video file (create maupun update)
+    if (videoFile) {
       abortRef.current = false;
       setUploadProgress(0);
 
@@ -168,9 +168,14 @@ export const DialogFormVideo = ({
           finalForm.append("thumbnail_file", values.thumbnail_file[0]);
         }
 
-        await axios.post(`${apiUrl}/video/finalize-chunk`, finalForm, { headers });
+        const finalizeUrl = isCreate
+          ? `${apiUrl}/video/finalize-chunk`
+          : `${apiUrl}/video/${detail?.id}/finalize-chunk`;
+
+        await axios.post(finalizeUrl, finalForm, { headers });
 
         queryClient.invalidateQueries({ queryKey: ["video-list"] });
+        if (!isCreate) queryClient.invalidateQueries({ queryKey: ["video-detail", detail?.id] });
         toast.success("Video berhasil diupload dan sedang diproses");
         handleClose();
       } catch {
@@ -181,7 +186,7 @@ export const DialogFormVideo = ({
       return;
     }
 
-    // Upload biasa (update, atau create tanpa video file)
+    // Upload biasa (tanpa video file — update metadata/thumbnail saja)
     const body = new FormData();
     body.append("judul_id", values.judul_id);
     body.append("judul_en", values.judul_en);
@@ -191,10 +196,6 @@ export const DialogFormVideo = ({
     body.append("deskripsi_en", values.deskripsi_en);
     body.append("kategori_id", values.kategori_id);
     body.append("is_active", String(values.is_active));
-
-    if (values.video_file && values.video_file.length > 0) {
-      body.append("video_file", values.video_file[0]);
-    }
 
     if (values.thumbnail_file && values.thumbnail_file.length > 0) {
       body.append("thumbnail_file", values.thumbnail_file[0]);
