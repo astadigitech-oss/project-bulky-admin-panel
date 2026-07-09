@@ -91,10 +91,11 @@ const data = {
           title: "Sumber",
           url: "/products/sources",
         },
-        {
-          title: "Banner Jenis Produk",
-          url: "/products/banners",
-        },
+        // disabled for a temporary time, will be re-enabled in the future
+        // {
+        //   title: "Banner Jenis Produk",
+        //   url: "/products/banners",
+        // },
         {
           title: "Kondisi Produk",
           url: "/products/conditions/product",
