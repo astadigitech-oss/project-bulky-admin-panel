@@ -267,7 +267,7 @@ export const ProductIdClient = () => {
       body.append("discrepancy", values.discrepancy);
     }
     body.append("id_cargo", values.id_cargo);
-    body.append("reference_id", values.reference_id);
+    // body.append("reference_id", values.reference_id);
     body.append("kategori_id", values.kategori_id);
     body.append("kondisi_id", values.kondisi_id);
     body.append("kondisi_paket_id", values.kondisi_paket_id);
@@ -461,7 +461,7 @@ export const ProductIdClient = () => {
             </div>
             {detail && isSuccessAllSelect ? (
               <div className="max-w-3xl mx-auto grid w-full gap-6 px-4">
-                <Controller
+                {/* <Controller
                   control={form.control}
                   name="reference_id"
                   render={({ field, fieldState }) => (
@@ -509,7 +509,7 @@ export const ProductIdClient = () => {
                       )}
                     </Field>
                   )}
-                />
+                /> */}
                 <Controller
                   name="id_cargo"
                   control={form.control}
