@@ -4,6 +4,9 @@ import { UseApiQueryProps } from "@/lib/query/use-query";
 import { keepPreviousData, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  CancelOrderBody,
+  CancelOrderParams,
+  CancelOrderResponse,
   DeleteOrderParams,
   DeleteOrderResponse,
   OrderDelivereeDetailRequest,
@@ -107,6 +110,7 @@ export const dataAPIOrder = {
       RetryBookingParams
     >;
     delete: UseMutateConfig<DeleteOrderResponse, undefined, DeleteOrderParams>;
+    cancel: UseMutateConfig<CancelOrderResponse, CancelOrderBody, CancelOrderParams>;
   } => ({
     updateStatus: {
       endpoint: "/pesanan/:id/update-status",
@@ -146,6 +150,19 @@ export const dataAPIOrder = {
           );
       },
       onError: { title: "DELETE_ORDER" },
+    },
+    cancel: {
+      endpoint: "/pesanan/:id/cancel",
+      method: "post",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient)
+          await invalidateQuery(
+            queryClient,
+            key.map((k) => [k]),
+          );
+      },
+      onError: { title: "CANCEL_ORDER" },
     },
   }),
 };

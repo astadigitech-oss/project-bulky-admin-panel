@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCancelOrder,
   useGetOrderDelivereeDetail,
   useGetOrderDetail,
   useGetOrderInvoice,
@@ -40,6 +41,7 @@ import {
   ExternalLink,
   FileText,
   Download,
+  XCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -165,9 +167,12 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
   const { mutate: updateStatus, isPending: isUpdating } =
     useUpdateOrderStatus();
   const { mutate: retryBooking, isPending: isRetrying } = useRetryBooking();
+  const { mutate: cancelOrder, isPending: isCancelling } = useCancelOrder();
 
   const [openDialog, setOpenDialog] = useState(false);
   const [note, setNote] = useState("");
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = () => {
@@ -239,6 +244,22 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
     retryBooking(
       { params: { id: orderId } },
       { onSuccess: async () => { await refetch(); } },
+    );
+  };
+
+  const handleCancelOrder = () => {
+    cancelOrder(
+      {
+        params: { id: orderId },
+        body: { reason: cancelReason || undefined },
+      },
+      {
+        onSuccess: async () => {
+          await refetch();
+          setOpenCancelDialog(false);
+          setCancelReason("");
+        },
+      },
     );
   };
 
@@ -513,6 +534,47 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
         </Dialog>
       )}
 
+      {/* Dialog Cancel Order */}
+      <Dialog open={openCancelDialog} onOpenChange={(open) => { if (!open) setCancelReason(""); setOpenCancelDialog(open); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <XCircle className="size-4" />
+              Batalkan Pesanan (DEBUG ONLY)
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Pesanan akan dibatalkan dan stok produk akan dikembalikan. Tindakan ini tidak dapat diurungkan.
+          </p>
+          <div className="flex flex-col gap-1.5">
+            <Label>
+              Alasan{" "}
+              <span className="text-muted-foreground font-normal">(opsional)</span>
+            </Label>
+            <Textarea
+              placeholder="Masukkan alasan pembatalan..."
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={3}
+              maxLength={500}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setCancelReason(""); setOpenCancelDialog(false); }}>
+              Kembali
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelOrder}
+              disabled={isCancelling}
+            >
+              {isCancelling && <RefreshCw className="size-3.5 animate-spin" />}
+              Ya, Batalkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
@@ -535,6 +597,17 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
             <Button size="sm" onClick={() => setOpenDialog(true)}>
               <ArrowRight className="size-3.5" />
               {statusConfig[nextStatuses[0]]?.label ?? nextStatuses[0]}
+            </Button>
+          )}
+          {order.order_status !== "COMPLETED" && order.order_status !== "CANCELLED" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setOpenCancelDialog(true)}
+            >
+              <XCircle className="size-3.5" />
+              Batalkan
             </Button>
           )}
         </div>
