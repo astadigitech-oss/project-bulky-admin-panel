@@ -36,6 +36,12 @@ export type RetryBookingParams = BaseParams;
 
 export type DeleteOrderParams = BaseParams;
 
+export type CancelOrderParams = BaseParams;
+
+export type CancelOrderBody = {
+  reason?: string;
+};
+
 // ─── Response ───────────────────────────────────────────────────────────────
 
 export type OrderItem = {
@@ -169,6 +175,19 @@ export type UpdateOrderStatusResponse = BaseResponse & {
 };
 
 export type DeleteOrderResponse = BaseResponse;
+
+export type CancelOrderResponse = BaseResponse & {
+  data: {
+    id: string;
+    kode: string;
+    previous_status: string;
+    order_status: string;
+    cancelled_reason: string | null;
+    restored_produk_count: number;
+    cancelled_at: string;
+    cancelled_by: string;
+  };
+};
 
 export type RetryBookingResponse = BaseResponse & {
   data: {

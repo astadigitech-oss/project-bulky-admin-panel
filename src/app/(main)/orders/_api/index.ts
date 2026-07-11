@@ -48,3 +48,6 @@ export const useRetryBooking = () =>
 
 export const useDeleteOrder = () =>
   useMutate(dataAPIOrder.mutation(useQueryClient()).delete);
+
+export const useCancelOrder = () =>
+  useMutate(dataAPIOrder.mutation(useQueryClient()).cancel);
