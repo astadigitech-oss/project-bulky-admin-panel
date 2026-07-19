@@ -62,6 +62,10 @@ const data = {
           title: "Ulasan",
           url: "/orders/reviews",
         },
+        {
+          title: "Persetujuan Disclaimer",
+          url: "/orders/disclaimer-consent/list",
+        },
       ],
     },
     {
