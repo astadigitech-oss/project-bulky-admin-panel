@@ -58,24 +58,27 @@ export const DisclaimerConsentListClient = () => {
       <div className="flex items-center justify-between gap-3">
         <InputSearch
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          setValue={setSearch}
           placeholder="Cari pesanan atau pembeli..."
           className="max-w-sm"
         />
-        <TooltipText text="Refresh data">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isRefetching}
-          >
-            <RefreshCw className={isRefetching ? "animate-spin" : ""} />
-          </Button>
-        </TooltipText>
+        <TooltipText
+          value="Refresh data"
+          render={
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => refetch()}
+              disabled={isRefetching}
+            >
+              <RefreshCw className={isRefetching ? "animate-spin" : ""} />
+            </Button>
+          }
+        />
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={items} isLoading={isLoading} />
+      <DataTable columns={columns} data={items} isInitialLoading={isLoading} />
 
       {/* Pagination */}
       <Pagination
