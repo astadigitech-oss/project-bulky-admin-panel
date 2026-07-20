@@ -136,7 +136,7 @@ export const DialogFormForceUpdate = ({
                       id={`${idFormForceUpdate}-${field.name}`}
                       type="text"
                       aria-invalid={fieldState.invalid}
-                      placeholder="cth. v1.0..."
+                      placeholder="contoh: 1.0.0"
                       autoComplete="off"
                     />
 
