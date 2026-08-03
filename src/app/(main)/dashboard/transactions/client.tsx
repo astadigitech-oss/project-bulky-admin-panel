@@ -279,7 +279,7 @@ export const DashboardTransactionClient = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              <TooltipProvider delayDuration={100}>
+              <TooltipProvider delay={100}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="cursor-help underline decoration-dotted underline-offset-4">
