@@ -10,7 +10,7 @@ export const useGetProductList = ({
   search,
   sort_by,
   order,
-  is_sold,
+  status,
 }: ProductListRequest) =>
   useApiQuery(
     dataAPIProduct.query({
@@ -19,7 +19,7 @@ export const useGetProductList = ({
       search,
       sort_by,
       order,
-      is_sold,
+      status,
     }).list,
   );
 

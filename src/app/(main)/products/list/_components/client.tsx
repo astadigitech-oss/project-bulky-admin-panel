@@ -22,10 +22,10 @@ import {
 import { useConfirm } from "@/hooks/use-confirm";
 
 export const ProductClient = () => {
-  const [{ sort, order, is_sold }, setQuery] = useQueryStates({
+  const [{ sort, order, status }, setQuery] = useQueryStates({
     sort: parseAsString.withDefault("created_at"),
     order: parseAsString.withDefault("desc"),
-    is_sold: parseAsStringLiteral(["true", "false"] as const).withDefault(null as unknown as "true" | "false"),
+    status: parseAsStringLiteral(["all", "available", "sold out"] as const).withDefault("all"),
   });
   const [DialogDelete, confirmDelete] = useConfirm(
     "Hapus [name]",
@@ -56,7 +56,7 @@ export const ProductClient = () => {
     search: searchValue,
     sort_by: sort,
     order: order as "asc" | "desc",
-    is_sold: is_sold === "true" ? true : is_sold === "false" ? false : undefined,
+    status,
   });
 
   const productList = list?.data ?? [];
@@ -108,15 +108,17 @@ export const ProductClient = () => {
           />
           <select
             className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-            value={is_sold ?? ""}
+            value={status}
             onChange={(e) =>
-              setQuery({ is_sold: (e.target.value as "true" | "false") || null })
+              setQuery({
+                status: e.target.value as "all" | "available" | "sold out",
+              })
             }
             disabled={isDisabled}
           >
-            <option value="">Semua Status</option>
-            <option value="false">Tersedia</option>
-            <option value="true">Terjual</option>
+            <option value="all">Semua Status</option>
+            <option value="available">Tersedia</option>
+            <option value="sold out">Terjual</option>
           </select>
           <TooltipText
             value="Perbarui Data"

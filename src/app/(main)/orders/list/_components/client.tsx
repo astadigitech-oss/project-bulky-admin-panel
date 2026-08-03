@@ -87,7 +87,7 @@ const DELIVERY_TYPE_OPTIONS = [
 ] as const;
 
 const chartConfig = {
-  total: {
+  total_pesanan: {
     label: "Pesanan",
     color: "var(--chart-1)",
   },
@@ -355,14 +355,22 @@ export const OrderListClient = () => {
                   />
                   <ChartTooltip
                     cursor={false}
-                    content={<ChartTooltipContent hideLabel />}
+                    content={
+                      <ChartTooltipContent
+                        indicator="line"
+                        labelFormatter={(e) => {
+                          const item = chartData.find((d) => d.label === e);
+                          return item?.period ?? String(e);
+                        }}
+                      />
+                    }
                   />
                   <Line
                     dataKey="total_pesanan"
                     type="natural"
-                    stroke="var(--color-total)"
+                    stroke="var(--color-total_pesanan)"
                     strokeWidth={2}
-                    dot={{ fill: "var(--color-total)" }}
+                    dot={false}
                     activeDot={{ r: 6 }}
                   />
                 </LineChart>

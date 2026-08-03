@@ -25,7 +25,7 @@ export const MainContainer = ({
 }) => {
   return (
     <SidebarInset className="relative overflow-y-scroll h-[calc(100vh-16px-16px)]">
-      <header className="flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-10 border-b dark:border-gray-300/30 shadow">
+      <header className="flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-40 border-b dark:border-gray-300/30 shadow">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           {breadcrumbs && breadcrumbs.length > 0 && (
