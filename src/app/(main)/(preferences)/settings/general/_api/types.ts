@@ -147,3 +147,23 @@ export type ImportV1Response = BaseResponse & {
     files: ImportV1FileItem[];
   };
 };
+
+// --- Asset migration (v1) — chunk upload ---
+export type PruneOrphansBody = {
+  dry_run: boolean;
+};
+
+export type PruneOrphanItem = {
+  path: string;
+  size: number;
+};
+
+export type PruneOrphansResponse = BaseResponse & {
+  data: {
+    dry_run: boolean;
+    total_files: number;
+    total_size: number;
+    deleted: number;
+    orphans: PruneOrphanItem[];
+  };
+};

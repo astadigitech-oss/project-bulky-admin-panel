@@ -27,3 +27,5 @@ export const useUpdatePayment = () =>
   useMutate(dataAPIGeneral.mutation(useQueryClient()).updatePayment);
 export const useImportV1 = () =>
   useMutate(dataAPIGeneral.mutation().importV1);
+export const usePruneOrphans = () =>
+  useMutate(dataAPIGeneral.mutation().pruneOrphans);

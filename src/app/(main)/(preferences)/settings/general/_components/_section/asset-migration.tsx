@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Progress, ProgressLabel } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -22,11 +23,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useConfirm } from "@/hooks/use-confirm";
 import { baseApiUrl, cookiesKey } from "@/config";
-import { useImportV1 } from "../../_api";
-import type { ImportV1FileItem } from "../../_api/types";
+import type {
+  ImportV1FileItem,
+  PruneOrphansResponse,
+} from "../../_api/types";
 
 const assetApiUrl = `${baseApiUrl}/api/panel/assets`;
+const CHUNK_SIZE = 100 * 1024 * 1024; // 100MB per chunk (aman di bawah BodyLimit 500MB)
+
+const formatBytes = (bytes: number) => {
+  if (bytes === 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
+  return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
+};
 
 type ImportResult = {
   imported: number;
@@ -40,10 +55,16 @@ export const AssetMigrationSection = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [pruneResult, setPruneResult] = useState<PruneOrphansResponse["data"] | null>(null);
+  const [isPruning, setIsPruning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const v1InputRef = useRef<HTMLInputElement>(null);
-  const importV1 = useImportV1();
-
+  const [ConfirmPruneDialog, confirmPrune] = useConfirm(
+    "Hapus file tak terpakai?",
+    "File yang tidak direferensikan database akan dihapus permanen. Lanjutkan?",
+    "destructive",
+  );
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -98,27 +119,108 @@ export const AssetMigrationSection = () => {
     }
   };
 
-  // Migrasi aset dari Bulky v1
-  const handleMigrateV1 = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Migrasi aset dari Bulky v1 (chunk upload)
+  const handleMigrateV1 = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsMigrating(true);
-    const formData = new FormData();
-    formData.append("file", file);
+    setImportResult(null);
+    setUploadProgress(0);
 
-    importV1.mutate(
-      { body: formData },
-      {
-        onSuccess: ({ data }) => {
-          setImportResult(data.data);
-        },
-        onSettled: () => {
-          setIsMigrating(false);
-          if (v1InputRef.current) v1InputRef.current.value = "";
-        },
-      },
-    );
+    try {
+      const token = getCookie(cookiesKey);
+      const headers = { Authorization: `Bearer ${token}` };
+      const uploadId = crypto.randomUUID();
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+      // 1) Kirim semua chunk sekuensial
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * CHUNK_SIZE;
+        const chunk = file.slice(
+          start,
+          Math.min(start + CHUNK_SIZE, file.size),
+        );
+
+        const chunkForm = new FormData();
+        chunkForm.append("upload_id", uploadId);
+        chunkForm.append("chunk_index", String(i));
+        chunkForm.append("total_chunks", String(totalChunks));
+        chunkForm.append("chunk_data", chunk);
+
+        await axios.post(`${assetApiUrl}/import-v1/chunk`, chunkForm, {
+          headers,
+        });
+
+        // Progress dihitung dari upload chunk (maks 90%) + finalize (10%)
+        setUploadProgress(Math.round(((i + 1) / totalChunks) * 90));
+      }
+
+      // 2) Finalize — gabungkan chunk & proses mapping
+      setUploadProgress(95);
+      const finalForm = new FormData();
+      finalForm.append("upload_id", uploadId);
+      finalForm.append("total_chunks", String(totalChunks));
+
+      const res = await axios.post(`${assetApiUrl}/import-v1/finalize`, finalForm, {
+        headers,
+      });
+      setUploadProgress(100);
+      // Normalisasi: backend bisa mengembalikan null untuk unmatched/files
+      setImportResult({
+        imported: res.data.data.imported ?? 0,
+        skipped: res.data.data.skipped ?? 0,
+        unmatched: res.data.data.unmatched ?? [],
+        files: res.data.data.files ?? [],
+      });
+    } catch {
+      toast.error("Migrasi gagal. Silakan coba lagi.");
+    } finally {
+      setIsMigrating(false);
+      setUploadProgress(null);
+      if (v1InputRef.current) v1InputRef.current.value = "";
+    }
+  };
+
+  // Prune file tak terpakai (default dry-run aman)
+  const handlePrune = async () => {
+    const confirmed = await confirmPrune();
+    if (!confirmed) return;
+
+    setIsPruning(true);
+    try {
+      const token = getCookie(cookiesKey);
+      const res = await axios.post(
+        `${assetApiUrl}/prune-orphans`,
+        { dry_run: false },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setPruneResult(res.data.data);
+      toast.success(res.data.message ?? "Pruning selesai");
+    } catch {
+      toast.error("Pruning gagal");
+    } finally {
+      setIsPruning(false);
+    }
+  };
+
+  // Prune dry-run — hanya lihat daftar tanpa menghapus
+  const handlePruneDryRun = async () => {
+    setIsPruning(true);
+    try {
+      const token = getCookie(cookiesKey);
+      const res = await axios.post(
+        `${assetApiUrl}/prune-orphans`,
+        { dry_run: true },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setPruneResult(res.data.data);
+      toast.success(res.data.message ?? "Pruning selesai");
+    } catch {
+      toast.error("Pruning gagal");
+    } finally {
+      setIsPruning(false);
+    }
   };
 
   const skippedFiles = importResult?.files.filter(
@@ -201,14 +303,28 @@ export const AssetMigrationSection = () => {
 
         {/* Migrasi v1 */}
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="font-medium text-sm">Migrasi Aset v1</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               Upload file{" "}
               <span className="font-mono">.zip</span>{" "}
               hasil export <span className="font-mono">storage</span> Bulky v1
-              untuk dipindahkan ke server ini
+              untuk dipindahkan ke server ini. File besar dipecah otomatis
+              menjadi beberapa bagian.
             </p>
+            {uploadProgress !== null && (
+              <div className="mt-3">
+                <Progress
+                  value={uploadProgress}
+                  className="max-w-60"
+                  classIndicator="bg-yellow-500"
+                >
+                  <ProgressLabel className="text-xs text-muted-foreground">
+                    Mengunggah {uploadProgress}%
+                  </ProgressLabel>
+                </Progress>
+              </div>
+            )}
           </div>
           <input
             ref={v1InputRef}
@@ -232,6 +348,49 @@ export const AssetMigrationSection = () => {
             )}
             {isMigrating ? "Migrating..." : "Migrasi v1"}
           </Button>
+        </div>
+
+        <div className="border-t" />
+
+        {/* Prune orphans */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="font-medium text-sm">Bersihkan File Tak Terpakai</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Hapus file di storage yang tidak direferensikan database. Cek
+              dulu dengan dry-run sebelum menghapus permanen.
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={isPruning}
+              onClick={handlePruneDryRun}
+            >
+              {isPruning ? (
+                <Spinner className="size-4 mr-2" />
+              ) : (
+                <FileWarning className="size-4 mr-2" />
+              )}
+              Dry-run
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="shrink-0"
+              disabled={isPruning}
+              onClick={handlePrune}
+            >
+              {isPruning ? (
+                <Spinner className="size-4 mr-2" />
+              ) : (
+                <XCircle className="size-4 mr-2" />
+              )}
+              Hapus Permanen
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -318,6 +477,86 @@ export const AssetMigrationSection = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Prune orphans report */}
+      <Dialog
+        open={!!pruneResult}
+        onOpenChange={(open) => {
+          if (!open) setPruneResult(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {pruneResult?.dry_run ? "Hasil Prune (Dry-run)" : "Hasil Prune"}
+            </DialogTitle>
+            <DialogDescription>
+              {pruneResult?.dry_run
+                ? "Daftar file tak terpakai — belum ada yang dihapus"
+                : "File tak terpakai telah dihapus permanen"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="border rounded-lg p-3">
+              <p className="text-2xl font-semibold leading-none">
+                {pruneResult?.total_files ?? 0}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Total file</p>
+            </div>
+            <div className="border rounded-lg p-3">
+              <p className="text-2xl font-semibold leading-none">
+                {formatBytes(pruneResult?.total_size ?? 0)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Total ukuran</p>
+            </div>
+          </div>
+
+          {pruneResult?.orphans && pruneResult.orphans.length > 0 && (
+            <div className="border rounded-lg p-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                {pruneResult.orphans.length} file tak terpakai
+              </p>
+              <ul className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                {pruneResult.orphans.map((orphan) => (
+                  <li
+                    key={orphan.path}
+                    className="text-xs font-mono text-muted-foreground truncate flex items-center justify-between gap-2"
+                    title={orphan.path}
+                  >
+                    <span className="truncate">{orphan.path}</span>
+                    <span className="shrink-0 text-[10px]">
+                      {formatBytes(orphan.size)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {pruneResult && !pruneResult.dry_run && (
+            <div className="border rounded-lg p-3 flex items-center gap-3">
+              <CheckCircle2 className="size-8 text-emerald-500 shrink-0" />
+              <div>
+                <p className="text-2xl font-semibold leading-none">
+                  {pruneResult.deleted}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  File dihapus
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPruneResult(null)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmPruneDialog />
     </div>
   );
 };
