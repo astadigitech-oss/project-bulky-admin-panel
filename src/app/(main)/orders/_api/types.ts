@@ -8,9 +8,12 @@ import {
 // ─── Request ────────────────────────────────────────────────────────────────
 
 export type OrderListRequest = BaseListParams & {
-  status?: string;
-  payment_status?: string;
+  order_status?: string;
+  payment_type?: string;
   delivery_type?: string;
+  buyer?: string;
+  cari?: string;
+  sort_order?: "asc" | "desc";
   tanggal_dari?: string;
   tanggal_sampai?: string;
 };

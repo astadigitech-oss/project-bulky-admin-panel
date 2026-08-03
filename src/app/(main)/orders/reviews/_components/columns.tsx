@@ -85,7 +85,7 @@ export const createColumns = ({
   },
   {
     accessorKey: "buyer",
-    header: "Pengguna",
+    header: "Pembeli",
     cell: ({ row }) => row.original.buyer.nama,
   },
   {

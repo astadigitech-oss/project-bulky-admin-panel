@@ -705,37 +705,44 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              {order.pembayaran.map(
-                (p: OrderDetailResponse["data"]["pembayaran"][number]) => (
-                  <div key={p.id} className="flex flex-col gap-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Metode Pembayaran</span>
-                      <span className="font-medium">
-                        {p.metode_pembayaran.nama}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Jumlah Bayar</span>
-                      <span>{formatRupiah(p.jumlah)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status Pembayaran</span>
-                      <Badge
-                        className={statusConfig[p.status]?.className ?? ""}
-                      >
-                        {statusConfig[p.status]?.label ?? p.status}
-                      </Badge>
-                    </div>
-                    {p.paid_at && (
+              {order.pembayaran.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">
+                  Data pembayaran tidak tersedia — pesanan lama dari migrasi
+                  Bulky v1 biasanya tidak membawa riwayat pembayaran.
+                </p>
+              ) : (
+                order.pembayaran.map(
+                  (p: OrderDetailResponse["data"]["pembayaran"][number]) => (
+                    <div key={p.id} className="flex flex-col gap-1 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tanggal Pembayaran</span>
-                        <span>
-                          {format(new Date(p.paid_at), "dd MMM yyyy, HH:mm")}
+                        <span className="text-muted-foreground">Metode Pembayaran</span>
+                        <span className="font-medium">
+                          {p.metode_pembayaran.nama}
                         </span>
                       </div>
-                    )}
-                  </div>
-                ),
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Jumlah Bayar</span>
+                        <span>{formatRupiah(p.jumlah)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Status Pembayaran</span>
+                        <Badge
+                          className={statusConfig[p.status]?.className ?? ""}
+                        >
+                          {statusConfig[p.status]?.label ?? p.status}
+                        </Badge>
+                      </div>
+                      {p.paid_at && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Tanggal Pembayaran</span>
+                          <span>
+                            {format(new Date(p.paid_at), "dd MMM yyyy, HH:mm")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ),
+                )
               )}
             </CardContent>
           </Card>
@@ -779,9 +786,13 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                     {alamat.kota}, {alamat.provinsi} {alamat.kode_pos}
                   </p>
                 </>
+              ) : order.delivery_type === "PICKUP" ? (
+                <p className="text-muted-foreground italic">
+                  Tidak memerlukan alamat pengiriman.
+                </p>
               ) : (
                 <p className="text-muted-foreground italic">
-                  Alamat tidak tersedia
+                  Alamat tidak tersedia (migrasi Bulky v1).
                 </p>
               )}
               <div className="flex items-center gap-2 mt-1">
@@ -1168,35 +1179,42 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-3">
-                {order.status_history.map(
-                  (
-                    h: OrderDetailResponse["data"]["status_history"][number],
-                    i: number,
-                  ) => (
-                    <div key={i} className="flex gap-3 text-xs">
-                      <div className="flex flex-col items-center">
-                        <div className="size-2 rounded-full bg-primary mt-0.5 shrink-0" />
-                        {i < order.status_history.length - 1 && (
-                          <div className="w-px flex-1 bg-border mt-1" />
-                        )}
+                {order.status_history.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">
+                    Riwayat status tidak tersedia — pesanan lama dari migrasi
+                    Bulky v1 biasanya hanya membawa status terakhir.
+                  </p>
+                ) : (
+                  order.status_history.map(
+                    (
+                      h: OrderDetailResponse["data"]["status_history"][number],
+                      i: number,
+                    ) => (
+                      <div key={i} className="flex gap-3 text-xs">
+                        <div className="flex flex-col items-center">
+                          <div className="size-2 rounded-full bg-primary mt-0.5 shrink-0" />
+                          {i < order.status_history.length - 1 && (
+                            <div className="w-px flex-1 bg-border mt-1" />
+                          )}
+                        </div>
+                        <div className="pb-3">
+                          <p className="font-medium">
+                            {h.status_from ? `${h.status_from} → ` : ""}
+                            {h.status_to}
+                            <span className="ml-1 text-muted-foreground font-normal">
+                              ({h.status_type})
+                            </span>
+                          </p>
+                          {h.note && (
+                            <p className="text-muted-foreground">{h.note}</p>
+                          )}
+                          <p className="text-muted-foreground">
+                            {format(new Date(h.created_at), "dd MMM yyyy, HH:mm")}
+                          </p>
+                        </div>
                       </div>
-                      <div className="pb-3">
-                        <p className="font-medium">
-                          {h.status_from ? `${h.status_from} → ` : ""}
-                          {h.status_to}
-                          <span className="ml-1 text-muted-foreground font-normal">
-                            ({h.status_type})
-                          </span>
-                        </p>
-                        {h.note && (
-                          <p className="text-muted-foreground">{h.note}</p>
-                        )}
-                        <p className="text-muted-foreground">
-                          {format(new Date(h.created_at), "dd MMM yyyy, HH:mm")}
-                        </p>
-                      </div>
-                    </div>
-                  ),
+                    ),
+                  )
                 )}
               </div>
             </CardContent>
