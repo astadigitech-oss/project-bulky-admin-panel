@@ -24,6 +24,7 @@ import { MaintenanceType } from "../_api/types";
 import { MetaPagination } from "@/lib/types";
 import { Dispatch, SetStateAction } from "react";
 import { Badge } from "@/components/ui/badge";
+import { HeaderDuoLang } from "@/components/column";
 
 export const column = ({
   setOpen,
@@ -55,7 +56,11 @@ export const column = ({
   },
   {
     accessorKey: "judul",
-    header: "Judul",
+    header: () => <HeaderDuoLang title="Judul" />,
+  },
+  {
+    accessorKey: "judul_en",
+    header: () => <HeaderDuoLang title="Title" en />,
   },
   {
     accessorKey: "tipe_maintenance",

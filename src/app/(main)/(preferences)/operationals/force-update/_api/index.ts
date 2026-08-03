@@ -11,6 +11,7 @@ export const useGetForceUpdateList = ({
   search,
   sort_by,
   order,
+  platform,
 }: ForceUpdateListRequest) =>
   useApiQuery(
     dataAPIForceUpdate.query({
@@ -19,6 +20,7 @@ export const useGetForceUpdateList = ({
       search,
       sort_by,
       order,
+      platform,
     }).list,
   );
 export const useGetForceUpdateDetail = ({ id }: ForceUpdateDetailRequest) =>

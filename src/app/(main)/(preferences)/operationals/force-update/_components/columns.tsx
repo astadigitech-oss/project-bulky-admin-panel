@@ -7,7 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn, typeForceUpdates } from "@/lib/utils";
+import { cn, typeForceUpdates, typePlatforms } from "@/lib/utils";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -53,6 +53,18 @@ export const column = ({
       <Badge className="text-xs py-0.5">
         {
           typeForceUpdates.find((i) => i.value === row.original.update_type)
+            ?.label
+        }
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "platform",
+    header: "Platform",
+    cell: ({ row }) => (
+      <Badge variant={"outline"} className="text-xs py-0.5">
+        {
+          typePlatforms.find((i) => i.value === row.original.platform)
             ?.label
         }
       </Badge>

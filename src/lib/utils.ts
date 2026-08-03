@@ -115,6 +115,18 @@ export const typeForceUpdates = [
   { label: "Wajib", value: "MANDATORY" },
 ];
 
+export const typePlatforms = [
+  { label: "Semua Platform", value: "ALL" },
+  { label: "Android", value: "ANDROID" },
+  { label: "iOS", value: "IOS" },
+];
+
+export const typePlatformFilters = [
+  { label: "Semua Platform", value: "" },
+  { label: "Android", value: "ANDROID" },
+  { label: "iOS", value: "IOS" },
+];
+
 export function formatRupiah(rupiah: string | number): string {
   const value =
     typeof rupiah === "string"

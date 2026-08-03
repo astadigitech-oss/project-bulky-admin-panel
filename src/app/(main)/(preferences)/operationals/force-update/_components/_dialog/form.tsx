@@ -32,15 +32,19 @@ import { ForceUpdateDetailResponse } from "../../_api/types";
 import { useCreateForceUpdate, useUpdateForceUpdate } from "../../_api";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { typeForceUpdates } from "@/lib/utils";
+import { typeForceUpdates, typePlatforms } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
   kode_versi: z.string().min(3, "Judul harus memiliki minimal 3 karakter"),
   update_type: z.enum(["OPTIONAL", "MANDATORY"]),
+  platform: z.enum(["ALL", "ANDROID", "IOS"]),
   informasi_update: z
     .string()
     .min(3, "Deskripsi harus memiliki minimal 3 karakter"),
+  informasi_update_en: z
+    .string()
+    .min(3, "Deskripsi EN harus memiliki minimal 3 karakter"),
 });
 
 export const DialogFormForceUpdate = ({
@@ -65,7 +69,9 @@ export const DialogFormForceUpdate = ({
     values: {
       kode_versi: detail?.kode_versi ?? "",
       informasi_update: detail?.informasi_update ?? "",
+      informasi_update_en: detail?.informasi_update_en ?? "",
       update_type: detail?.update_type ?? "OPTIONAL",
+      platform: detail?.platform ?? "ALL",
     },
   });
 
@@ -153,7 +159,7 @@ export const DialogFormForceUpdate = ({
                 render={({ field, fieldState }) => (
                   <Field
                     data-invalid={fieldState.invalid}
-                    className="gap-1 col-span-full"
+                    className="gap-1 col-span-3"
                   >
                     <FieldLabel
                       required
@@ -187,6 +193,46 @@ export const DialogFormForceUpdate = ({
                 )}
               />
               <Controller
+                name="platform"
+                control={form.control}
+                disabled={isDisabled}
+                render={({ field, fieldState }) => (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className="gap-1 col-span-3"
+                  >
+                    <FieldLabel
+                      required
+                      htmlFor={`${idFormForceUpdate}-${field.name}`}
+                    >
+                      Platform
+                    </FieldLabel>
+                    <Select
+                      items={typePlatforms}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={field.disabled}
+                      data-invalid={fieldState.invalid}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={"Pilih platform..."} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {typePlatforms.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
                 name="informasi_update"
                 control={form.control}
                 disabled={isDisabled}
@@ -206,6 +252,36 @@ export const DialogFormForceUpdate = ({
                       id={`${idFormForceUpdate}-${field.name}`}
                       aria-invalid={fieldState.invalid}
                       placeholder="Informasi update..."
+                      autoComplete="off"
+                      className="min-h-20"
+                    />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="informasi_update_en"
+                control={form.control}
+                disabled={isDisabled}
+                render={({ field, fieldState }) => (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className="gap-1 col-span-full"
+                  >
+                    <FieldLabel
+                      required
+                      htmlFor={`${idFormForceUpdate}-${field.name}`}
+                    >
+                      Deskripsi (EN)
+                    </FieldLabel>
+                    <Textarea
+                      {...field}
+                      id={`${idFormForceUpdate}-${field.name}`}
+                      aria-invalid={fieldState.invalid}
+                      placeholder="Update information..."
                       autoComplete="off"
                       className="min-h-20"
                     />

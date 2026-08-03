@@ -4,12 +4,19 @@ import { Plus, RefreshCw } from "lucide-react";
 import { useSearchQuery } from "@/hooks/use-search";
 import { InputSearch } from "@/components/ui/input-search";
 import { SortTable } from "@/components/sort-table";
-import { parseAsString, useQueryStates } from "nuqs";
+import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { TooltipText } from "@/providers/tooltip-provider";
 import DataTable from "@/components/ui/data-table";
 import { column } from "./columns";
-import { cn } from "@/lib/utils";
+import { cn, typePlatformFilters } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Pagination from "@/components/pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import {
@@ -24,11 +31,12 @@ import { useConfirm } from "@/hooks/use-confirm";
 
 export const ForceUpdateSettingsClient = () => {
   const [open, setOpen] = useState<"edit" | "create">();
-  const [{ sort, order, forceUpdateId }, setQuery] = useQueryStates(
+  const [{ sort, order, forceUpdateId, platform }, setQuery] = useQueryStates(
     {
       forceUpdateId: parseAsString.withDefault(""),
       sort: parseAsString.withDefault("created_at"),
       order: parseAsString.withDefault("desc"),
+      platform: parseAsStringLiteral(["", "ALL", "ANDROID", "IOS"] as const).withDefault(""),
     },
     { urlKeys: { forceUpdateId: "id" } },
   );
@@ -63,6 +71,7 @@ export const ForceUpdateSettingsClient = () => {
     search: searchValue,
     sort_by: sort,
     order: order as "asc" | "desc",
+    platform,
   });
   const { data: detail } = useGetForceUpdateDetail({
     id: forceUpdateId,
@@ -117,6 +126,23 @@ export const ForceUpdateSettingsClient = () => {
             value={search}
             setValue={setSearch}
           />
+          <Select
+            items={typePlatformFilters}
+            value={platform}
+            onValueChange={(v) => setQuery({ platform: v ?? "" })}
+            disabled={isDisabled}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={"Semua Platform"} />
+            </SelectTrigger>
+            <SelectContent>
+              {typePlatformFilters.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <TooltipText
             value="Perbarui Data"
             render={
