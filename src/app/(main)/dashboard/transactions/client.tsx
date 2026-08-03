@@ -281,11 +281,13 @@ export const DashboardTransactionClient = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               <TooltipProvider delay={100}>
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="cursor-help underline decoration-dotted underline-offset-4">
-                      Revenue
-                    </span>
-                  </TooltipTrigger>
+                  <TooltipTrigger
+                    render={
+                      <span className="cursor-help underline decoration-dotted underline-offset-4">
+                        Revenue
+                      </span>
+                    }
+                  />
                   <TooltipContent className="max-w-xs">
                     <p>
                       Dihitung berdasarkan pesanan yang berstatus{" "}
