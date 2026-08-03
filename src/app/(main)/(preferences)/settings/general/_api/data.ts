@@ -8,6 +8,8 @@ import {
   GetPaymentResponse,
   GetScheduleResponse,
   GetWarehouseResponse,
+  ImportV1Body,
+  ImportV1Response,
   UpdatePaymentParams,
   UpdatePaymentResponse,
   UpdateProfileBody,
@@ -77,6 +79,7 @@ export const dataAPIGeneral = {
       undefined,
       UpdatePaymentParams
     >;
+    importV1: UseMutateConfig<ImportV1Response, ImportV1Body>;
   } => ({
     updateProfile: {
       endpoint: "/auth/profile",
@@ -130,6 +133,14 @@ export const dataAPIGeneral = {
         if (queryClient) await invalidateQuery(queryClient, [[key[3]]]);
       },
       onError: { title: "PAYMENT_METHOD" },
+    },
+    importV1: {
+      endpoint: `/assets/import-v1`,
+      method: "post",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+      },
+      onError: { title: "IMPORT_ASSETS_V1" },
     },
   }),
 };

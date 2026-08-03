@@ -128,3 +128,22 @@ export type UpdatePaymentParams = BaseParams;
 export type UpdatePaymentResponse = BaseResponse & {
   data: { id: string; is_active: boolean; kode: string; nama: string };
 };
+
+// --- Asset migration (v1) ---
+export type ImportV1Body = FormData;
+
+export type ImportV1FileItem = {
+  source: string;
+  dest: string;
+  status: "imported" | "skipped";
+  reason?: string;
+};
+
+export type ImportV1Response = BaseResponse & {
+  data: {
+    imported: number;
+    skipped: number;
+    unmatched: string[];
+    files: ImportV1FileItem[];
+  };
+};
