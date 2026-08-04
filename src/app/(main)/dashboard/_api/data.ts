@@ -9,6 +9,7 @@ import {
   DasborStokPerKategoriResponse,
   DasborTabelTransaksiResponse,
   DasborUserTransaksiResponse,
+  FilterOrderStatus,
   PeriodeChart,
   PeriodeDasbor,
 } from "./types";
@@ -68,6 +69,7 @@ export const dataAPIDashboard = {
 
   tabelTransaksi: (params: {
     periode?: PeriodeDasbor;
+    status?: FilterOrderStatus;
     halaman?: number;
     per_halaman?: number;
   }): UseApiQueryProps<DasborTabelTransaksiResponse> => ({
@@ -75,6 +77,7 @@ export const dataAPIDashboard = {
     endpoint: "/dasbor/tabel-transaksi",
     searchParams: {
       periode: params.periode,
+      status: params.status?.join(","),
       halaman: params.halaman,
       per_halaman: params.per_halaman,
     },

@@ -40,6 +40,8 @@ import {
 import type {
   DasborTabelTransaksiItem,
   DasborUserTransaksiItem,
+  FilterOrderStatus,
+  OrderStatus,
   PeriodeDasbor,
 } from "@/app/(main)/dashboard/_api/types";
 
@@ -49,19 +51,68 @@ const PERIODE_OPTIONS: { label: string; value: PeriodeDasbor }[] = [
   { label: "Tahun Ini", value: "tahun_ini" },
 ];
 
+const STATUS_FILTER_OPTIONS: {
+  label: string;
+  value: OrderStatus;
+  className: string;
+}[] = [
+  {
+    value: "PENDING",
+    label: "Menunggu",
+    className:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  },
+  {
+    value: "PROCESSING",
+    label: "Diproses",
+    className:
+      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  },
+  {
+    value: "READY",
+    label: "Siap Kirim",
+    className:
+      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  },
+  {
+    value: "SHIPPED",
+    label: "Dikirim",
+    className:
+      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  },
+  {
+    value: "COMPLETED",
+    label: "Selesai",
+    className:
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  },
+];
+
 const USER_PER_PAGE = 10;
 
 const ORDER_STATUS_MAP: Record<
   string,
   { label: string; className: string }
 > = {
-  COMPLETED: {
-    label: "Selesai",
-    className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  PENDING: {
+    label: "Menunggu",
+    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
   },
   PROCESSING: {
     label: "Diproses",
     className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  },
+  READY: {
+    label: "Siap Kirim",
+    className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  },
+  SHIPPED: {
+    label: "Dikirim",
+    className: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  },
+  COMPLETED: {
+    label: "Selesai",
+    className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   },
   CANCELLED: {
     label: "Dibatalkan",
@@ -94,6 +145,47 @@ function PeriodeDasborFilter({
         >
           {opt.label}
         </Button>
+      ))}
+    </div>
+  );
+}
+
+function StatusFilter({
+  value,
+  onChange,
+}: {
+  value: FilterOrderStatus;
+  onChange: (v: FilterOrderStatus) => void;
+}) {
+  const selected = new Set(value);
+
+  const toggleStatus = (status: OrderStatus) => {
+    const next = new Set(selected);
+    if (next.has(status)) {
+      next.delete(status);
+    } else {
+      next.add(status);
+    }
+    onChange(next.size === 0 ? undefined : [...next]);
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {STATUS_FILTER_OPTIONS.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          aria-pressed={selected.has(opt.value)}
+          onClick={() => toggleStatus(opt.value)}
+          className={cn(
+            "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer",
+            selected.has(opt.value)
+              ? cn("border-transparent", opt.className)
+              : "border-border text-muted-foreground hover:bg-accent",
+          )}
+        >
+          {opt.label}
+        </button>
       ))}
     </div>
   );
@@ -163,6 +255,8 @@ export const DashboardTransactionClient = () => {
   const [periodeBuyer, setPeriodeBuyer] = useState<PeriodeDasbor>("semua");
   const [periodeUser, setPeriodeUser] = useState<PeriodeDasbor>("semua");
   const [periodeTabel, setPeriodeTabel] = useState<PeriodeDasbor>("semua");
+  const [statusTabel, setStatusTabel] =
+    useState<FilterOrderStatus>(undefined);
   const [halaman, setHalaman] = useState(1);
   const [halamanUser, setHalamanUser] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
@@ -177,6 +271,7 @@ export const DashboardTransactionClient = () => {
   const { data: tabelRes, isLoading: loadingTabel } =
     useGetDasborTabelTransaksi({
       periode: periodeTabel,
+      status: statusTabel,
       halaman,
       per_halaman: 10,
     });
@@ -213,7 +308,7 @@ export const DashboardTransactionClient = () => {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      await exportTransaksi(periodeTabel);
+      await exportTransaksi(periodeTabel, statusTabel);
     } catch {
       toast.error("Gagal mengekspor data transaksi");
     } finally {
@@ -223,6 +318,11 @@ export const DashboardTransactionClient = () => {
 
   const handlePeriodeTabelChange = (v: PeriodeDasbor) => {
     setPeriodeTabel(v);
+    setHalaman(1);
+  };
+
+  const handleStatusTabelChange = (v: FilterOrderStatus) => {
+    setStatusTabel(v);
     setHalaman(1);
   };
 
@@ -290,9 +390,10 @@ export const DashboardTransactionClient = () => {
                   />
                   <TooltipContent className="max-w-xs">
                     <p>
-                      Dihitung berdasarkan pesanan yang berstatus{" "}
-                      <span className="font-semibold">paid</span> dan{" "}
-                      <span className="font-semibold">completed</span>.
+                      Dihitung berdasarkan pesanan yang{" "}
+                      <span className="font-semibold">sudah dilunasi</span>{" "}
+                      dan{" "}
+                      <span className="font-semibold">tidak dibatalkan</span>.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -451,6 +552,7 @@ export const DashboardTransactionClient = () => {
               value={periodeTabel}
               onChange={handlePeriodeTabelChange}
             />
+            <StatusFilter value={statusTabel} onChange={handleStatusTabelChange} />
             <Button
               variant="outline"
               size="sm"
