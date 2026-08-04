@@ -54,6 +54,17 @@ const formatBytes = (bytes: number) => {
   return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
 };
 
+// SHA-1 hex dari Blob/ArrayBuffer — dipakai verifikasi integritas chunk
+// (server skip upload ulang kalau chunk sudah tersimpan dengan sha1 sama).
+async function sha1Hex(data: Blob | ArrayBuffer): Promise<string> {
+  const buf =
+    data instanceof Blob ? await data.arrayBuffer() : data;
+  const digest = await crypto.subtle.digest("SHA-1", buf);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 type ImportResult = {
   imported: number;
   skipped: number;
@@ -186,21 +197,25 @@ export const AssetMigrationSection = () => {
       setUploadProgress(Math.min(90, Math.round((sent / file.size) * 90)));
     };
 
-    // Helper: kirim satu chunk dengan retry + deteksi stalled
+    // Helper: kirim satu chunk dengan retry + deteksi stalled. Pakai pola
+    // resumable ala Google Drive: kirim checksum SHA-1, server skip upload
+    // ulang kalau chunk sudah tersimpan & sha1 cocok (hemat bandwidth).
     const uploadOne = async (i: number) => {
       const start = i * CHUNK_SIZE;
       const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
+      const chunkSHA1 = await sha1Hex(chunk);
 
       const chunkForm = new FormData();
       chunkForm.append("upload_id", uploadId);
       chunkForm.append("chunk_index", String(i));
       chunkForm.append("total_chunks", String(totalChunks));
+      chunkForm.append("chunk_sha1", chunkSHA1);
       chunkForm.append("chunk_data", chunk);
 
       let lastErr: unknown = null;
       for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
         try {
-          await axios.post(`${assetApiUrl}/import-v1/chunk`, chunkForm, {
+          const res = await axios.post(`${assetApiUrl}/import-v1/chunk`, chunkForm, {
             headers,
             // Batasi durasi request: kalau tidak ada transfer data dalam
             // STALL_TIMEOUT_MS, anggap gagal & retry (biar tidak "bengong").
@@ -211,11 +226,36 @@ export const AssetMigrationSection = () => {
               updateStats(i);
             },
           });
+
+          // Server bilang chunk sudah tersimpan & sha1 cocok → tidak ada
+          // transfer data; jangan sentuh progress (sudah dihitung utuh).
+          if (res.data?.data?.already_exist) {
+            progressMap.set(i, chunk.size);
+            updateStats(i);
+            return;
+          }
+
           // Chunk sukses — catat ukuran penuh (monotonik, tidak pernah turun)
           progressMap.set(i, chunk.size);
           updateStats(i);
           return;
         } catch (err) {
+          // Checksum tidak cocok → chunk lama di server korup. Reset chunk
+          // itu di server dulu (hapus per-chunk) sebelum retry upload penuh.
+          if (
+            axios.isAxiosError(err) &&
+            err.response?.status === 422 &&
+            attempt < MAX_RETRY
+          ) {
+            try {
+              await axios.delete(`${assetApiUrl}/import-v1/chunk`, {
+                params: { upload_id: uploadId, chunk_index: i },
+                headers,
+              });
+            } catch {
+              // abaikan — reset best-effort
+            }
+          }
           lastErr = err;
           if (attempt < MAX_RETRY) {
             await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
