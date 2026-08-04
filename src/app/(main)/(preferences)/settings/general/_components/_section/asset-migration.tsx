@@ -31,7 +31,10 @@ import type {
 } from "../../_api/types";
 
 const assetApiUrl = `${baseApiUrl}/api/panel/assets`;
-const CHUNK_SIZE = 100 * 1024 * 1024; // 100MB per chunk (aman di bawah BodyLimit 500MB)
+// 90 MiB per chunk — aman di bawah limit upload Cloudflare free plan (100 MB =
+// 100.000.000 bytes) dan BodyLimit Fiber 500MB. 100 MiB sebelumnya (104.857.600
+// bytes) melebihi batas Cloudflare → 413 Content Too Large.
+const CHUNK_SIZE = 90 * 1024 * 1024;
 const CONCURRENCY = 3; // berapa chunk dikirim bersamaan (koneksi lambat tidak "bengong")
 const MAX_RETRY = 2; // ulangi chunk yang gagal sebelum menyerah
 
