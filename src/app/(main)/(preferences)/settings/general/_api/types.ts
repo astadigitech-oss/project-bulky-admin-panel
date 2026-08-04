@@ -167,3 +167,34 @@ export type PruneOrphansResponse = BaseResponse & {
     orphans: PruneOrphanItem[];
   };
 };
+
+// --- Asset migration (v1) — housekeeping chunk upload basi ---
+export type PendingV1UploadItem = {
+  upload_id: string;
+  chunk_count: number;
+  total_size: number;
+  last_modified: string;
+};
+
+export type ListPendingV1UploadsResponse = BaseResponse & {
+  data: {
+    pending_uploads: PendingV1UploadItem[];
+    stale_tmp_files: string[];
+    total_pending_size: number;
+  };
+};
+
+export type CleanupStaleV1UploadsBody = {
+  older_than_hours?: number;
+  dry_run: boolean;
+};
+
+export type CleanupStaleV1UploadsResponse = BaseResponse & {
+  data: {
+    dry_run: boolean;
+    older_than_hours: number;
+    deleted_uploads: string[];
+    deleted_tmp_files: string[];
+    freed_size: number;
+  };
+};

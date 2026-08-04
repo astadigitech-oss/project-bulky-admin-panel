@@ -10,6 +10,8 @@ import {
   FileWarning,
   HardDriveDownload,
   HardDriveUpload,
+  ListChecks,
+  Trash2,
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,9 @@ import {
 import { useConfirm } from "@/hooks/use-confirm";
 import { baseApiUrl, cookiesKey } from "@/config";
 import type {
+  CleanupStaleV1UploadsResponse,
   ImportV1FileItem,
+  ListPendingV1UploadsResponse,
   PruneOrphansResponse,
 } from "../../_api/types";
 
@@ -89,11 +93,24 @@ export const AssetMigrationSection = () => {
   uploadRef.current = uploadStats;
   const [pruneResult, setPruneResult] = useState<PruneOrphansResponse["data"] | null>(null);
   const [isPruning, setIsPruning] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState<
+    ListPendingV1UploadsResponse["data"] | null
+  >(null);
+  const [isCheckingPending, setIsCheckingPending] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<
+    CleanupStaleV1UploadsResponse["data"] | null
+  >(null);
+  const [isCleaning, setIsCleaning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const v1InputRef = useRef<HTMLInputElement>(null);
   const [ConfirmPruneDialog, confirmPrune] = useConfirm(
     "Hapus file tak terpakai?",
     "File yang tidak direferensikan database akan dihapus permanen. Lanjutkan?",
+    "destructive",
+  );
+  const [ConfirmCleanupDialog, confirmCleanup] = useConfirm(
+    "Hapus chunk upload basi?",
+    "Upload chunk v1 yang lebih dari 24 jam belum di-finalize/abort akan dihapus permanen. Lanjutkan?",
     "destructive",
   );
 
@@ -370,6 +387,67 @@ export const AssetMigrationSection = () => {
     }
   };
 
+  // Cek upload chunk v1 yang masih tersimpan di volume tapi belum
+  // di-finalize/abort (biasanya sisa migrasi yang gagal/ditinggal)
+  const handleCheckPending = async () => {
+    setIsCheckingPending(true);
+    try {
+      const token = getCookie(cookiesKey);
+      const res = await axios.get<ListPendingV1UploadsResponse>(
+        `${assetApiUrl}/import-v1/pending`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setPendingUploads(res.data.data);
+      toast.success(res.data.message ?? "Pengecekan selesai");
+    } catch {
+      toast.error("Gagal memeriksa chunk pending");
+    } finally {
+      setIsCheckingPending(false);
+    }
+  };
+
+  // Hapus permanen chunk v1 basi (lebih dari 24 jam belum di-finalize/abort)
+  const handleCleanupStale = async () => {
+    const confirmed = await confirmCleanup();
+    if (!confirmed) return;
+
+    setIsCleaning(true);
+    try {
+      const token = getCookie(cookiesKey);
+      const res = await axios.post<CleanupStaleV1UploadsResponse>(
+        `${assetApiUrl}/import-v1/cleanup`,
+        { older_than_hours: 24, dry_run: false },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setCleanupResult(res.data.data);
+      setPendingUploads(null);
+      toast.success(res.data.message ?? "Pembersihan selesai");
+    } catch {
+      toast.error("Pembersihan gagal");
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
+  // Dry-run — hanya lihat apa yang AKAN dihapus tanpa menghapus
+  const handleCleanupStaleDryRun = async () => {
+    setIsCleaning(true);
+    try {
+      const token = getCookie(cookiesKey);
+      const res = await axios.post<CleanupStaleV1UploadsResponse>(
+        `${assetApiUrl}/import-v1/cleanup`,
+        { older_than_hours: 24, dry_run: true },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setCleanupResult(res.data.data);
+      toast.success(res.data.message ?? "Pengecekan selesai");
+    } catch {
+      toast.error("Pengecekan gagal");
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
   const skippedFiles = importResult?.files.filter(
     (f) => f.status === "skipped",
   );
@@ -551,6 +629,64 @@ export const AssetMigrationSection = () => {
             </Button>
           </div>
         </div>
+
+        <div className="border-t" />
+
+        {/* Chunk upload v1 basi */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="font-medium text-sm">Chunk Upload Basi (Migrasi v1)</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Pantau & bersihkan sisa upload chunk migrasi v1 yang gagal atau
+              ditinggal (belum di-finalize/abort) agar volume storage tidak
+              diam-diam penuh.
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={isCheckingPending}
+              onClick={handleCheckPending}
+            >
+              {isCheckingPending ? (
+                <Spinner className="size-4 mr-2" />
+              ) : (
+                <ListChecks className="size-4 mr-2" />
+              )}
+              Cek Status
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={isCleaning}
+              onClick={handleCleanupStaleDryRun}
+            >
+              {isCleaning ? (
+                <Spinner className="size-4 mr-2" />
+              ) : (
+                <FileWarning className="size-4 mr-2" />
+              )}
+              Dry-run
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="shrink-0"
+              disabled={isCleaning}
+              onClick={handleCleanupStale}
+            >
+              {isCleaning ? (
+                <Spinner className="size-4 mr-2" />
+              ) : (
+                <Trash2 className="size-4 mr-2" />
+              )}
+              Bersihkan
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Import report */}
@@ -715,7 +851,185 @@ export const AssetMigrationSection = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Pending v1 chunk uploads report */}
+      <Dialog
+        open={!!pendingUploads}
+        onOpenChange={(open) => {
+          if (!open) setPendingUploads(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Status Chunk Upload v1</DialogTitle>
+            <DialogDescription>
+              Daftar upload chunk migrasi v1 yang masih tersimpan di volume
+              tapi belum di-finalize/abort
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="border rounded-lg p-3">
+              <p className="text-2xl font-semibold leading-none">
+                {pendingUploads?.pending_uploads.length ?? 0}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Upload pending
+              </p>
+            </div>
+            <div className="border rounded-lg p-3">
+              <p className="text-2xl font-semibold leading-none">
+                {formatBytes(pendingUploads?.total_pending_size ?? 0)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total ukuran
+              </p>
+            </div>
+          </div>
+
+          {pendingUploads && pendingUploads.pending_uploads.length > 0 && (
+            <div className="border rounded-lg p-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                Daftar upload pending
+              </p>
+              <ul className="mt-2 space-y-1.5 max-h-40 overflow-y-auto">
+                {pendingUploads.pending_uploads.map((item) => (
+                  <li
+                    key={item.upload_id}
+                    className="text-xs flex items-center justify-between gap-2"
+                  >
+                    <span
+                      className="font-mono text-muted-foreground truncate"
+                      title={item.upload_id}
+                    >
+                      {item.upload_id}
+                    </span>
+                    <span className="shrink-0 text-[10px] text-muted-foreground">
+                      {item.chunk_count} bagian ·{" "}
+                      {formatBytes(item.total_size)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {pendingUploads && pendingUploads.stale_tmp_files.length > 0 && (
+            <div className="border rounded-lg p-3">
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <FileWarning className="size-3.5" />
+                {pendingUploads.stale_tmp_files.length} file sementara yatim
+              </p>
+              <ul className="mt-2 space-y-1">
+                {pendingUploads.stale_tmp_files.map((path) => (
+                  <li
+                    key={path}
+                    className="text-xs font-mono text-muted-foreground truncate"
+                    title={path}
+                  >
+                    {path}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingUploads(null)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cleanup stale v1 chunk uploads report */}
+      <Dialog
+        open={!!cleanupResult}
+        onOpenChange={(open) => {
+          if (!open) setCleanupResult(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {cleanupResult?.dry_run
+                ? "Hasil Pembersihan (Dry-run)"
+                : "Hasil Pembersihan"}
+            </DialogTitle>
+            <DialogDescription>
+              {cleanupResult?.dry_run
+                ? `Chunk basi lebih dari ${cleanupResult?.older_than_hours ?? 24} jam — belum ada yang dihapus`
+                : `Chunk basi lebih dari ${cleanupResult?.older_than_hours ?? 24} jam telah dihapus permanen`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="border rounded-lg p-3">
+              <p className="text-2xl font-semibold leading-none">
+                {(cleanupResult?.deleted_uploads.length ?? 0) +
+                  (cleanupResult?.deleted_tmp_files.length ?? 0)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {cleanupResult?.dry_run ? "Akan dihapus" : "Dihapus"}
+              </p>
+            </div>
+            <div className="border rounded-lg p-3">
+              <p className="text-2xl font-semibold leading-none">
+                {formatBytes(cleanupResult?.freed_size ?? 0)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {cleanupResult?.dry_run ? "Akan dibebaskan" : "Dibebaskan"}
+              </p>
+            </div>
+          </div>
+
+          {cleanupResult && cleanupResult.deleted_uploads.length > 0 && (
+            <div className="border rounded-lg p-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                {cleanupResult.deleted_uploads.length} upload chunk
+              </p>
+              <ul className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                {cleanupResult.deleted_uploads.map((id) => (
+                  <li
+                    key={id}
+                    className="text-xs font-mono text-muted-foreground truncate"
+                    title={id}
+                  >
+                    {id}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {cleanupResult && cleanupResult.deleted_tmp_files.length > 0 && (
+            <div className="border rounded-lg p-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                {cleanupResult.deleted_tmp_files.length} file sementara yatim
+              </p>
+              <ul className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                {cleanupResult.deleted_tmp_files.map((name) => (
+                  <li
+                    key={name}
+                    className="text-xs font-mono text-muted-foreground truncate"
+                    title={name}
+                  >
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCleanupResult(null)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ConfirmPruneDialog />
+      <ConfirmCleanupDialog />
     </div>
   );
 };
