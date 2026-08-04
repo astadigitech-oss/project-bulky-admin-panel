@@ -397,7 +397,14 @@ export const AssetMigrationSection = () => {
         `${assetApiUrl}/import-v1/pending`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      setPendingUploads(res.data.data);
+      // Backend Go mengembalikan null (bukan []) untuk slice kosong — normalisasi
+      // supaya akses .length di JSX tidak crash.
+      const data = res.data.data;
+      setPendingUploads({
+        pending_uploads: data.pending_uploads ?? [],
+        stale_tmp_files: data.stale_tmp_files ?? [],
+        total_pending_size: data.total_pending_size ?? 0,
+      });
       toast.success(res.data.message ?? "Pengecekan selesai");
     } catch {
       toast.error("Gagal memeriksa chunk pending");
@@ -419,7 +426,15 @@ export const AssetMigrationSection = () => {
         { older_than_hours: 24, dry_run: false },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      setCleanupResult(res.data.data);
+      // Normalisasi null → [] (lihat catatan di handleCheckPending)
+      const data = res.data.data;
+      setCleanupResult({
+        dry_run: data.dry_run,
+        older_than_hours: data.older_than_hours,
+        deleted_uploads: data.deleted_uploads ?? [],
+        deleted_tmp_files: data.deleted_tmp_files ?? [],
+        freed_size: data.freed_size ?? 0,
+      });
       setPendingUploads(null);
       toast.success(res.data.message ?? "Pembersihan selesai");
     } catch {
@@ -439,7 +454,15 @@ export const AssetMigrationSection = () => {
         { older_than_hours: 24, dry_run: true },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      setCleanupResult(res.data.data);
+      // Normalisasi null → [] (lihat catatan di handleCheckPending)
+      const data = res.data.data;
+      setCleanupResult({
+        dry_run: data.dry_run,
+        older_than_hours: data.older_than_hours,
+        deleted_uploads: data.deleted_uploads ?? [],
+        deleted_tmp_files: data.deleted_tmp_files ?? [],
+        freed_size: data.freed_size ?? 0,
+      });
       toast.success(res.data.message ?? "Pengecekan selesai");
     } catch {
       toast.error("Pengecekan gagal");
