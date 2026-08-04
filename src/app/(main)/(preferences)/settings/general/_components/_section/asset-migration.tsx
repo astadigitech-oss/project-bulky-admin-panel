@@ -31,12 +31,18 @@ import type {
 } from "../../_api/types";
 
 const assetApiUrl = `${baseApiUrl}/api/panel/assets`;
-// 90 MiB per chunk — aman di bawah limit upload Cloudflare free plan (100 MB =
-// 100.000.000 bytes) dan BodyLimit Fiber 500MB. 100 MiB sebelumnya (104.857.600
-// bytes) melebihi batas Cloudflare → 413 Content Too Large.
-const CHUNK_SIZE = 90 * 1024 * 1024;
-const CONCURRENCY = 3; // berapa chunk dikirim bersamaan (koneksi lambat tidak "bengong")
-const MAX_RETRY = 2; // ulangi chunk yang gagal sebelum menyerah
+// 10 MiB per chunk — jauh di bawah limit Cloudflare free (100 MB) dan BodyLimit
+// Fiber 500MB. Chunk kecil = retry & progress lebih granular, cocok untuk
+// koneksi lambat/terputus-putus. (90 MiB sebelumnya membuat UI "bengong"
+// karena progress hanya naik saat satu chunk besar selesai.)
+const CHUNK_SIZE = 10 * 1024 * 1024;
+// Berapa chunk dikirim bersamaan. 2 cukup — 3+ di koneksi kecil saling berebut
+// bandwidth dan semua jadi lambat.
+const CONCURRENCY = 2;
+const MAX_RETRY = 3; // ulangi chunk yang gagal sebelum menyerah
+// Batas waktu tanpa transfer data (upload stalled). 90 MiB butuh ~10 menit di
+// 150 KB/s; pakai timeout per-chunk yang wajar agar UI tidak menggantung.
+const STALL_TIMEOUT_MS = 3 * 60 * 1000;
 
 const formatBytes = (bytes: number) => {
   if (bytes === 0) return "0 B";
@@ -62,6 +68,14 @@ export const AssetMigrationSection = () => {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [migrationPhase, setMigrationPhase] = useState<string | null>(null);
+  const [uploadStats, setUploadStats] = useState<{
+    sent: number;
+    total: number;
+    chunk: number;
+    totalChunks: number;
+  } | null>(null);
+  const uploadRef = useRef(uploadStats);
+  uploadRef.current = uploadStats;
   const [pruneResult, setPruneResult] = useState<PruneOrphansResponse["data"] | null>(null);
   const [isPruning, setIsPruning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -153,7 +167,19 @@ export const AssetMigrationSection = () => {
     const uploadId = crypto.randomUUID();
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    // Helper: kirim satu chunk dengan retry
+    // Counter byte terkirim (semua chunk) untuk progress real-time.
+    let bytesSent = 0;
+
+    const updateStats = (chunk: number, progressEvent: { loaded: number }) => {
+      setUploadStats({
+        sent: bytesSent + progressEvent.loaded,
+        total: file.size,
+        chunk: chunk + 1, // 1-based untuk label
+        totalChunks,
+      });
+    };
+
+    // Helper: kirim satu chunk dengan retry + deteksi stalled
     const uploadOne = async (i: number) => {
       const start = i * CHUNK_SIZE;
       const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
@@ -169,8 +195,16 @@ export const AssetMigrationSection = () => {
         try {
           await axios.post(`${assetApiUrl}/import-v1/chunk`, chunkForm, {
             headers,
-            timeout: 0, // koneksi lambat — jangan batasi durasi
+            // Batasi durasi request: kalau tidak ada transfer data dalam
+            // STALL_TIMEOUT_MS, anggap gagal & retry (biar tidak "bengong").
+            timeout: STALL_TIMEOUT_MS,
+            // Perbarui progress byte real-time — UI tidak pernah terlihat beku.
+            onUploadProgress: (p) => {
+              updateStats(i, p);
+              setUploadProgress(Math.min(90, Math.round((bytesSent + (p.loaded ?? 0)) / file.size * 90)));
+            },
           });
+          bytesSent += chunk.size;
           return;
         } catch (err) {
           lastErr = err;
@@ -198,7 +232,7 @@ export const AssetMigrationSection = () => {
           }
           uploaded += 1;
           // Progress dihitung dari upload chunk (maks 90%) + finalize (10%)
-          setUploadProgress(Math.round((uploaded / totalChunks) * 90));
+          setUploadProgress(Math.min(90, Math.round((uploaded / totalChunks) * 90)));
         }),
       );
 
@@ -241,6 +275,7 @@ export const AssetMigrationSection = () => {
     } finally {
       setIsMigrating(false);
       setUploadProgress(null);
+      setUploadStats(null);
       if (v1InputRef.current) v1InputRef.current.value = "";
     }
   };
@@ -384,6 +419,14 @@ export const AssetMigrationSection = () => {
                 >
                   <ProgressLabel className="text-xs text-muted-foreground">
                     {migrationPhase ?? "Mengunggah"} {uploadProgress}%
+                    {uploadStats && (
+                      <span className="tabular-nums">
+                        {" "}
+                        · {formatBytes(uploadStats.sent)} /{" "}
+                        {formatBytes(uploadStats.total)} · bagian{" "}
+                        {uploadStats.chunk}/{uploadStats.totalChunks}
+                      </span>
+                    )}
                   </ProgressLabel>
                 </Progress>
               </div>
