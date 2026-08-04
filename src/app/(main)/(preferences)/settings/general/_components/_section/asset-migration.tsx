@@ -283,23 +283,35 @@ export const AssetMigrationSection = () => {
     };
 
     try {
-      // 1) Kirim semua chunk — paralel (konkurensi terbatas) supaya
-      //    koneksi lambat tidak membuat UI terlihat "bengong"
+      // 1) Kirim semua chunk — paralel dengan konkurensi DIBATASI (worker
+      //    pool sejumlah CONCURRENCY). Sebelumnya semua chunk ditembak
+      //    sekaligus lewat Promise.all tanpa batas — untuk file besar
+      //    (ratusan chunk) ini membanjiri koneksi browser/proxy/server
+      //    sehingga sebagian request ter-cancel (terlihat di Network tab
+      //    sebagai status "cancelled"), gagal setelah retry habis, tapi
+      //    tidak pernah ter-log ke console (hanya toast.error).
       setMigrationPhase(`Mengunggah ${file.name}...`);
       let uploaded = 0;
       const failed: number[] = [];
-      await Promise.all(
-        Array.from({ length: totalChunks }, (_, i) => i).map(async (i) => {
+      const chunkQueue = Array.from({ length: totalChunks }, (_, i) => i);
+      let nextIndex = 0;
+      const worker = async () => {
+        while (nextIndex < chunkQueue.length) {
+          const i = chunkQueue[nextIndex++];
           try {
             await uploadOne(i);
-          } catch {
+          } catch (err) {
+            console.error(`Chunk ${i} gagal diunggah setelah retry:`, err);
             failed.push(i);
-            return;
+            continue;
           }
           uploaded += 1;
           // Progress dihitung dari upload chunk (maks 90%) + finalize (10%)
           setUploadProgress(Math.min(90, Math.round((uploaded / totalChunks) * 90)));
-        }),
+        }
+      };
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, totalChunks) }, () => worker()),
       );
 
       // Chunk yang gagal setelah retry — hentikan, jangan lanjut finalize
