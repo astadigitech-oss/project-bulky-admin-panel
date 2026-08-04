@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { getCookie } from "cookies-next/client";
 import { toast } from "sonner";
@@ -32,6 +32,8 @@ import type {
 
 const assetApiUrl = `${baseApiUrl}/api/panel/assets`;
 const CHUNK_SIZE = 100 * 1024 * 1024; // 100MB per chunk (aman di bawah BodyLimit 500MB)
+const CONCURRENCY = 3; // berapa chunk dikirim bersamaan (koneksi lambat tidak "bengong")
+const MAX_RETRY = 2; // ulangi chunk yang gagal sebelum menyerah
 
 const formatBytes = (bytes: number) => {
   if (bytes === 0) return "0 B";
@@ -56,6 +58,7 @@ export const AssetMigrationSection = () => {
   const [isMigrating, setIsMigrating] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [migrationPhase, setMigrationPhase] = useState<string | null>(null);
   const [pruneResult, setPruneResult] = useState<PruneOrphansResponse["data"] | null>(null);
   const [isPruning, setIsPruning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,6 +68,19 @@ export const AssetMigrationSection = () => {
     "File yang tidak direferensikan database akan dihapus permanen. Lanjutkan?",
     "destructive",
   );
+
+  // Bersihkan chunk yang tersisa di server kalau migrasi batal/gagal
+  const cleanupChunks = useCallback(async (uploadId: string) => {
+    try {
+      const token = getCookie(cookiesKey);
+      await axios.delete(`${assetApiUrl}/import-v1/chunk`, {
+        params: { upload_id: uploadId },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      // abaikan — folder chunk di server memang tidak dijamin ada
+    }
+  }, []);
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -127,36 +143,73 @@ export const AssetMigrationSection = () => {
     setIsMigrating(true);
     setImportResult(null);
     setUploadProgress(0);
+    setMigrationPhase("Menyiapkan...");
+
+    const token = getCookie(cookiesKey);
+    const headers = { Authorization: `Bearer ${token}` };
+    const uploadId = crypto.randomUUID();
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+    // Helper: kirim satu chunk dengan retry
+    const uploadOne = async (i: number) => {
+      const start = i * CHUNK_SIZE;
+      const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
+
+      const chunkForm = new FormData();
+      chunkForm.append("upload_id", uploadId);
+      chunkForm.append("chunk_index", String(i));
+      chunkForm.append("total_chunks", String(totalChunks));
+      chunkForm.append("chunk_data", chunk);
+
+      let lastErr: unknown = null;
+      for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
+        try {
+          await axios.post(`${assetApiUrl}/import-v1/chunk`, chunkForm, {
+            headers,
+            timeout: 0, // koneksi lambat — jangan batasi durasi
+          });
+          return;
+        } catch (err) {
+          lastErr = err;
+          if (attempt < MAX_RETRY) {
+            await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+          }
+        }
+      }
+      throw lastErr;
+    };
 
     try {
-      const token = getCookie(cookiesKey);
-      const headers = { Authorization: `Bearer ${token}` };
-      const uploadId = crypto.randomUUID();
-      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      // 1) Kirim semua chunk — paralel (konkurensi terbatas) supaya
+      //    koneksi lambat tidak membuat UI terlihat "bengong"
+      setMigrationPhase(`Mengunggah ${file.name}...`);
+      let uploaded = 0;
+      const failed: number[] = [];
+      await Promise.all(
+        Array.from({ length: totalChunks }, (_, i) => i).map(async (i) => {
+          try {
+            await uploadOne(i);
+          } catch {
+            failed.push(i);
+            return;
+          }
+          uploaded += 1;
+          // Progress dihitung dari upload chunk (maks 90%) + finalize (10%)
+          setUploadProgress(Math.round((uploaded / totalChunks) * 90));
+        }),
+      );
 
-      // 1) Kirim semua chunk sekuensial
-      for (let i = 0; i < totalChunks; i++) {
-        const start = i * CHUNK_SIZE;
-        const chunk = file.slice(
-          start,
-          Math.min(start + CHUNK_SIZE, file.size),
+      // Chunk yang gagal setelah retry — hentikan, jangan lanjut finalize
+      if (failed.length > 0) {
+        throw new Error(
+          `${failed.length} bagian gagal diunggah (indeks: ${failed
+            .slice(0, 5)
+            .join(", ")}${failed.length > 5 ? ", ..." : ""})`,
         );
-
-        const chunkForm = new FormData();
-        chunkForm.append("upload_id", uploadId);
-        chunkForm.append("chunk_index", String(i));
-        chunkForm.append("total_chunks", String(totalChunks));
-        chunkForm.append("chunk_data", chunk);
-
-        await axios.post(`${assetApiUrl}/import-v1/chunk`, chunkForm, {
-          headers,
-        });
-
-        // Progress dihitung dari upload chunk (maks 90%) + finalize (10%)
-        setUploadProgress(Math.round(((i + 1) / totalChunks) * 90));
       }
 
-      // 2) Finalize — gabungkan chunk & proses mapping
+      // 2) Finalize — gabungkan chunk & proses mapping (bisa lama)
+      setMigrationPhase("Memproses file...");
       setUploadProgress(95);
       const finalForm = new FormData();
       finalForm.append("upload_id", uploadId);
@@ -164,8 +217,10 @@ export const AssetMigrationSection = () => {
 
       const res = await axios.post(`${assetApiUrl}/import-v1/finalize`, finalForm, {
         headers,
+        timeout: 0, // ekstrak ribuan file bisa memakan waktu lama
       });
       setUploadProgress(100);
+      setMigrationPhase(null);
       // Normalisasi: backend bisa mengembalikan null untuk unmatched/files
       setImportResult({
         imported: res.data.data.imported ?? 0,
@@ -173,8 +228,13 @@ export const AssetMigrationSection = () => {
         unmatched: res.data.data.unmatched ?? [],
         files: res.data.data.files ?? [],
       });
-    } catch {
-      toast.error("Migrasi gagal. Silakan coba lagi.");
+    } catch (err) {
+      setMigrationPhase(null);
+      const detail =
+        err instanceof Error && err.message ? ` (${err.message})` : "";
+      toast.error(`Migrasi gagal. Silakan coba lagi.${detail}`);
+      // Bersihkan chunk yang sudah terlanjur tersimpan di server
+      await cleanupChunks(uploadId);
     } finally {
       setIsMigrating(false);
       setUploadProgress(null);
@@ -320,7 +380,7 @@ export const AssetMigrationSection = () => {
                   classIndicator="bg-yellow-500"
                 >
                   <ProgressLabel className="text-xs text-muted-foreground">
-                    Mengunggah {uploadProgress}%
+                    {migrationPhase ?? "Mengunggah"} {uploadProgress}%
                   </ProgressLabel>
                 </Progress>
               </div>
@@ -346,7 +406,11 @@ export const AssetMigrationSection = () => {
             ) : (
               <DatabaseBackup className="size-4 mr-2" />
             )}
-            {isMigrating ? "Migrating..." : "Migrasi v1"}
+            {isMigrating
+              ? migrationPhase === "Memproses file..."
+                ? "Memproses..."
+                : "Mengunggah..."
+              : "Migrasi v1"}
           </Button>
         </div>
 
