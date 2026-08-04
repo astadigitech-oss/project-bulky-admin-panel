@@ -167,16 +167,23 @@ export const AssetMigrationSection = () => {
     const uploadId = crypto.randomUUID();
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    // Counter byte terkirim (semua chunk) untuk progress real-time.
-    let bytesSent = 0;
+    // Progress byte per chunk. Total yang ditampilkan di-clamp agar TIDAK
+    // pernah menurun: saat sebuah chunk stalled lalu di-retry, counter
+    // loaded-nya di-reset dari 0 — tanpa clamp angka "terkirim" akan terlihat
+    // berkurang padahal data aman (chunk yang sudah sukses tetap tersimpan).
+    const progressMap = new Map<number, number>();
+    let lastShownTotal = 0;
+    const shownTotal = () => {
+      let total = 0;
+      for (const v of progressMap.values()) total += v;
+      lastShownTotal = Math.max(lastShownTotal, total);
+      return Math.min(lastShownTotal, file.size);
+    };
 
-    const updateStats = (chunk: number, progressEvent: { loaded: number }) => {
-      setUploadStats({
-        sent: bytesSent + progressEvent.loaded,
-        total: file.size,
-        chunk: chunk + 1, // 1-based untuk label
-        totalChunks,
-      });
+    const updateStats = (chunk: number) => {
+      const sent = shownTotal();
+      setUploadStats({ sent, total: file.size, chunk: chunk + 1, totalChunks });
+      setUploadProgress(Math.min(90, Math.round((sent / file.size) * 90)));
     };
 
     // Helper: kirim satu chunk dengan retry + deteksi stalled
@@ -200,11 +207,13 @@ export const AssetMigrationSection = () => {
             timeout: STALL_TIMEOUT_MS,
             // Perbarui progress byte real-time — UI tidak pernah terlihat beku.
             onUploadProgress: (p) => {
-              updateStats(i, p);
-              setUploadProgress(Math.min(90, Math.round((bytesSent + (p.loaded ?? 0)) / file.size * 90)));
+              progressMap.set(i, p.loaded ?? 0);
+              updateStats(i);
             },
           });
-          bytesSent += chunk.size;
+          // Chunk sukses — catat ukuran penuh (monotonik, tidak pernah turun)
+          progressMap.set(i, chunk.size);
+          updateStats(i);
           return;
         } catch (err) {
           lastErr = err;
