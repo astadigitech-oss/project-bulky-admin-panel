@@ -19,6 +19,7 @@ import { MouseEvent, useEffect, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cookiesKey } from "@/config";
+import { useMounted } from "@/hooks/use-mounted";
 import { deleteCookie } from "cookies-next/client";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { Spinner } from "../ui/spinner";
@@ -38,11 +39,12 @@ const ToggleTheme = dynamic(() => import("../toggle-theme"), {
 export const Action = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const mounted = useMounted();
   const [isTransition, startTransition] = useTransition();
   const { data, isPending: isMePending, isSuccess, isError } = useMe();
   const { mutate: logout, isPending: isLogouting } = useLogout();
   const user = data?.data;
-  const isLoading = isLogouting || isMePending || isTransition;
+  const isLoading = !mounted || isLogouting || isMePending || isTransition;
 
   const handleLogout = (e: MouseEvent) => {
     e.preventDefault();
