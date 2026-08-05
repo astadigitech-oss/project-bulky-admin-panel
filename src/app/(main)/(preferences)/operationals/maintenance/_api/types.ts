@@ -13,10 +13,12 @@ export type MaintenanceType = {
   id: string;
   is_active: boolean;
   judul: string;
+  judul_en: string;
   tipe_maintenance: TypeMaintenanceEnum;
 };
 export type MaintenancePartType = {
   deskripsi: string;
+  deskripsi_en: string;
   updated_at: string;
 };
 
@@ -37,8 +39,10 @@ export type MaintenanceDetailResponse = BaseResponse & {
 // ------mutation------
 export type CreateMaintenanceBody = {
   judul: string;
+  judul_en: string;
   tipe_maintenance: TypeMaintenanceEnum;
   deskripsi: string;
+  deskripsi_en: string;
 };
 
 export type CreateMaintenanceResponse = BaseResponse & {
@@ -49,8 +53,10 @@ export type UpdateMaintenanceParams = BaseParams;
 
 export type UpdateMaintenanceBody = {
   judul: string;
+  judul_en?: string;
   tipe_maintenance: TypeMaintenanceEnum;
   deskripsi: string;
+  deskripsi_en?: string;
 };
 
 export type UpdateMaintenanceResponse = BaseResponse & {

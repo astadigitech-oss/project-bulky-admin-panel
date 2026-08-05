@@ -24,13 +24,15 @@ import {
 } from "../ui/collapsible";
 import { Suspense, useState } from "react";
 
-interface NavValueProps {
+export interface NavValueProps {
   title: string;
   url: string;
   icon: LucideIcon;
-  items: {
+  permission?: string;
+  items: readonly {
     title: string;
     url: string;
+    permission?: string;
   }[];
 }
 
@@ -137,170 +139,174 @@ export function NavMain({
           </SidebarMenu>
         </Suspense>
       </SidebarGroup>
-      <SidebarGroup>
-        <SidebarGroupLabel>Sumber Daya</SidebarGroupLabel>
-        <Suspense
-          fallback={
+      {nav.navInfo.length > 0 && (
+        <SidebarGroup>
+          <SidebarGroupLabel>Sumber Daya</SidebarGroupLabel>
+          <Suspense
+            fallback={
+              <SidebarMenu>
+                {nav.navInfo.map((item) => (
+                  <SidebarMenuSkeleton key={item.title} />
+                ))}
+              </SidebarMenu>
+            }
+          >
             <SidebarMenu>
-              {nav.navInfo.map((item) => (
-                <SidebarMenuSkeleton key={item.title} />
-              ))}
-            </SidebarMenu>
-          }
-        >
-          <SidebarMenu>
-            {nav.navInfo.map((item) => {
-              const isActive = pathname.includes(item.url);
+              {nav.navInfo.map((item) => {
+                const isActive = pathname.includes(item.url);
 
-              if (item.items.length === 0) {
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      tooltip={item.title}
-                      isActive={isActive}
-                      render={
-                        <Link href={item.url}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      }
-                    />
-                  </SidebarMenuItem>
-                );
-              }
-
-              return (
-                <Collapsible
-                  key={item.title}
-                  open={openKey === item.title}
-                  onOpenChange={(open) => setOpenKey(open ? item.title : null)}
-                  render={
-                    <SidebarMenuItem>
+                if (item.items.length === 0) {
+                  return (
+                    <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
                         tooltip={item.title}
-                        onClick={() =>
-                          setOpenKey(openKey === item.title ? null : item.title)
-                        }
-                      >
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-
-                      <CollapsibleTrigger
+                        isActive={isActive}
                         render={
-                          <SidebarMenuAction className="data-[state=open]:rotate-90">
-                            <ChevronRight />
-                            <span className="sr-only">Toggle</span>
-                          </SidebarMenuAction>
+                          <Link href={item.url}>
+                            <item.icon />
+                            <span>{item.title}</span>
+                          </Link>
                         }
                       />
-
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.items.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton
-                                isActive={pathname.includes(subItem.url)}
-                                render={
-                                  <Link href={subItem.url}>
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                }
-                              />
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
                     </SidebarMenuItem>
-                  }
-                />
-              );
-            })}
-          </SidebarMenu>
-        </Suspense>
-      </SidebarGroup>
-      <SidebarGroup>
-        <SidebarGroupLabel>Preferensi</SidebarGroupLabel>
-        <Suspense
-          fallback={
-            <SidebarMenu>
-              {nav.navPreferences.map((item) => (
-                <SidebarMenuSkeleton key={item.title} />
-              ))}
-            </SidebarMenu>
-          }
-        >
-          <SidebarMenu>
-            {nav.navPreferences.map((item) => {
-              const isActive = pathname.includes(item.url);
+                  );
+                }
 
-              if (item.items.length === 0) {
                 return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      tooltip={item.title}
-                      isActive={isActive}
-                      render={
-                        <Link href={item.url}>
+                  <Collapsible
+                    key={item.title}
+                    open={openKey === item.title}
+                    onOpenChange={(open) => setOpenKey(open ? item.title : null)}
+                    render={
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          tooltip={item.title}
+                          onClick={() =>
+                            setOpenKey(openKey === item.title ? null : item.title)
+                          }
+                        >
                           <item.icon />
                           <span>{item.title}</span>
-                        </Link>
-                      }
-                    />
-                  </SidebarMenuItem>
-                );
-              }
+                        </SidebarMenuButton>
 
-              return (
-                <Collapsible
-                  key={item.title}
-                  open={openKey === item.title}
-                  onOpenChange={(open) => setOpenKey(open ? item.title : null)}
-                  render={
-                    <SidebarMenuItem>
+                        <CollapsibleTrigger
+                          render={
+                            <SidebarMenuAction className="data-[state=open]:rotate-90">
+                              <ChevronRight />
+                              <span className="sr-only">Toggle</span>
+                            </SidebarMenuAction>
+                          }
+                        />
+
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.items.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton
+                                  isActive={pathname.includes(subItem.url)}
+                                  render={
+                                    <Link href={subItem.url}>
+                                      <span>{subItem.title}</span>
+                                    </Link>
+                                  }
+                                />
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    }
+                  />
+                );
+              })}
+            </SidebarMenu>
+          </Suspense>
+        </SidebarGroup>
+      )}
+      {nav.navPreferences.length > 0 && (
+        <SidebarGroup>
+          <SidebarGroupLabel>Preferensi</SidebarGroupLabel>
+          <Suspense
+            fallback={
+              <SidebarMenu>
+                {nav.navPreferences.map((item) => (
+                  <SidebarMenuSkeleton key={item.title} />
+                ))}
+              </SidebarMenu>
+            }
+          >
+            <SidebarMenu>
+              {nav.navPreferences.map((item) => {
+                const isActive = pathname.includes(item.url);
+
+                if (item.items.length === 0) {
+                  return (
+                    <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
                         tooltip={item.title}
-                        onClick={() =>
-                          setOpenKey(openKey === item.title ? null : item.title)
-                        }
-                      >
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-
-                      <CollapsibleTrigger
+                        isActive={isActive}
                         render={
-                          <SidebarMenuAction className="data-[state=open]:rotate-90">
-                            <ChevronRight />
-                            <span className="sr-only">Toggle</span>
-                          </SidebarMenuAction>
+                          <Link href={item.url}>
+                            <item.icon />
+                            <span>{item.title}</span>
+                          </Link>
                         }
                       />
-
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.items.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton
-                                isActive={pathname.includes(subItem.url)}
-                                render={
-                                  <Link href={subItem.url}>
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                }
-                              />
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
                     </SidebarMenuItem>
-                  }
-                />
-              );
-            })}
-          </SidebarMenu>
-        </Suspense>
-      </SidebarGroup>
+                  );
+                }
+
+                return (
+                  <Collapsible
+                    key={item.title}
+                    open={openKey === item.title}
+                    onOpenChange={(open) => setOpenKey(open ? item.title : null)}
+                    render={
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          tooltip={item.title}
+                          onClick={() =>
+                            setOpenKey(openKey === item.title ? null : item.title)
+                          }
+                        >
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </SidebarMenuButton>
+
+                        <CollapsibleTrigger
+                          render={
+                            <SidebarMenuAction className="data-[state=open]:rotate-90">
+                              <ChevronRight />
+                              <span className="sr-only">Toggle</span>
+                            </SidebarMenuAction>
+                          }
+                        />
+
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.items.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton
+                                  isActive={pathname.includes(subItem.url)}
+                                  render={
+                                    <Link href={subItem.url}>
+                                      <span>{subItem.title}</span>
+                                    </Link>
+                                  }
+                                />
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    }
+                  />
+                );
+              })}
+            </SidebarMenu>
+          </Suspense>
+        </SidebarGroup>
+      )}
     </SidebarContent>
   );
 }

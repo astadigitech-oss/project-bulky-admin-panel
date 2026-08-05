@@ -9,6 +9,7 @@ export type ProductPartIType = {
   file_pdf: string;
   gambar_utama: null | string;
   id: string;
+  is_sold: boolean;
   nama_en: string;
   nama_id: string;
   reference_id: null | string;
@@ -16,7 +17,7 @@ export type ProductPartIType = {
 };
 
 export type ProductListRequest = BaseListParams & {
-  is_sold?: boolean;
+  status?: "all" | "available" | "sold out";
 };
 
 export type ProductListResponse = BaseResponse & {

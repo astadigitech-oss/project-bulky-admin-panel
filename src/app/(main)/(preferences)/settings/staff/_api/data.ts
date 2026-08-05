@@ -19,6 +19,7 @@ type StaffType = {
   is_active: boolean;
   last_login_at: string | null;
   nama: string;
+  role_id: string;
   updated_at: string;
 };
 
@@ -63,6 +64,7 @@ export type UpdateStaffBody = {
   email: string;
   is_active: boolean;
   nama: string;
+  role_id?: string;
 };
 
 type UpdateStaffResponse = CreateStaffResponse;

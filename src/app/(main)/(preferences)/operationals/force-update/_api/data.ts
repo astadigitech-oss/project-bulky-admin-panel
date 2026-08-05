@@ -31,14 +31,15 @@ export const dataAPIForceUpdate = {
     search,
     sort_by,
     order,
+    platform,
   }: ForceUpdateListRequest & ForceUpdateDetailRequest): {
     list: UseApiQueryProps<ForceUpdateListResponse>;
     show: UseApiQueryProps<ForceUpdateDetailResponse>;
   } => ({
     list: {
-      key: [key[0], { page, per_page, search, sort_by, order }],
+      key: [key[0], { page, per_page, search, sort_by, order, platform }],
       endpoint: `/force-update`,
-      searchParams: { page, per_page, search, sort_by, order },
+      searchParams: { page, per_page, search, sort_by, order, platform },
       placeholderData: keepPreviousData,
     },
     show: {

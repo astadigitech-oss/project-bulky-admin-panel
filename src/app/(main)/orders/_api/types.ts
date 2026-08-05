@@ -8,9 +8,12 @@ import {
 // ─── Request ────────────────────────────────────────────────────────────────
 
 export type OrderListRequest = BaseListParams & {
-  status?: string;
-  payment_status?: string;
+  order_status?: string;
+  payment_type?: string;
   delivery_type?: string;
+  buyer?: string;
+  cari?: string;
+  sort_order?: "asc" | "desc";
   tanggal_dari?: string;
   tanggal_sampai?: string;
 };
@@ -32,7 +35,15 @@ export type UpdateOrderStatusBody = {
 
 export type UpdateOrderStatusParams = BaseParams;
 
+export type RetryBookingParams = BaseParams;
+
 export type DeleteOrderParams = BaseParams;
+
+export type CancelOrderParams = BaseParams;
+
+export type CancelOrderBody = {
+  reason?: string;
+};
 
 // ─── Response ───────────────────────────────────────────────────────────────
 
@@ -82,6 +93,13 @@ export type OrderDetailResponse = BaseResponse & {
       kode_pos: string;
     } | null;
     delivery_type: string;
+    shipping_info: {
+      delivery_type: string;
+      booking_id: string | null;
+      tracking_no: string | null;
+      booking_status: "NOT_APPLICABLE" | "PENDING" | "IN_PROGRESS" | "BOOKED" | "FAILED";
+      booking_error: string | null;
+    };
     payment_type: string;
     payment_status: string;
     order_status: string;
@@ -123,6 +141,7 @@ export type OrderDetailResponse = BaseResponse & {
     biaya_produk: string;
     biaya_pengiriman: string;
     biaya_ppn: string;
+    biaya_lainnya: string;
     potongan_kupon: string;
     total_bayar: string;
     catatan_buyer: string | null;
@@ -159,3 +178,149 @@ export type UpdateOrderStatusResponse = BaseResponse & {
 };
 
 export type DeleteOrderResponse = BaseResponse;
+
+export type CancelOrderResponse = BaseResponse & {
+  data: {
+    id: string;
+    kode: string;
+    previous_status: string;
+    order_status: string;
+    cancelled_reason: string | null;
+    restored_produk_count: number;
+    cancelled_at: string;
+    cancelled_by: string;
+  };
+};
+
+export type RetryBookingResponse = BaseResponse & {
+  data: {
+    pesanan_id: string;
+    delivery_type: string;
+    booking_id: string | null;
+    tracking_no: string | null;
+  };
+};
+
+export type OrderInvoiceRequest = BaseParams;
+
+export type ForwarderInvoiceDetail = {
+  freight_element_name: string;
+  basis_name: string;
+  total_idr: string;
+  amount: string;
+  total: string;
+  subtotal: string;
+  invoice_no: string;
+  qty: string;
+  container_type: string;
+  currency: string;
+  tax: string;
+  remark: string;
+};
+
+export type ForwarderInvoice = {
+  booking_no: string;
+  invoice_no: string;
+  due_date: string;
+  invoice_id: string;
+  currency: string;
+  remark: string;
+  create_date: string;
+  download_invoice_url: string;
+  data_detail: ForwarderInvoiceDetail[];
+  invoice_date: string;
+  quotation_no: string;
+  status: string;
+};
+
+export type OrderInvoiceResponse = BaseResponse & {
+  data: ForwarderInvoice[];
+};
+
+export type OrderTrackingRequest = BaseParams;
+
+export type OrderDelivereeDetailRequest = BaseParams;
+
+export type DelivereeVehicleTypeInfo = {
+  id: number;
+  name: string;
+  cargo_length: number;
+  cargo_height: number;
+  cargo_width: number;
+  cargo_weight: number;
+  cargo_cubic_meter: number;
+};
+
+export type DelivereeDriver = {
+  id: number;
+  name: string;
+  phone: string;
+  driver_image_url: string;
+  last_known_position_lat: number;
+  last_known_position_lng: number;
+};
+
+export type DelivereeDeliveryLocation = {
+  id: number;
+  name: string;
+  driver_note: string;
+  note: string;
+  recipient_name: string;
+  recipient_phone: string;
+  delivery_status: string;
+  failed_delivery_reason: string;
+  signature_url: string;
+  arrived_at: string;
+  leaved_at: string;
+  latitude: number;
+  longitude: number;
+  parking_fees: number;
+  tolls_fees: number;
+  waiting_time_fees: number;
+  tracking_sharing: string;
+};
+
+export type DelivereeDeliveryDetail = {
+  id: number;
+  customer_name: string;
+  driver_id: number;
+  vehicle_type_info: DelivereeVehicleTypeInfo;
+  time_type: string;
+  status: string;
+  note: string;
+  total_fees: number;
+  currency: string;
+  tracking_url: string;
+  job_order_number: string;
+  created_at: string;
+  pickup_time: string;
+  completed_at: string;
+  driver: DelivereeDriver | null;
+  locations: DelivereeDeliveryLocation[];
+  require_signatures: boolean;
+  distance_fees: number;
+  cod_pod_fees: number;
+  cod_pod: boolean;
+  surcharges_fees: number;
+  way_point_fees: number;
+};
+
+export type OrderDelivereeDetailResponse = BaseResponse & {
+  data: DelivereeDeliveryDetail;
+};
+
+export type TrackingEvent = {
+  date: string;
+  time: string;
+  status: string;
+};
+
+export type TrackingResponse = BaseResponse & {
+  data: {
+    provider: string;
+    booking_ref: string;
+    status: string;
+    tracking_url: string | null;
+    history: TrackingEvent[];
+  };
+};

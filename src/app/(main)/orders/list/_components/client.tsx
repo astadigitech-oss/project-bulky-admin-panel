@@ -61,6 +61,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const ORDER_STATUSES = [
   { value: "PENDING", label: "Menunggu Pembayaran" },
@@ -71,23 +72,13 @@ const ORDER_STATUSES = [
   { value: "CANCELLED", label: "Dibatalkan" },
 ] as const;
 
-const PAYMENT_STATUS_OPTIONS = [
-  { value: "PENDING", label: "Menunggu" },
-  { value: "PARTIAL", label: "Sebagian" },
-  { value: "PAID", label: "Lunas" },
-  { value: "EXPIRED", label: "Kadaluarsa" },
-  { value: "FAILED", label: "Gagal" },
-  { value: "REFUNDED", label: "Refund" },
-] as const;
-
-const DELIVERY_TYPE_OPTIONS = [
-  { value: "PICKUP", label: "Ambil Sendiri" },
-  { value: "DELIVEREE", label: "Deliveree" },
-  { value: "FORWARDER", label: "Forwarder" },
+const PAYMENT_TYPE_OPTIONS = [
+  { value: "REGULAR", label: "Reguler" },
+  { value: "SPLIT", label: "Split" },
 ] as const;
 
 const chartConfig = {
-  total: {
+  total_pesanan: {
     label: "Pesanan",
     color: "var(--chart-1)",
   },
@@ -99,13 +90,14 @@ export const OrderListClient = () => {
     order: parseAsString.withDefault("desc"),
   });
 
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<
+  const [selectedOrderStatus, setSelectedOrderStatus] = useState<
     string | undefined
   >(undefined);
-  const [selectedDeliveryType, setSelectedDeliveryType] = useState<
+  const [selectedPaymentType, setSelectedPaymentType] = useState<
     string | undefined
   >(undefined);
+  const [buyerSearch, setBuyerSearch] = useState("");
+  const buyerQuery = useDebounce(buyerSearch, 500);
 
   // Chart filter states
   const [filterType, setFilterType] = useState<"default" | "custom">("default");
@@ -133,12 +125,13 @@ export const OrderListClient = () => {
   } = useGetOrderList({
     page: page ?? 1,
     per_page: limit ?? 10,
-    search: search || undefined,
     sort_by: sort,
     order: order as "asc" | "desc",
-    status: selectedStatuses.length === 1 ? selectedStatuses[0] : undefined,
-    payment_status: selectedPaymentStatus,
-    delivery_type: selectedDeliveryType,
+    order_status: selectedOrderStatus,
+    payment_type: selectedPaymentType,
+    buyer: buyerQuery || undefined,
+    cari: search || undefined,
+    sort_order: order as "asc" | "desc",
     enabled: page !== null && limit !== null,
   });
 
@@ -173,9 +166,9 @@ export const OrderListClient = () => {
   };
 
   const handleResetFilters = () => {
-    setSelectedStatuses([]);
-    setSelectedPaymentStatus(undefined);
-    setSelectedDeliveryType(undefined);
+    setSelectedOrderStatus(undefined);
+    setSelectedPaymentType(undefined);
+    setBuyerSearch("");
     setSearch("");
   };
 
@@ -197,9 +190,7 @@ export const OrderListClient = () => {
   };
 
   const toggleStatus = (value: string) => {
-    setSelectedStatuses((prev) =>
-      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value],
-    );
+    setSelectedOrderStatus((prev) => (prev === value ? undefined : value));
   };
 
   const columns = createColumns({
@@ -223,9 +214,9 @@ export const OrderListClient = () => {
   const processingOrders = stats?.per_status?.["PROCESSING"] ?? 0;
 
   const hasActiveFilters =
-    selectedStatuses.length > 0 ||
-    !!selectedPaymentStatus ||
-    !!selectedDeliveryType ||
+    !!selectedOrderStatus ||
+    !!selectedPaymentType ||
+    !!buyerQuery ||
     !!search;
 
   return (
@@ -355,14 +346,22 @@ export const OrderListClient = () => {
                   />
                   <ChartTooltip
                     cursor={false}
-                    content={<ChartTooltipContent hideLabel />}
+                    content={
+                      <ChartTooltipContent
+                        indicator="line"
+                        labelFormatter={(e) => {
+                          const item = chartData.find((d) => d.label === e);
+                          return item?.period ?? String(e);
+                        }}
+                      />
+                    }
                   />
                   <Line
                     dataKey="total_pesanan"
                     type="natural"
-                    stroke="var(--color-total)"
+                    stroke="var(--color-total_pesanan)"
                     strokeWidth={2}
-                    dot={{ fill: "var(--color-total)" }}
+                    dot={false}
                     activeDot={{ r: 6 }}
                   />
                 </LineChart>
@@ -463,7 +462,7 @@ export const OrderListClient = () => {
                       <PlusCircle className="size-3" />
                       Status
                     </div>
-                    {selectedStatuses.length > 0 && (
+                    {selectedOrderStatus !== undefined && (
                       <>
                         <Separator
                           orientation="vertical"
@@ -475,7 +474,9 @@ export const OrderListClient = () => {
                             "bg-yellow-200 dark:bg-yellow-300/30 dark:group-hover:bg-transparent",
                           )}
                         >
-                          {selectedStatuses.length}
+                          {ORDER_STATUSES.find(
+                            (s) => s.value === selectedOrderStatus,
+                          )?.label ?? selectedOrderStatus}
                         </div>
                       </>
                     )}
@@ -490,7 +491,7 @@ export const OrderListClient = () => {
                 <Command className="p-0">
                   <CommandGroup>
                     {ORDER_STATUSES.map((s) => {
-                      const isSelected = selectedStatuses.includes(s.value);
+                      const isSelected = selectedOrderStatus === s.value;
                       return (
                         <CommandItem
                           key={s.value}
@@ -512,15 +513,15 @@ export const OrderListClient = () => {
                       );
                     })}
                   </CommandGroup>
-                  {selectedStatuses.length > 0 && (
+                  {selectedOrderStatus !== undefined && (
                     <>
                       <CommandSeparator />
                       <CommandGroup>
                         <CommandItem
                           className="text-xs font-medium justify-center"
-                          onSelect={() => setSelectedStatuses([])}
+                          onSelect={() => setSelectedOrderStatus(undefined)}
                         >
-                          Clear filters
+                          Clear filter
                         </CommandItem>
                       </CommandGroup>
                     </>
@@ -529,7 +530,7 @@ export const OrderListClient = () => {
               </PopoverContent>
             </Popover>
 
-            {/* Filter Pembayaran */}
+            {/* Filter Tipe Pembayaran */}
             <Popover>
               <PopoverTrigger
                 render={
@@ -538,7 +539,7 @@ export const OrderListClient = () => {
                       <PlusCircle className="size-3" />
                       Pembayaran
                     </div>
-                    {selectedPaymentStatus !== undefined && (
+                    {selectedPaymentType !== undefined && (
                       <>
                         <Separator
                           orientation="vertical"
@@ -550,9 +551,9 @@ export const OrderListClient = () => {
                             "bg-yellow-200 dark:bg-yellow-300/30 dark:group-hover:bg-transparent",
                           )}
                         >
-                          {PAYMENT_STATUS_OPTIONS.find(
-                            (o) => o.value === selectedPaymentStatus,
-                          )?.label ?? selectedPaymentStatus}
+                          {PAYMENT_TYPE_OPTIONS.find(
+                            (o) => o.value === selectedPaymentType,
+                          )?.label ?? selectedPaymentType}
                         </div>
                       </>
                     )}
@@ -566,14 +567,14 @@ export const OrderListClient = () => {
               >
                 <Command className="p-0">
                   <CommandGroup>
-                    {PAYMENT_STATUS_OPTIONS.map((opt) => {
-                      const isSelected = selectedPaymentStatus === opt.value;
+                    {PAYMENT_TYPE_OPTIONS.map((opt) => {
+                      const isSelected = selectedPaymentType === opt.value;
                       return (
                         <CommandItem
                           key={opt.value}
                           className="text-xs"
                           onSelect={() =>
-                            setSelectedPaymentStatus(
+                            setSelectedPaymentType(
                               isSelected ? undefined : opt.value,
                             )
                           }
@@ -593,13 +594,13 @@ export const OrderListClient = () => {
                       );
                     })}
                   </CommandGroup>
-                  {selectedPaymentStatus !== undefined && (
+                  {selectedPaymentType !== undefined && (
                     <>
                       <CommandSeparator />
                       <CommandGroup>
                         <CommandItem
                           className="text-xs font-medium justify-center"
-                          onSelect={() => setSelectedPaymentStatus(undefined)}
+                          onSelect={() => setSelectedPaymentType(undefined)}
                         >
                           Clear filter
                         </CommandItem>
@@ -610,16 +611,16 @@ export const OrderListClient = () => {
               </PopoverContent>
             </Popover>
 
-            {/* Filter Pengiriman */}
+            {/* Filter Pembeli */}
             <Popover>
               <PopoverTrigger
                 render={
                   <button className="flex items-center border border-gray-300 dark:border-gray-300/50 border-dashed rounded-md h-8 hover:bg-yellow-200 dark:hover:bg-yellow-300/30 transition cursor-default group">
                     <div className="text-xs font-medium h-full py-0 px-3 flex items-center gap-2">
                       <PlusCircle className="size-3" />
-                      Pengiriman
+                      Pembeli
                     </div>
-                    {selectedDeliveryType !== undefined && (
+                    {buyerQuery && (
                       <>
                         <Separator
                           orientation="vertical"
@@ -631,9 +632,7 @@ export const OrderListClient = () => {
                             "bg-yellow-200 dark:bg-yellow-300/30 dark:group-hover:bg-transparent",
                           )}
                         >
-                          {DELIVERY_TYPE_OPTIONS.find(
-                            (o) => o.value === selectedDeliveryType,
-                          )?.label ?? selectedDeliveryType}
+                          {buyerQuery}
                         </div>
                       </>
                     )}
@@ -642,52 +641,39 @@ export const OrderListClient = () => {
               />
               <PopoverContent
                 portal={{ keepMounted: true }}
-                className="p-0 w-40"
+                className="p-0 w-64"
                 align="start"
               >
-                <Command className="p-0">
-                  <CommandGroup>
-                    {DELIVERY_TYPE_OPTIONS.map((opt) => {
-                      const isSelected = selectedDeliveryType === opt.value;
-                      return (
-                        <CommandItem
-                          key={opt.value}
-                          className="text-xs"
-                          onSelect={() =>
-                            setSelectedDeliveryType(
-                              isSelected ? undefined : opt.value,
-                            )
-                          }
-                        >
-                          <div
-                            className={cn(
-                              "flex h-4 w-4 items-center justify-center rounded-sm border",
-                              isSelected
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-gray-500/50 opacity-50 [&_svg]:invisible",
-                            )}
-                          >
-                            <Check className="text-primary-foreground size-3" />
-                          </div>
-                          {opt.label}
-                        </CommandItem>
+                <div className="flex flex-col gap-2 p-3">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Cari berdasarkan nama pembeli
+                  </label>
+                  <InputSearch
+                    placeholder="Nama pembeli..."
+                    value={buyerSearch}
+                    setValue={(v) => {
+                      setBuyerSearch(
+                        v === null
+                          ? ""
+                          : typeof v === "function"
+                            ? v(buyerSearch) ?? ""
+                            : v,
                       );
-                    })}
-                  </CommandGroup>
-                  {selectedDeliveryType !== undefined && (
-                    <>
-                      <CommandSeparator />
-                      <CommandGroup>
-                        <CommandItem
-                          className="text-xs font-medium justify-center"
-                          onSelect={() => setSelectedDeliveryType(undefined)}
-                        >
-                          Clear filter
-                        </CommandItem>
-                      </CommandGroup>
-                    </>
+                      return Promise.resolve(new URLSearchParams());
+                    }}
+                  />
+                  {buyerQuery && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start text-xs h-8"
+                      onClick={() => setBuyerSearch("")}
+                    >
+                      <X className="size-3 mr-1" />
+                      Clear filter
+                    </Button>
                   )}
-                </Command>
+                </div>
               </PopoverContent>
             </Popover>
 

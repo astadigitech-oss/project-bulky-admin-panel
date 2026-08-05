@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/select";
 
 export const IMAGE_RULES = {
-  mimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/svg+xml"],
+  mimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
   maxSize: 10 * 1024 * 1024, // 10MB
 };
 

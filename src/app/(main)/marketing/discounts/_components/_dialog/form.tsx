@@ -155,7 +155,7 @@ export const DialogFormCoupon = ({
       deskripsi: values.deskripsi?.trim() ? values.deskripsi.trim() : "",
       limit_pemakaian: values.limit_pemakaian ?? undefined,
       kategori: values.is_all_kategori ? [] : (values.kategori ?? []),
-      tanggal_kedaluarsa: `${values.tanggal_kedaluarsa}T23:59:59Z`,
+      tanggal_kedaluarsa: `${values.tanggal_kedaluarsa}T23:59:59+07:00`,
     };
 
     switch (mode) {

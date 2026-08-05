@@ -49,6 +49,7 @@ const formSchema = z.object({
   nama: z.string().min(3, "Nama harus memiliki minimal 3 karakter"),
   email: z.email("Email tidak valid"),
   is_active: z.boolean(),
+  role_id: z.string().min(1, "Role harus dipilih"),
 });
 
 export const DialogFormStaff = ({
@@ -72,10 +73,6 @@ export const DialogFormStaff = ({
       mode === "create" || mode === "password"
         ? z.string().min(8, "Password harus memiliki minimal 8 karakter")
         : z.string().optional(),
-    role_id:
-      mode === "create"
-        ? z.string().min(1, "Role harus dipilih")
-        : z.string().optional(),
   });
 
   const { mutate: createStaff, isPending: isCreating } = useCreateStaff();
@@ -94,7 +91,7 @@ export const DialogFormStaff = ({
       email: detail?.email ?? "",
       password: "",
       confirm_password: "",
-      role_id: "",
+      role_id: detail?.role_id ?? "",
       is_active: detail?.is_active ?? true,
     },
   });
@@ -126,6 +123,7 @@ export const DialogFormStaff = ({
           email: values.email,
           nama: values.nama,
           is_active: values.is_active,
+          role_id: values.role_id || undefined,
         };
         updateStaff(
           { body: bodyEdit, params: { id: detail?.id ?? "" } },
@@ -322,7 +320,7 @@ export const DialogFormStaff = ({
                   />
                 </>
               )}
-              {mode === "create" && (
+              {mode !== "password" && (
                 <Controller
                   name="role_id"
                   control={form.control}

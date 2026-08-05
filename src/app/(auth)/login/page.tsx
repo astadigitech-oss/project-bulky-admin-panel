@@ -6,10 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { sizesImage } from "@/lib/utils";
-import Image from "next/image";
 import Link from "next/link";
 import { ClientLogin } from "./_components/client";
+import { ClientLogo } from "./_components/client-logo";
 import { Metadata } from "next";
 import { auth } from "@/lib/action/auth";
 import { redirect } from "next/navigation";
@@ -27,15 +26,8 @@ const LoginPage = async () => {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <Card>
-            <Link href="/" className="aspect-4/1 w-1/3 relative mx-6">
-              <Image
-                src={"/assets/images/logo-bulky.webp"}
-                sizes={sizesImage}
-                alt="bulky_logo"
-                className="object-contain"
-                fill
-                loading="eager"
-              />
+            <Link href="/" className="w-1/2 mx-4">
+              <ClientLogo />
             </Link>
             <CardHeader>
               <CardTitle>Login to your account</CardTitle>

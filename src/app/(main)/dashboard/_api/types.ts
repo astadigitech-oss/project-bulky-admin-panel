@@ -3,6 +3,17 @@
 export type PeriodeChart = "bulan_ini" | "tahun_ini";
 export type PeriodeDasbor = "semua" | "bulan_ini" | "tahun_ini";
 
+export type OrderStatus =
+  | "PENDING"
+  | "PROCESSING"
+  | "READY"
+  | "SHIPPED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+/** Param filter status opsional (CSV). Undefined = default BE (mengecualikan CANCELLED). */
+export type FilterOrderStatus = OrderStatus[] | undefined;
+
 // ─── Ringkasan Dasbor ─────────────────────────────────────────────────────────
 
 export type ChartTransaksiResponse = {
@@ -82,7 +93,7 @@ export type DasborTabelTransaksiItem = {
   tanggal_pesanan: string;
   delivery_type: string;
   payment_type: string;
-  order_status: "COMPLETED" | "PROCESSING" | "CANCELLED";
+  order_status: OrderStatus;
   jenis_pembayaran: string[];
 };
 

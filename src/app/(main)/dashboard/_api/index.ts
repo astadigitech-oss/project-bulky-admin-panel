@@ -3,7 +3,7 @@ import { getCookie } from "cookies-next/client";
 import { useApiQuery } from "@/lib/query/use-query";
 import { apiUrl, cookiesKey } from "@/config";
 import { dataAPIDashboard } from "./data";
-import type { PeriodeChart, PeriodeDasbor } from "./types";
+import type { FilterOrderStatus, PeriodeChart, PeriodeDasbor } from "./types";
 
 // ─── Ringkasan Dasbor ─────────────────────────────────────────────────────────
 
@@ -32,6 +32,7 @@ export const useGetDasborPenjualanPerBuyer = (params: {
 
 export const useGetDasborTabelTransaksi = (params: {
   periode?: PeriodeDasbor;
+  status?: FilterOrderStatus;
   halaman?: number;
   per_halaman?: number;
 }) => useApiQuery(dataAPIDashboard.tabelTransaksi(params));
@@ -42,10 +43,14 @@ export const useGetDasborUserTransaksi = (params: {
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-export const exportTransaksi = async (periode?: PeriodeDasbor) => {
+export const exportTransaksi = async (
+  periode?: PeriodeDasbor,
+  status?: FilterOrderStatus,
+) => {
   const token = getCookie(cookiesKey);
   const params = new URLSearchParams();
   if (periode) params.append("periode", periode);
+  if (status && status.length > 0) params.append("status", status.join(","));
 
   const url = `${apiUrl}/dasbor/ekspor-transaksi${params.toString() ? `?${params}` : ""}`;
 

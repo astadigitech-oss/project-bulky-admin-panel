@@ -128,3 +128,93 @@ export type UpdatePaymentParams = BaseParams;
 export type UpdatePaymentResponse = BaseResponse & {
   data: { id: string; is_active: boolean; kode: string; nama: string };
 };
+
+// --- Asset migration (v1) ---
+export type ImportV1Body = FormData;
+
+export type ImportV1FileItem = {
+  source: string;
+  dest: string;
+  status: "imported" | "skipped";
+  reason?: string;
+};
+
+export type ImportV1Response = BaseResponse & {
+  data: {
+    imported: number;
+    skipped: number;
+    unmatched: string[];
+    files: ImportV1FileItem[];
+  };
+};
+
+// --- Asset migration (v1) — chunk upload ---
+export type PruneOrphansBody = {
+  dry_run: boolean;
+  dry_run_token?: string;
+};
+
+export type PruneOrphanItem = {
+  path: string;
+  size: number;
+};
+
+export type PruneOrphansResponse = BaseResponse & {
+  data: {
+    dry_run: boolean;
+    total_files: number;
+    total_size: number;
+    deleted: number;
+    orphans: PruneOrphanItem[];
+    dry_run_token: string;
+    token_expiry_s: number;
+  };
+};
+
+// --- Asset migration (v1) — verifikasi konsistensi DB ↔ file fisik ---
+export type VerifyAssetItem = {
+  path: string;
+  count?: number;
+};
+
+export type VerifyAssetsResponse = BaseResponse & {
+  data: {
+    referenced: number;
+    missing: VerifyAssetItem[];
+    duplicates: VerifyAssetItem[];
+  };
+};
+
+// --- Asset migration (v1) — housekeeping chunk upload basi ---
+export type PendingV1UploadItem = {
+  upload_id: string;
+  chunk_count: number;
+  total_size: number;
+  last_modified: string;
+};
+
+export type ListPendingV1UploadsResponse = BaseResponse & {
+  data: {
+    pending_uploads: PendingV1UploadItem[];
+    stale_tmp_files: string[];
+    total_pending_size: number;
+  };
+};
+
+export type CleanupStaleV1UploadsBody = {
+  older_than_hours?: number;
+  dry_run: boolean;
+  dry_run_token?: string;
+};
+
+export type CleanupStaleV1UploadsResponse = BaseResponse & {
+  data: {
+    dry_run: boolean;
+    older_than_hours: number;
+    deleted_uploads: string[];
+    deleted_tmp_files: string[];
+    freed_size: number;
+    dry_run_token: string;
+    token_expiry_s: number;
+  };
+};

@@ -144,6 +144,28 @@ export const column = ({
     ),
   },
   {
+    accessorKey: "is_sold",
+    header: "Status Produk",
+    cell: ({ row }) => (
+      <div
+        className={cn(
+          "flex items-center gap-2 text-xs px-2 py-0.5 rounded-full font-medium w-fit",
+          row.original.is_sold
+            ? "bg-red-500/10 dark:bg-red-500/30 dark:text-red-200 text-red-600"
+            : "bg-green-500/20 dark:bg-green-500/30 dark:text-emerald-100 text-emerald-600",
+        )}
+      >
+        <div
+          className={cn(
+            "size-2 rounded-full",
+            row.original.is_sold ? "bg-red-500" : "bg-green-500",
+          )}
+        />
+        {row.original.is_sold ? "Terjual" : "Tersedia"}
+      </div>
+    ),
+  },
+  {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => (
