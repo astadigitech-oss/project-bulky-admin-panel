@@ -151,6 +151,7 @@ export type ImportV1Response = BaseResponse & {
 // --- Asset migration (v1) — chunk upload ---
 export type PruneOrphansBody = {
   dry_run: boolean;
+  dry_run_token?: string;
 };
 
 export type PruneOrphanItem = {
@@ -165,6 +166,22 @@ export type PruneOrphansResponse = BaseResponse & {
     total_size: number;
     deleted: number;
     orphans: PruneOrphanItem[];
+    dry_run_token: string;
+    token_expiry_s: number;
+  };
+};
+
+// --- Asset migration (v1) — verifikasi konsistensi DB ↔ file fisik ---
+export type VerifyAssetItem = {
+  path: string;
+  count?: number;
+};
+
+export type VerifyAssetsResponse = BaseResponse & {
+  data: {
+    referenced: number;
+    missing: VerifyAssetItem[];
+    duplicates: VerifyAssetItem[];
   };
 };
 
@@ -187,6 +204,7 @@ export type ListPendingV1UploadsResponse = BaseResponse & {
 export type CleanupStaleV1UploadsBody = {
   older_than_hours?: number;
   dry_run: boolean;
+  dry_run_token?: string;
 };
 
 export type CleanupStaleV1UploadsResponse = BaseResponse & {
@@ -196,5 +214,7 @@ export type CleanupStaleV1UploadsResponse = BaseResponse & {
     deleted_uploads: string[];
     deleted_tmp_files: string[];
     freed_size: number;
+    dry_run_token: string;
+    token_expiry_s: number;
   };
 };

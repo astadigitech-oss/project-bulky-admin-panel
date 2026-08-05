@@ -7,10 +7,13 @@ import { toast } from "sonner";
 import {
   CheckCircle2,
   DatabaseBackup,
+  FileSearch,
   FileWarning,
   HardDriveDownload,
   HardDriveUpload,
   ListChecks,
+  ShieldAlert,
+  ShieldCheck,
   Trash2,
   XCircle,
 } from "lucide-react";
@@ -19,6 +22,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -32,6 +36,7 @@ import type {
   ImportV1FileItem,
   ListPendingV1UploadsResponse,
   PruneOrphansResponse,
+  VerifyAssetsResponse,
 } from "../../_api/types";
 
 const assetApiUrl = `${baseApiUrl}/api/panel/assets`;
@@ -101,6 +106,17 @@ export const AssetMigrationSection = () => {
     CleanupStaleV1UploadsResponse["data"] | null
   >(null);
   const [isCleaning, setIsCleaning] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<
+    VerifyAssetsResponse["data"] | null
+  >(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  // Token dry-run untuk konfirmasi eksekusi prune permanen. Prune permanen
+  // di-backend WAJIB menyertakan token ini (diterbitkan saat dry-run).
+  const [pruneToken, setPruneToken] = useState<string | null>(null);
+  const [pruneTokenExpiry, setPruneTokenExpiry] = useState<number | null>(null);
+  // Token dry-run untuk cleanup chunk basi (pola sama dengan prune).
+  const [cleanupToken, setCleanupToken] = useState<string | null>(null);
+  const [cleanupTokenExpiry, setCleanupTokenExpiry] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const v1InputRef = useRef<HTMLInputElement>(null);
   const [ConfirmPruneDialog, confirmPrune] = useConfirm(
@@ -358,29 +374,34 @@ export const AssetMigrationSection = () => {
     }
   };
 
-  // Prune file tak terpakai (default dry-run aman)
-  const handlePrune = async () => {
-    const confirmed = await confirmPrune();
-    if (!confirmed) return;
-
-    setIsPruning(true);
+  // Verifikasi konsistensi DB ↔ file fisik (read-only). File yang
+  // direferensikan DB tapi tidak ada di disk = sinyal migrasi belum lengkap
+  // (contoh: 30 PDF yang ter-prune) — bukan kandidat prune.
+  const handleVerify = async () => {
+    setIsVerifying(true);
     try {
       const token = getCookie(cookiesKey);
-      const res = await axios.post(
-        `${assetApiUrl}/prune-orphans`,
-        { dry_run: false },
+      const res = await axios.get<VerifyAssetsResponse>(
+        `${assetApiUrl}/verify`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      setPruneResult(res.data.data);
-      toast.success(res.data.message ?? "Pruning selesai");
+      // Backend Go mengembalikan null untuk slice kosong — normalisasi
+      const data = res.data.data;
+      setVerifyResult({
+        referenced: data.referenced ?? 0,
+        missing: data.missing ?? [],
+        duplicates: data.duplicates ?? [],
+      });
+      toast.success(res.data.message ?? "Verifikasi selesai");
     } catch {
-      toast.error("Pruning gagal");
+      toast.error("Verifikasi gagal");
     } finally {
-      setIsPruning(false);
+      setIsVerifying(false);
     }
   };
 
-  // Prune dry-run — hanya lihat daftar tanpa menghapus
+  // Prune dry-run — hanya lihat daftar tanpa menghapus, terbitkan token
+  // konfirmasi untuk eksekusi permanen.
   const handlePruneDryRun = async () => {
     setIsPruning(true);
     try {
@@ -390,10 +411,43 @@ export const AssetMigrationSection = () => {
         { dry_run: true },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      setPruneResult(res.data.data);
+      const data = res.data.data;
+      setPruneResult(data);
+      setPruneToken(data.dry_run_token ?? null);
+      setPruneTokenExpiry(data.token_expiry_s ?? null);
       toast.success(res.data.message ?? "Pruning selesai");
     } catch {
       toast.error("Pruning gagal");
+    } finally {
+      setIsPruning(false);
+    }
+  };
+
+  // Eksekusi prune permanen — pakai token dari dry-run terakhir.
+  const handlePruneExecute = async () => {
+    if (!pruneToken) {
+      toast.error("Jalankan dry-run dulu untuk mengaktifkan hapus permanen");
+      return;
+    }
+    const confirmed = await confirmPrune();
+    if (!confirmed) return;
+
+    setIsPruning(true);
+    try {
+      const token = getCookie(cookiesKey);
+      const res = await axios.post(
+        `${assetApiUrl}/prune-orphans`,
+        { dry_run: false, dry_run_token: pruneToken },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setPruneResult(res.data.data);
+      setPruneToken(null);
+      setPruneTokenExpiry(null);
+      toast.success(res.data.message ?? "Pruning selesai");
+    } catch {
+      toast.error("Pruning gagal — jalankan dry-run ulang");
+      setPruneToken(null);
+      setPruneTokenExpiry(null);
     } finally {
       setIsPruning(false);
     }
@@ -425,38 +479,8 @@ export const AssetMigrationSection = () => {
     }
   };
 
-  // Hapus permanen chunk v1 basi (lebih dari 24 jam belum di-finalize/abort)
-  const handleCleanupStale = async () => {
-    const confirmed = await confirmCleanup();
-    if (!confirmed) return;
-
-    setIsCleaning(true);
-    try {
-      const token = getCookie(cookiesKey);
-      const res = await axios.post<CleanupStaleV1UploadsResponse>(
-        `${assetApiUrl}/import-v1/cleanup`,
-        { older_than_hours: 24, dry_run: false },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      // Normalisasi null → [] (lihat catatan di handleCheckPending)
-      const data = res.data.data;
-      setCleanupResult({
-        dry_run: data.dry_run,
-        older_than_hours: data.older_than_hours,
-        deleted_uploads: data.deleted_uploads ?? [],
-        deleted_tmp_files: data.deleted_tmp_files ?? [],
-        freed_size: data.freed_size ?? 0,
-      });
-      setPendingUploads(null);
-      toast.success(res.data.message ?? "Pembersihan selesai");
-    } catch {
-      toast.error("Pembersihan gagal");
-    } finally {
-      setIsCleaning(false);
-    }
-  };
-
-  // Dry-run — hanya lihat apa yang AKAN dihapus tanpa menghapus
+  // Dry-run — hanya lihat apa yang AKAN dihapus tanpa menghapus, terbitkan
+  // token konfirmasi untuk eksekusi permanen.
   const handleCleanupStaleDryRun = async () => {
     setIsCleaning(true);
     try {
@@ -474,10 +498,55 @@ export const AssetMigrationSection = () => {
         deleted_uploads: data.deleted_uploads ?? [],
         deleted_tmp_files: data.deleted_tmp_files ?? [],
         freed_size: data.freed_size ?? 0,
+        dry_run_token: data.dry_run_token ?? "",
+        token_expiry_s: data.token_expiry_s ?? 600,
       });
+      setCleanupToken(data.dry_run_token ?? null);
+      setCleanupTokenExpiry(data.token_expiry_s ?? null);
+      setPendingUploads(null);
       toast.success(res.data.message ?? "Pengecekan selesai");
     } catch {
       toast.error("Pengecekan gagal");
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
+  // Eksekusi pembersihan permanen — pakai token dari dry-run terakhir.
+  const handleCleanupExecute = async () => {
+    if (!cleanupToken) {
+      toast.error("Jalankan dry-run dulu untuk mengaktifkan bersihkan");
+      return;
+    }
+    const confirmed = await confirmCleanup();
+    if (!confirmed) return;
+
+    setIsCleaning(true);
+    try {
+      const token = getCookie(cookiesKey);
+      const res = await axios.post<CleanupStaleV1UploadsResponse>(
+        `${assetApiUrl}/import-v1/cleanup`,
+        { older_than_hours: 24, dry_run: false, dry_run_token: cleanupToken },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = res.data.data;
+      setCleanupResult({
+        dry_run: data.dry_run,
+        older_than_hours: data.older_than_hours,
+        deleted_uploads: data.deleted_uploads ?? [],
+        deleted_tmp_files: data.deleted_tmp_files ?? [],
+        freed_size: data.freed_size ?? 0,
+        dry_run_token: data.dry_run_token ?? "",
+        token_expiry_s: data.token_expiry_s ?? 600,
+      });
+      setCleanupToken(null);
+      setCleanupTokenExpiry(null);
+      setPendingUploads(null);
+      toast.success(res.data.message ?? "Pembersihan selesai");
+    } catch {
+      toast.error("Pembersihan gagal — jalankan dry-run ulang");
+      setCleanupToken(null);
+      setCleanupTokenExpiry(null);
     } finally {
       setIsCleaning(false);
     }
@@ -494,231 +563,341 @@ export const AssetMigrationSection = () => {
           Migrasi Aset
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Export & import file uploads yang terdaftar di database
+          Export, import, dan perawatan file uploads yang terdaftar di database
         </p>
       </div>
-      <div className="flex flex-col gap-5 border p-4 rounded-lg dark:bg-gray-900/70 lg:col-span-2">
-        {/* Export */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="font-medium text-sm">Export Assets</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Download semua file yang terdaftar di database sebagai{" "}
-              <span className="font-mono">.zip</span>
-            </p>
+      <div className="flex flex-col gap-6 lg:col-span-2">
+        {/* ============ Pemindahan Aset ============ */}
+        <div className="flex flex-col gap-5 border p-4 rounded-lg dark:bg-gray-900/70">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-medium text-sm">Export Assets</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Download semua file yang terdaftar di database sebagai{" "}
+                <span className="font-mono">.zip</span>
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={isExporting}
+              onClick={handleExport}
+            >
+              {isExporting ? (
+                <Spinner className="size-4 mr-2" />
+              ) : (
+                <HardDriveDownload className="size-4 mr-2" />
+              )}
+              {isExporting ? "Exporting..." : "Export"}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-            disabled={isExporting}
-            onClick={handleExport}
-          >
-            {isExporting ? (
-              <Spinner className="size-4 mr-2" />
-            ) : (
-              <HardDriveDownload className="size-4 mr-2" />
-            )}
-            {isExporting ? "Exporting..." : "Export"}
-          </Button>
+
+          <div className="border-t" />
+
+          {/* Import */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-medium text-sm">Import Assets</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Upload file{" "}
+                <span className="font-mono">.zip</span>{" "}
+                hasil export untuk restore ke server ini
+              </p>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".zip"
+              className="hidden"
+              onChange={handleImport}
+              disabled={isImporting}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={isImporting}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isImporting ? (
+                <Spinner className="size-4 mr-2" />
+              ) : (
+                <HardDriveUpload className="size-4 mr-2" />
+              )}
+              {isImporting ? "Importing..." : "Import"}
+            </Button>
+          </div>
+
+          <div className="border-t" />
+
+          {/* Migrasi v1 */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="font-medium text-sm">Migrasi Aset v1</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Upload file{" "}
+                <span className="font-mono">.zip</span>{" "}
+                hasil export <span className="font-mono">storage</span> Bulky
+                v1 untuk dipindahkan ke server ini. File besar dipecah
+                otomatis menjadi beberapa bagian.
+              </p>
+              {uploadProgress !== null && (
+                <div className="mt-3">
+                  <Progress
+                    value={uploadProgress}
+                    className="max-w-60"
+                    classIndicator="bg-yellow-500"
+                  >
+                    <ProgressLabel className="text-xs text-muted-foreground">
+                      {migrationPhase ?? "Mengunggah"} {uploadProgress}%
+                      {uploadStats && (
+                        <span className="tabular-nums">
+                          {" "}
+                          · {formatBytes(uploadStats.sent)} /{" "}
+                          {formatBytes(uploadStats.total)} · bagian{" "}
+                          {uploadStats.chunk}/{uploadStats.totalChunks}
+                        </span>
+                      )}
+                    </ProgressLabel>
+                  </Progress>
+                </div>
+              )}
+            </div>
+            <input
+              ref={v1InputRef}
+              type="file"
+              accept=".zip"
+              className="hidden"
+              onChange={handleMigrateV1}
+              disabled={isMigrating}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={isMigrating}
+              onClick={() => v1InputRef.current?.click()}
+            >
+              {isMigrating ? (
+                <Spinner className="size-4 mr-2" />
+              ) : (
+                <DatabaseBackup className="size-4 mr-2" />
+              )}
+              {isMigrating
+                ? migrationPhase === "Memproses file..."
+                  ? "Memproses..."
+                  : "Mengunggah..."
+                : "Migrasi v1"}
+            </Button>
+          </div>
         </div>
 
-        <div className="border-t" />
-
-        {/* Import */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="font-medium text-sm">Import Assets</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Upload file{" "}
-              <span className="font-mono">.zip</span>{" "}
-              hasil export untuk restore ke server ini
-            </p>
+        {/* ============ Perawatan Storage ============ */}
+        <div className="flex flex-col gap-5 border p-4 rounded-lg dark:bg-gray-900/70">
+          {/* Verifikasi konsistensi DB ↔ file */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="font-medium text-sm">
+                Periksa Kecocokan DB ↔ File
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Bandingkan path file yang direferensikan database dengan file
+                fisik di disk. File yang direferensikan tapi hilang = sinyal
+                migrasi/import belum lengkap, bukan kandidat penghapusan.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={isVerifying}
+              onClick={handleVerify}
+            >
+              {isVerifying ? (
+                <Spinner className="size-4 mr-2" />
+              ) : (
+                <FileSearch className="size-4 mr-2" />
+              )}
+              {isVerifying ? "Memeriksa..." : "Periksa"}
+            </Button>
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".zip"
-            className="hidden"
-            onChange={handleImport}
-            disabled={isImporting}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-            disabled={isImporting}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {isImporting ? (
-              <Spinner className="size-4 mr-2" />
-            ) : (
-              <HardDriveUpload className="size-4 mr-2" />
-            )}
-            {isImporting ? "Importing..." : "Import"}
-          </Button>
+
+          <div className="border-t" />
+
+          {/* Chunk upload v1 basi */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-medium text-sm">
+                Chunk Upload Basi (Migrasi v1)
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Pantau & bersihkan sisa upload chunk migrasi v1 yang gagal
+                atau ditinggal (belum di-finalize/abort) agar volume storage
+                tidak diam-diam penuh.
+              </p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                disabled={isCheckingPending}
+                onClick={handleCheckPending}
+              >
+                {isCheckingPending ? (
+                  <Spinner className="size-4 mr-2" />
+                ) : (
+                  <ListChecks className="size-4 mr-2" />
+                )}
+                Cek Status
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                disabled={isCleaning}
+                onClick={handleCleanupStaleDryRun}
+              >
+                {isCleaning ? (
+                  <Spinner className="size-4 mr-2" />
+                ) : (
+                  <FileWarning className="size-4 mr-2" />
+                )}
+                Dry-run
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="shrink-0"
+                disabled={isCleaning || !cleanupToken}
+                onClick={handleCleanupExecute}
+              >
+                {isCleaning ? (
+                  <Spinner className="size-4 mr-2" />
+                ) : (
+                  <Trash2 className="size-4 mr-2" />
+                )}
+                {cleanupToken ? "Bersihkan (siap)" : "Bersihkan"}
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className="border-t" />
-
-        {/* Migrasi v1 */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="font-medium text-sm">Migrasi Aset v1</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Upload file{" "}
-              <span className="font-mono">.zip</span>{" "}
-              hasil export <span className="font-mono">storage</span> Bulky v1
-              untuk dipindahkan ke server ini. File besar dipecah otomatis
-              menjadi beberapa bagian.
+        {/* ============ Danger Zone ============ */}
+        <div className="flex flex-col gap-5 border border-red-500/50 p-4 rounded-lg dark:bg-red-950/20">
+          <div>
+            <p className="font-medium text-sm text-red-500 flex items-center gap-1.5">
+              <ShieldAlert className="size-4" />
+              Danger Zone
             </p>
-            {uploadProgress !== null && (
-              <div className="mt-3">
-                <Progress
-                  value={uploadProgress}
-                  className="max-w-60"
-                  classIndicator="bg-yellow-500"
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Aksi di bawah ini menghapus file permanen. Jalankan{" "}
+              <span className="font-mono">Dry-run</span> dulu untuk melihat
+              daftar & mengaktifkan tombol eksekusi. Token dry-run berlaku 10
+              menit.
+            </p>
+          </div>
+
+          <div className="border-t border-red-500/30" />
+
+          {/* Prune orphans */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-medium text-sm">Bersihkan File Tak Terpakai</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Hapus file di storage yang tidak direferensikan database.
+                {pruneResult && !pruneResult.dry_run && pruneToken === null && (
+                  <span className="block mt-1 text-emerald-500 font-medium">
+                    Selesai — {pruneResult.deleted} file dihapus
+                  </span>
+                )}
+                {pruneToken && (
+                  <span className="block mt-1 text-yellow-500 font-medium">
+                    Dry-run siap — tombol eksekusi aktif (berlaku{" "}
+                    {pruneTokenExpiry ? `${Math.round(pruneTokenExpiry / 60)} menit` : "10 menit"})
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0 items-end">
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={isPruning}
+                  onClick={handlePruneDryRun}
                 >
-                  <ProgressLabel className="text-xs text-muted-foreground">
-                    {migrationPhase ?? "Mengunggah"} {uploadProgress}%
-                    {uploadStats && (
-                      <span className="tabular-nums">
-                        {" "}
-                        · {formatBytes(uploadStats.sent)} /{" "}
-                        {formatBytes(uploadStats.total)} · bagian{" "}
-                        {uploadStats.chunk}/{uploadStats.totalChunks}
-                      </span>
-                    )}
-                  </ProgressLabel>
-                </Progress>
+                  {isPruning ? (
+                    <Spinner className="size-4 mr-2" />
+                  ) : (
+                    <ShieldCheck className="size-4 mr-2" />
+                  )}
+                  Dry-run
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={isPruning || !pruneToken}
+                  onClick={handlePruneExecute}
+                  title={
+                    pruneToken
+                      ? "Hapus permanen file yang terdaftar di dry-run"
+                      : "Jalankan dry-run dulu untuk mengaktifkan"
+                  }
+                >
+                  {isPruning ? (
+                    <Spinner className="size-4 mr-2" />
+                  ) : (
+                    <XCircle className="size-4 mr-2" />
+                  )}
+                  {pruneToken
+                    ? `Hapus ${pruneResult?.total_files ?? ""} File`.trim()
+                    : "Hapus Permanen"}
+                </Button>
               </div>
-            )}
+            </div>
           </div>
-          <input
-            ref={v1InputRef}
-            type="file"
-            accept=".zip"
-            className="hidden"
-            onChange={handleMigrateV1}
-            disabled={isMigrating}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-            disabled={isMigrating}
-            onClick={() => v1InputRef.current?.click()}
-          >
-            {isMigrating ? (
-              <Spinner className="size-4 mr-2" />
-            ) : (
-              <DatabaseBackup className="size-4 mr-2" />
-            )}
-            {isMigrating
-              ? migrationPhase === "Memproses file..."
-                ? "Memproses..."
-                : "Mengunggah..."
-              : "Migrasi v1"}
-          </Button>
-        </div>
 
-        <div className="border-t" />
+          <div className="border-t border-red-500/30" />
 
-        {/* Prune orphans */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="font-medium text-sm">Bersihkan File Tak Terpakai</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Hapus file di storage yang tidak direferensikan database. Cek
-              dulu dengan dry-run sebelum menghapus permanen.
-            </p>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              disabled={isPruning}
-              onClick={handlePruneDryRun}
-            >
-              {isPruning ? (
-                <Spinner className="size-4 mr-2" />
-              ) : (
-                <FileWarning className="size-4 mr-2" />
-              )}
-              Dry-run
-            </Button>
+          {/* Cleanup chunk basi */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-medium text-sm">Hapus Chunk Basi Permanen</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Eksekusi permanen pembersihan chunk upload basi (dry-run
+                tersedia di grup Perawatan Storage).
+                {cleanupToken && (
+                  <span className="block mt-1 text-yellow-500 font-medium">
+                    Dry-run siap — tombol eksekusi aktif (berlaku{" "}
+                    {cleanupTokenExpiry ? `${Math.round(cleanupTokenExpiry / 60)} menit` : "10 menit"})
+                  </span>
+                )}
+              </p>
+            </div>
             <Button
               variant="destructive"
               size="sm"
               className="shrink-0"
-              disabled={isPruning}
-              onClick={handlePrune}
-            >
-              {isPruning ? (
-                <Spinner className="size-4 mr-2" />
-              ) : (
-                <XCircle className="size-4 mr-2" />
-              )}
-              Hapus Permanen
-            </Button>
-          </div>
-        </div>
-
-        <div className="border-t" />
-
-        {/* Chunk upload v1 basi */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="font-medium text-sm">Chunk Upload Basi (Migrasi v1)</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Pantau & bersihkan sisa upload chunk migrasi v1 yang gagal atau
-              ditinggal (belum di-finalize/abort) agar volume storage tidak
-              diam-diam penuh.
-            </p>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              disabled={isCheckingPending}
-              onClick={handleCheckPending}
-            >
-              {isCheckingPending ? (
-                <Spinner className="size-4 mr-2" />
-              ) : (
-                <ListChecks className="size-4 mr-2" />
-              )}
-              Cek Status
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              disabled={isCleaning}
-              onClick={handleCleanupStaleDryRun}
-            >
-              {isCleaning ? (
-                <Spinner className="size-4 mr-2" />
-              ) : (
-                <FileWarning className="size-4 mr-2" />
-              )}
-              Dry-run
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="shrink-0"
-              disabled={isCleaning}
-              onClick={handleCleanupStale}
+              disabled={isCleaning || !cleanupToken}
+              onClick={handleCleanupExecute}
+              title={
+                cleanupToken
+                  ? "Hapus permanen chunk basi yang terdaftar di dry-run"
+                  : "Jalankan dry-run dulu untuk mengaktifkan"
+              }
             >
               {isCleaning ? (
                 <Spinner className="size-4 mr-2" />
               ) : (
                 <Trash2 className="size-4 mr-2" />
               )}
-              Bersihkan
+              {cleanupToken
+                ? `Hapus ${cleanupResult?.deleted_uploads.length ?? ""} Upload`.trim()
+                : "Hapus Permanen"}
             </Button>
           </div>
         </div>
@@ -731,7 +910,7 @@ export const AssetMigrationSection = () => {
           if (!open) setImportResult(null);
         }}
       >
-        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Hasil Migrasi Aset v1</DialogTitle>
             <DialogDescription>
@@ -739,6 +918,7 @@ export const AssetMigrationSection = () => {
             </DialogDescription>
           </DialogHeader>
 
+          <DialogBody>
           <div className="grid grid-cols-2 gap-3">
             <div className="border rounded-lg p-3 flex items-center gap-3">
               <CheckCircle2 className="size-8 text-emerald-500 shrink-0" />
@@ -800,8 +980,121 @@ export const AssetMigrationSection = () => {
             </div>
           )}
 
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setImportResult(null)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Verify DB ↔ file report */}
+      <Dialog
+        open={!!verifyResult}
+        onOpenChange={(open) => {
+          if (!open) setVerifyResult(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Hasil Verifikasi Aset</DialogTitle>
+            <DialogDescription>
+              Kecocokan path file di database dengan file fisik di disk
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogBody>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="border rounded-lg p-3">
+              <p className="text-2xl font-semibold leading-none">
+                {verifyResult?.referenced ?? 0}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Path direferensikan DB
+              </p>
+            </div>
+            <div className="border rounded-lg p-3">
+              <p
+                className={`text-2xl font-semibold leading-none ${
+                  (verifyResult?.missing.length ?? 0) > 0
+                    ? "text-red-500"
+                    : "text-emerald-500"
+                }`}
+              >
+                {verifyResult?.missing.length ?? 0}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                File hilang di disk
+              </p>
+            </div>
+          </div>
+
+          {verifyResult && verifyResult.missing.length > 0 && (
+            <div className="border border-red-500/40 rounded-lg p-3">
+              <p className="text-xs font-medium text-red-500">
+                {verifyResult.missing.length} file direferensikan DB tapi
+                tidak ada di disk
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Ini biasanya menandakan migrasi/import belum lengkap — jangan
+                jalankan prune sebelum file-file ini kembali ada.
+              </p>
+              <ul className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                {verifyResult.missing.map((item) => (
+                  <li
+                    key={item.path}
+                    className="text-xs font-mono text-muted-foreground truncate"
+                    title={item.path}
+                  >
+                    {item.path}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {verifyResult && verifyResult.duplicates.length > 0 && (
+            <div className="border border-yellow-500/40 rounded-lg p-3">
+              <p className="text-xs font-medium text-yellow-500">
+                {verifyResult.duplicates.length} path dipakai lebih dari satu
+                baris DB
+              </p>
+              <ul className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                {verifyResult.duplicates.map((item) => (
+                  <li
+                    key={item.path}
+                    className="text-xs font-mono text-muted-foreground truncate"
+                    title={item.path}
+                  >
+                    {item.path}{" "}
+                    <span className="text-yellow-500">
+                      ({item.count ?? 2}×)
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {verifyResult &&
+            verifyResult.missing.length === 0 &&
+            verifyResult.duplicates.length === 0 && (
+              <div className="border rounded-lg p-3 flex items-center gap-3">
+                <CheckCircle2 className="size-8 text-emerald-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Semua file cocok</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Semua path yang direferensikan database ada di disk dan
+                    unik. Tidak ada anomali.
+                  </p>
+                </div>
+              </div>
+            )}
+
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVerifyResult(null)}>
               Tutup
             </Button>
           </DialogFooter>
@@ -815,7 +1108,7 @@ export const AssetMigrationSection = () => {
           if (!open) setPruneResult(null);
         }}
       >
-        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {pruneResult?.dry_run ? "Hasil Prune (Dry-run)" : "Hasil Prune"}
@@ -827,6 +1120,7 @@ export const AssetMigrationSection = () => {
             </DialogDescription>
           </DialogHeader>
 
+          <DialogBody>
           <div className="grid grid-cols-2 gap-3">
             <div className="border rounded-lg p-3">
               <p className="text-2xl font-semibold leading-none">
@@ -878,6 +1172,7 @@ export const AssetMigrationSection = () => {
             </div>
           )}
 
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPruneResult(null)}>
               Tutup
@@ -893,7 +1188,7 @@ export const AssetMigrationSection = () => {
           if (!open) setPendingUploads(null);
         }}
       >
-        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Status Chunk Upload v1</DialogTitle>
             <DialogDescription>
@@ -902,6 +1197,7 @@ export const AssetMigrationSection = () => {
             </DialogDescription>
           </DialogHeader>
 
+          <DialogBody>
           <div className="grid grid-cols-2 gap-3">
             <div className="border rounded-lg p-3">
               <p className="text-2xl font-semibold leading-none">
@@ -968,6 +1264,7 @@ export const AssetMigrationSection = () => {
             </div>
           )}
 
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPendingUploads(null)}>
               Tutup
@@ -983,7 +1280,7 @@ export const AssetMigrationSection = () => {
           if (!open) setCleanupResult(null);
         }}
       >
-        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {cleanupResult?.dry_run
@@ -997,6 +1294,7 @@ export const AssetMigrationSection = () => {
             </DialogDescription>
           </DialogHeader>
 
+          <DialogBody>
           <div className="grid grid-cols-2 gap-3">
             <div className="border rounded-lg p-3">
               <p className="text-2xl font-semibold leading-none">
@@ -1055,6 +1353,7 @@ export const AssetMigrationSection = () => {
             </div>
           )}
 
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCleanupResult(null)}>
               Tutup

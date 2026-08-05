@@ -50,6 +50,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   Dialog,
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogFooter,
@@ -775,10 +776,11 @@ export const BlogFormPageClient = () => {
                 </Button>
               }
             />
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+            <DialogContent className="max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Preview Konten Berita</DialogTitle>
               </DialogHeader>
+              <DialogBody>
               <Tabs value={contentState} onValueChange={setContentState}>
                 <TabsList>
                   <TabsTrigger value="id" className="flex items-center gap-2">
@@ -807,6 +809,7 @@ export const BlogFormPageClient = () => {
                   />
                 </TabsContent>
               </Tabs>
+              </DialogBody>
               <DialogFooter>
                 <DialogClose
                   render={

@@ -22,10 +22,11 @@ import {
   TvMinimalPlay,
   Users,
 } from "lucide-react";
-import { NavMain } from "./nav-main";
+import { NavMain, type NavValueProps } from "./nav-main";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Skeleton } from "../ui/skeleton";
+import { useMe } from "@/components/container/_api";
 
 const LogoNoSSR = dynamic(() => import("./logo-no-ssr"), {
   ssr: false,
@@ -38,6 +39,7 @@ const data = {
       title: "Dasbor",
       url: "/dashboard",
       icon: ChartNoAxesCombined,
+      permission: "dashboard:read",
       items: [
         {
           title: "Dasbor Transaksi",
@@ -53,6 +55,7 @@ const data = {
       title: "Pesanan",
       url: "/orders",
       icon: ShoppingBasket,
+      permission: "pesanan:read",
       items: [
         {
           title: "List",
@@ -61,10 +64,12 @@ const data = {
         {
           title: "Ulasan",
           url: "/orders/reviews",
+          permission: "ulasan:read",
         },
         {
           title: "Persetujuan Disclaimer",
           url: "/orders/disclaimer-consent/list",
+          permission: "system:read",
         },
       ],
     },
@@ -72,12 +77,14 @@ const data = {
       title: "Pelanggan",
       url: "/customers",
       icon: Users,
+      permission: "buyer:read",
       items: [],
     },
     {
       title: "Produk",
       url: "/products",
       icon: Package,
+      permission: "produk:read",
       items: [
         {
           title: "List",
@@ -86,14 +93,17 @@ const data = {
         {
           title: "Merek",
           url: "/products/brands",
+          permission: "brand:read",
         },
         {
           title: "Kategori",
           url: "/products/categories",
+          permission: "kategori:read",
         },
         {
           title: "Sumber",
           url: "/products/sources",
+          permission: "kondisi:read",
         },
         // disabled for a temporary time, will be re-enabled in the future
         // {
@@ -103,10 +113,12 @@ const data = {
         {
           title: "Kondisi Produk",
           url: "/products/conditions/product",
+          permission: "kondisi:read",
         },
         {
           title: "Kondisi Paket",
           url: "/products/conditions/package",
+          permission: "kondisi:read",
         },
       ],
     },
@@ -114,18 +126,22 @@ const data = {
       title: "Pemasaran",
       url: "/marketing",
       icon: Megaphone,
+      permission: "marketing:read",
       items: [
         {
           title: "Diskon",
           url: "/marketing/discounts",
+          permission: "diskon:read",
         },
         {
           title: "Banner Promosi",
           url: "/marketing/banners",
+          permission: "marketing:read",
         },
         {
           title: "Formulir Grosir",
           url: "/marketing/wholesaler",
+          permission: "system:read",
         },
       ],
     },
@@ -135,6 +151,7 @@ const data = {
       title: "Berita",
       url: "/blogs",
       icon: Newspaper,
+      permission: "marketing:read",
       items: [
         {
           title: "List",
@@ -154,6 +171,7 @@ const data = {
       title: "Video",
       url: "/videos",
       icon: TvMinimalPlay,
+      permission: "marketing:read",
       items: [
         {
           title: "List",
@@ -171,6 +189,7 @@ const data = {
       title: "Bantuan",
       url: "/helps",
       icon: Headset,
+      permission: "system:read",
       items: [
         {
           title: "Cara Pembelian",
@@ -183,6 +202,7 @@ const data = {
         {
           title: "FAQ",
           url: "/helps/faqs",
+          permission: "faq:read",
         },
       ],
     },
@@ -190,6 +210,7 @@ const data = {
       title: "Kebijakan",
       url: "/policies",
       icon: Scale,
+      permission: "system:read",
       items: [
         {
           title: "Syarat & Ketentuan",
@@ -209,6 +230,7 @@ const data = {
       title: "Operasional",
       url: "/operationals",
       icon: MonitorSmartphone,
+      permission: "system:read",
       items: [
         {
           title: "Maintenance",
@@ -221,6 +243,7 @@ const data = {
         {
           title: "Banner Hero",
           url: "/operationals/hero",
+          permission: "marketing:read",
         },
       ],
     },
@@ -228,6 +251,7 @@ const data = {
       title: "Pengaturan",
       url: "/settings",
       icon: Settings2,
+      permission: "system:read",
       items: [
         {
           title: "Umum",
@@ -236,23 +260,46 @@ const data = {
         {
           title: "Staff",
           url: "/settings/staff",
+          permission: "admin:read",
         },
         {
           title: "Pajak",
           url: "/settings/tax",
+          permission: "system:read",
         },
         {
           title: "Log Aktivitas",
           url: "/settings/activity-logs",
+          permission: "activity_log:read",
         },
       ],
     },
   ],
-};
+} as const;
 
 export const AppSidebar = ({
   ...props
 }: React.ComponentProps<typeof Sidebar>) => {
+  const { data: meData } = useMe();
+  const permissions = meData?.data?.permissions ?? [];
+
+  const hasPermission = (perm?: string) =>
+    !perm || permissions.includes(perm);
+
+  const filterNav = (nav: readonly NavValueProps[]) =>
+    nav
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => hasPermission(item.permission)),
+      }))
+      .filter((group) => hasPermission(group.permission));
+
+  const filteredData = {
+    navMain: filterNav(data.navMain),
+    navInfo: filterNav(data.navInfo),
+    navPreferences: filterNav(data.navPreferences),
+  };
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -274,7 +321,7 @@ export const AppSidebar = ({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain nav={data} />
+        <NavMain nav={filteredData} />
       </SidebarContent>
     </Sidebar>
   );

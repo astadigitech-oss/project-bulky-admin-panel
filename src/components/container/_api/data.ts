@@ -6,14 +6,16 @@ import { deleteCookie } from "cookies-next/client";
 import { toast } from "sonner";
 
 // types
+export type MeData = {
+  email: string;
+  id: string;
+  nama: string;
+  permissions: string[];
+  role: { nama: string };
+};
+
 type MeResponse = BaseResponse & {
-  data: {
-    email: string;
-    id: string;
-    nama: string;
-    permissions: string[];
-    role: { nama: string };
-  };
+  data: MeData;
 };
 
 type LogoutResponse = BaseResponse;
