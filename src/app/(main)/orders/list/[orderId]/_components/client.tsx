@@ -84,6 +84,20 @@ const BASE_STATUS_CONFIG: Record<string, { label: string; className: string }> =
     label: "Belum Bayar",
     className: "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400",
   },
+  EXPIRED: {
+    label: "Kedaluwarsa",
+    className:
+      "bg-gray-500/10 border-gray-500/20 text-gray-600 dark:text-gray-300",
+  },
+  FAILED: {
+    label: "Gagal",
+    className: "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400",
+  },
+  REFUNDED: {
+    label: "Dikembalikan",
+    className:
+      "bg-gray-500/10 border-gray-500/20 text-gray-600 dark:text-gray-300",
+  },
 };
 
 const getStatusConfig = (
@@ -704,45 +718,87 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                 Pembayaran
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
+            <CardContent className="flex flex-col gap-2">
               {order.pembayaran.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">
-                  Data pembayaran tidak tersedia — pesanan lama dari migrasi
+                  Data pembayaran tidak tersedia. Pesanan lama dari migrasi
                   Bulky v1 biasanya tidak membawa riwayat pembayaran.
                 </p>
               ) : (
-                order.pembayaran.map(
-                  (p: OrderDetailResponse["data"]["pembayaran"][number]) => (
-                    <div key={p.id} className="flex flex-col gap-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Metode Pembayaran</span>
-                        <span className="font-medium">
-                          {p.metode_pembayaran.nama}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Jumlah Bayar</span>
-                        <span>{formatRupiah(p.jumlah)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Status Pembayaran</span>
-                        <Badge
-                          className={statusConfig[p.status]?.className ?? ""}
-                        >
-                          {statusConfig[p.status]?.label ?? p.status}
-                        </Badge>
-                      </div>
-                      {p.paid_at && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Tanggal Pembayaran</span>
-                          <span>
-                            {format(new Date(p.paid_at), "dd MMM yyyy, HH:mm")}
+                <>
+                  {order.pembayaran.map(
+                    (p: OrderDetailResponse["data"]["pembayaran"][number]) => (
+                      <div
+                        key={p.id}
+                        className="rounded-lg border bg-muted/40 px-3 py-2.5 flex flex-col gap-2"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+                            <Badge
+                              className={
+                                statusConfig[p.status]?.className ?? ""
+                              }
+                            >
+                              {statusConfig[p.status]?.label ?? p.status}
+                            </Badge>
+                            {p.metode_pembayaran.nama && (
+                              <span className="flex items-center gap-2 text-xs text-muted-foreground truncate">
+                                <span
+                                  aria-hidden
+                                  className="size-1 shrink-0 rounded-full bg-muted-foreground/50"
+                                />
+                                {p.metode_pembayaran.nama}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold shrink-0">
+                            {formatRupiah(p.jumlah)}
                           </span>
                         </div>
-                      )}
+                        <div className="flex flex-col gap-1 text-xs">
+                          {p.nama_pembayar && (
+                            <div className="flex justify-between gap-3">
+                              <span className="text-muted-foreground">
+                                Nama Pembayar
+                              </span>
+                              <span className="font-medium text-right">
+                                {p.nama_pembayar}
+                              </span>
+                            </div>
+                          )}
+                          {p.paid_at && (
+                            <div className="flex justify-between gap-3">
+                              <span className="text-muted-foreground">
+                                Tanggal Pembayaran
+                              </span>
+                              <span className="font-medium text-right">
+                                {format(
+                                  new Date(p.paid_at),
+                                  "dd MMM yyyy, HH:mm",
+                                )}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ),
+                  )}
+                  {order.pembayaran.length > 1 && (
+                    <div className="flex items-center justify-between border-t pt-2 mt-1 text-sm">
+                      <span className="text-muted-foreground">
+                        Total {order.pembayaran.length} pembayaran
+                      </span>
+                      <span className="font-semibold">
+                        {formatRupiah(
+                          order.pembayaran.reduce(
+                            (sum, p) => sum + Number(p.jumlah),
+                            0,
+                          ),
+                        )}
+                      </span>
                     </div>
-                  ),
-                )
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
