@@ -80,12 +80,11 @@ const formSchema = z.object({
   label_ids: z.array(z.string()).optional(),
   highlight_id: z.string().optional(),
   highlight_en: z.string().optional(),
-  meta_id: z.string().optional(),
-  meta_en: z.string().optional(),
+  meta_title_id: z.string().optional(),
+  meta_title_en: z.string().optional(),
   meta_description_id: z.string().optional(),
   meta_description_en: z.string().optional(),
-  meta_keyword_id: z.string().optional(),
-  meta_keyword_en: z.string().optional(),
+  meta_keywords: z.string().optional(),
   is_active: z.boolean(),
   featured_image: z.array(z.file()).optional(),
 });
@@ -153,12 +152,11 @@ export const BlogFormPageClient = () => {
       label_ids: [],
       highlight_id: detail?.data.highlight_id ?? "",
       highlight_en: detail?.data.highlight_en ?? "",
-      meta_id: (detail?.data as any)?.meta_id ?? "",
-      meta_en: (detail?.data as any)?.meta_en ?? "",
+      meta_title_id: (detail?.data as any)?.meta_title_id ?? "",
+      meta_title_en: (detail?.data as any)?.meta_title_en ?? "",
       meta_description_id: (detail?.data as any)?.meta_description_id ?? "",
       meta_description_en: (detail?.data as any)?.meta_description_en ?? "",
-      meta_keyword_id: (detail?.data as any)?.meta_keyword_id ?? "",
-      meta_keyword_en: (detail?.data as any)?.meta_keyword_en ?? "",
+      meta_keywords: (detail?.data as any)?.meta_keywords ?? "",
       is_active: detail?.data.is_active ?? false,
       featured_image: [],
     },
@@ -188,12 +186,11 @@ export const BlogFormPageClient = () => {
     body.append("kategori_id", values.kategori_id);
     body.append("highlight_id", values.highlight_id ?? "");
     body.append("highlight_en", values.highlight_en ?? "");
-    body.append("meta_id", values.meta_id ?? "");
-    body.append("meta_en", values.meta_en ?? "");
+    body.append("meta_title_id", values.meta_title_id ?? "");
+    body.append("meta_title_en", values.meta_title_en ?? "");
     body.append("meta_description_id", values.meta_description_id ?? "");
     body.append("meta_description_en", values.meta_description_en ?? "");
-    body.append("meta_keyword_id", values.meta_keyword_id ?? "");
-    body.append("meta_keyword_en", values.meta_keyword_en ?? "");
+    body.append("meta_keywords", values.meta_keywords ?? "");
     body.append("is_active", String(values.is_active));
 
     (values.label_ids ?? []).forEach((id) => body.append("label_ids", id));
@@ -245,19 +242,19 @@ export const BlogFormPageClient = () => {
       .join(", ");
 
     if (lang === "id") {
-      form.setValue("meta_id", title ?? "", { shouldDirty: true });
+      form.setValue("meta_title_id", title ?? "", { shouldDirty: true });
       form.setValue("meta_description_id", takeSnippet(plain, 160), {
         shouldDirty: true,
       });
-      form.setValue("meta_keyword_id", keywords, { shouldDirty: true });
+      form.setValue("meta_keywords", keywords, { shouldDirty: true });
       return;
     }
 
-    form.setValue("meta_en", title ?? "", { shouldDirty: true });
+    form.setValue("meta_title_en", title ?? "", { shouldDirty: true });
     form.setValue("meta_description_en", takeSnippet(plain, 160), {
       shouldDirty: true,
     });
-    form.setValue("meta_keyword_en", keywords, { shouldDirty: true });
+    form.setValue("meta_keywords", keywords, { shouldDirty: true });
   };
 
   return (
@@ -608,7 +605,7 @@ export const BlogFormPageClient = () => {
               </div>
 
               <Controller
-                name="meta_id"
+                name="meta_title_id"
                 control={form.control}
                 disabled={isLoading}
                 render={({ field }) => (
@@ -635,7 +632,7 @@ export const BlogFormPageClient = () => {
               />
 
               <Controller
-                name="meta_en"
+                name="meta_title_en"
                 control={form.control}
                 disabled={isLoading}
                 render={({ field }) => (
@@ -704,42 +701,16 @@ export const BlogFormPageClient = () => {
               />
 
               <Controller
-                name="meta_keyword_id"
+                name="meta_keywords"
                 control={form.control}
                 disabled={isLoading}
                 render={({ field }) => (
-                  <Field className="gap-1">
-                    <FieldLabel className="flex items-center gap-2">
-                      Meta Keyword
-                      <div className="rounded overflow-hidden size-4 flex items-center justify-center">
-                        <ID />
-                      </div>
-                    </FieldLabel>
+                  <Field className="gap-1 md:col-span-2">
+                    <FieldLabel>Meta Keyword</FieldLabel>
                     <Textarea
                       {...field}
                       className="min-h-20"
                       placeholder="Kata kunci dipisah koma"
-                    />
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="meta_keyword_en"
-                control={form.control}
-                disabled={isLoading}
-                render={({ field }) => (
-                  <Field className="gap-1">
-                    <FieldLabel className="flex items-center gap-2">
-                      Meta Keyword
-                      <div className="rounded overflow-hidden size-4 flex items-center justify-center">
-                        <GB />
-                      </div>
-                    </FieldLabel>
-                    <Textarea
-                      {...field}
-                      className="min-h-20"
-                      placeholder="Keywords separated by comma"
                     />
                   </Field>
                 )}
