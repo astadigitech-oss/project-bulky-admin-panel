@@ -28,6 +28,11 @@ export type BlogDetailType = BlogType & {
   kategori_id: string;
   highlight_id: string;
   highlight_en: string;
+  meta_title_id: string | null;
+  meta_title_en: string | null;
+  meta_description_id: string | null;
+  meta_description_en: string | null;
+  meta_keywords: string | null;
   updated_at: string;
 };
 
