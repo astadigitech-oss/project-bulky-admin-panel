@@ -71,6 +71,11 @@ const data = {
           url: "/orders/disclaimer-consent/list",
           permission: "system:read",
         },
+        {
+          title: "Kendaraan Deliveree",
+          url: "/orders/deliveree-vehicles",
+          permission: "deliveree_vehicle:read",
+        },
       ],
     },
     {
