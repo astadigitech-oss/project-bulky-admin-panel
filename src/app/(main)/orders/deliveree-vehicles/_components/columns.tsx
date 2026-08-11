@@ -7,6 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { TooltipText } from "@/providers/tooltip-provider";
@@ -60,17 +61,56 @@ const EnvironmentBadge = ({ value }: { value: "sandbox" | "production" }) => (
   </Badge>
 );
 
+// SelectionProps dipakai untuk kolom checkbox multi-select (bulk enable/disable).
+export type SelectionProps = {
+  selectedIds: Set<string>;
+  allSelected: boolean;
+  someSelected: boolean;
+  onToggle: (id: string) => void;
+  onToggleAll: () => void;
+};
+
 export const column = ({
   metaPage,
   setQuery,
   setDialog,
   disabled,
+  selection,
 }: {
   metaPage: MetaPagination;
   setQuery: any;
   setDialog: (mode: "detail" | "edit" | null) => void;
   disabled: boolean;
+  selection?: SelectionProps;
 }): ColumnDef<DelivereeVehicle>[] => [
+  ...(selection
+    ? [
+        {
+          id: "select",
+          header: () => (
+            <div className="flex w-6 justify-center">
+              <Checkbox
+                checked={selection.allSelected}
+                indeterminate={selection.someSelected}
+                onCheckedChange={selection.onToggleAll}
+                disabled={disabled}
+                aria-label="Pilih semua kendaraan di halaman ini"
+              />
+            </div>
+          ),
+          cell: ({ row }) => (
+            <div className="flex w-6 justify-center">
+              <Checkbox
+                checked={selection.selectedIds.has(row.original.id)}
+                onCheckedChange={() => selection.onToggle(row.original.id)}
+                disabled={disabled}
+                aria-label={`Pilih ${row.original.nama}`}
+              />
+            </div>
+          ),
+        } as ColumnDef<DelivereeVehicle>,
+      ]
+    : []),
   {
     id: "id",
     header: () => <div className="text-center">No</div>,

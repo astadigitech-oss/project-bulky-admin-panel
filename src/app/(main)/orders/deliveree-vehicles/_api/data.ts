@@ -4,6 +4,8 @@ import { UseApiQueryProps } from "@/lib/query/use-query";
 import { keepPreviousData, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  BulkUpdateDelivereeVehicleBody,
+  BulkUpdateDelivereeVehicleResponse,
   DelivereeVehicleDetailRequest,
   DelivereeVehicleDetailResponse,
   DelivereeVehicleListRequest,
@@ -51,6 +53,10 @@ export const dataAPIDelivereeVehicle = {
       UpdateDelivereeVehicleBody,
       UpdateDelivereeVehicleParams
     >;
+    bulkStatus: UseMutateConfig<
+      BulkUpdateDelivereeVehicleResponse,
+      BulkUpdateDelivereeVehicleBody
+    >;
     sync: UseMutateConfig<SyncDelivereeVehicleResponse, undefined>;
   } => ({
     update: {
@@ -65,6 +71,15 @@ export const dataAPIDelivereeVehicle = {
           ]);
       },
       onError: { title: "UPDATE_DELIVEREE_VEHICLE" },
+    },
+    bulkStatus: {
+      endpoint: "/deliveree-vehicle/bulk-status",
+      method: "post",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
+      },
+      onError: { title: "BULK_STATUS_DELIVEREE_VEHICLE" },
     },
     sync: {
       endpoint: "/deliveree-vehicle/sync",

@@ -1,6 +1,13 @@
 "use client";
 
-import { RefreshCw, CloudDownload, LoaderCircle } from "lucide-react";
+import {
+  RefreshCw,
+  CloudDownload,
+  LoaderCircle,
+  Power,
+  PowerOff,
+  X,
+} from "lucide-react";
 import { useSearchQuery } from "@/hooks/use-search";
 import { InputSearch } from "@/components/ui/input-search";
 import { SortTable } from "@/components/sort-table";
@@ -26,6 +33,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useEffect, useState } from "react";
 import {
+  useBulkUpdateDelivereeVehicle,
   useGetDelivereeVehicleDetail,
   useGetDelivereeVehicleList,
   useSyncDelivereeVehicle,
@@ -59,10 +67,19 @@ export const DelivereeVehicleClient = () => {
 
   const [DialogSync, confirmSync] = useConfirm(
     "Sync Data Kendaraan Deliveree",
-    "Data kendaraan akan ditarik dari API Deliveree dan memperbarui master data (termasuk menghitung ulang threshold). Lanjutkan?",
+    "Data kendaraan akan ditarik dari API Deliveree dan memperbarui master data (termasuk menghitung ulang threshold). Lakukan di LUAR JAM KERJA / di luar jam sibuk transaksi, karena perubahan master data dapat memengaruhi pemilihan kendaraan pada pesanan yang sedang berjalan. Lanjutkan?",
+  );
+
+  // Konfirmasi bulk enable/disable — title dinamis memakai placeholder [count].
+  const [DialogBulkStatus, confirmBulk] = useConfirm(
+    "Ubah status [count] kendaraan",
+    "Kendaraan terpilih akan diaktifkan/dinonaktifkan. Kendaraan yang NONAKTIF tidak akan dipakai dalam pemilihan kendaraan saat booking baru. Lanjutkan?",
+    "destructive",
   );
 
   const { mutate: sync, isPending: isSyncing } = useSyncDelivereeVehicle();
+  const { mutate: bulkStatus, isPending: isBulk } =
+    useBulkUpdateDelivereeVehicle();
 
   const { search, searchValue, setSearch } = useSearchQuery();
   const { page, limit, metaPage, setPage, setLimit, setPaginationData } =
@@ -84,6 +101,47 @@ export const DelivereeVehicleClient = () => {
 
   const vehicleList = list?.data ?? [];
   const isDisabled = isSyncing;
+
+  // === Multi-select untuk bulk enable/disable ===
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const allSelected =
+    vehicleList.length > 0 && vehicleList.every((v) => selectedIds.has(v.id));
+  const someSelected =
+    vehicleList.some((v) => selectedIds.has(v.id)) && !allSelected;
+  const selectedCount = selectedIds.size;
+
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const toggleSelectAll = () =>
+    setSelectedIds((prev) => {
+      if (allSelected) return new Set();
+      const next = new Set(prev);
+      vehicleList.forEach((v) => next.add(v.id));
+      return next;
+    });
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleBulkStatus = async (isActive: boolean) => {
+    const ok = await confirmBulk(String(selectedIds.size));
+    if (!ok) return;
+    const ids = Array.from(selectedIds);
+    bulkStatus(
+      { body: { ids, is_active: isActive } },
+      {
+        onSuccess: () => {
+          clearSelection();
+          refetch();
+        },
+      },
+    );
+  };
 
   const handleSync = async () => {
     const ok = await confirmSync();
@@ -118,6 +176,7 @@ export const DelivereeVehicleClient = () => {
   return (
     <div className="flex flex-col gap-6 pt-4">
       <DialogSync />
+      <DialogBulkStatus />
       <DialogSyncResult
         open={!!syncResult}
         onOpenChange={(open) => {
@@ -220,12 +279,63 @@ export const DelivereeVehicleClient = () => {
 
       {/* Table */}
       <div className="flex flex-col gap-4">
+        {selectedIds.size > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/40 px-3.5 py-2.5">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium text-foreground">
+                {selectedIds.size} kendaraan dipilih
+              </span>
+              <Button
+                variant={"ghost"}
+                size={"icon-xs"}
+                onClick={clearSelection}
+                disabled={isDisabled || isBulk}
+                aria-label="Batal pilih semua"
+              >
+                <X className="size-3.5" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={"outline"}
+                size={"sm"}
+                className={"text-xs"}
+                onClick={() => handleBulkStatus(true)}
+                disabled={isDisabled || isBulk}
+              >
+                {isBulk ? (
+                  <LoaderCircle className="size-3.5 animate-spin" />
+                ) : (
+                  <Power className="size-3.5" />
+                )}
+                Aktifkan ({selectedIds.size})
+              </Button>
+              <Button
+                variant={"destructive"}
+                size={"sm"}
+                className={"text-xs"}
+                onClick={() => handleBulkStatus(false)}
+                disabled={isDisabled || isBulk}
+              >
+                <PowerOff className="size-3.5" />
+                Nonaktifkan ({selectedIds.size})
+              </Button>
+            </div>
+          </div>
+        )}
         <DataTable
           columns={column({
             metaPage,
             setQuery,
             setDialog,
-            disabled: isDisabled,
+            disabled: isDisabled || isBulk,
+            selection: {
+              selectedIds,
+              allSelected,
+              someSelected,
+              onToggle: toggleSelect,
+              onToggleAll: toggleSelectAll,
+            },
           })}
           data={vehicleList}
           isInitialLoading={isLoadList}
