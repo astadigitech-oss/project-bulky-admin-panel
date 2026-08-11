@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { CheckCircle2, CircleSlash2, CloudDownload, PlusCircle } from "lucide-react";
+import { CheckCircle2, CircleSlash2, CloudDownload, Info, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SyncResult } from "../../_api/types";
 
@@ -116,6 +116,16 @@ export const DialogSyncResult = ({
               Disinkronkan pada{" "}
               <span className="font-medium text-foreground">
                 {format(result.synced_at, "PPpp", { locale: idLocale })}
+              </span>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3.5 py-2.5 text-xs text-amber-700 dark:text-amber-300">
+              <Info className="mt-0.5 size-3.5 shrink-0" />
+              <span>
+                Catatan: perubahan master data ini langsung dipakai untuk
+                pemilihan kendaraan pada booking baru. Disarankan melakukan
+                sync di <b>luar jam kerja / di luar jam sibuk transaksi</b>{" "}
+                untuk menghindari dampak pada pesanan yang sedang berjalan.
               </span>
             </div>
           </div>

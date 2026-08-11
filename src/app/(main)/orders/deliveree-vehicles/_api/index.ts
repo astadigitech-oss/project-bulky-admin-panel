@@ -34,5 +34,7 @@ export const useGetDelivereeVehicleDetail = ({
 // mutation
 export const useUpdateDelivereeVehicle = () =>
   useMutate(dataAPIDelivereeVehicle.mutation(useQueryClient()).update);
+export const useBulkUpdateDelivereeVehicle = () =>
+  useMutate(dataAPIDelivereeVehicle.mutation(useQueryClient()).bulkStatus);
 export const useSyncDelivereeVehicle = () =>
   useMutate(dataAPIDelivereeVehicle.mutation(useQueryClient()).sync);

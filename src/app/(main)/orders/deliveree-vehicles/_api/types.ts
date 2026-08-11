@@ -63,6 +63,18 @@ export type UpdateDelivereeVehicleResponse = BaseResponse & {
   data: DelivereeVehicle;
 };
 
+export type BulkUpdateDelivereeVehicleBody = {
+  ids: string[];
+  is_active: boolean;
+};
+
+export type BulkUpdateDelivereeVehicleResponse = BaseResponse & {
+  data: {
+    affected: number;
+    is_active: boolean;
+  };
+};
+
 export type SyncDelivereeVehicleResponse = BaseResponse & {
   data: SyncResult;
 };
