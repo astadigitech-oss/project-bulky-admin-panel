@@ -15,6 +15,7 @@ import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import React, { useEffect } from "react";
 import { column } from "./columns";
 import {
+  useChangeSaleProduct,
   useChangeStatusProduct,
   useDeleteProduct,
   useGetProductList,
@@ -36,10 +37,16 @@ export const ProductClient = () => {
     "[command]",
     "Tindakan tidak bersifat permanen, anda dapat mengubahnya lagi lain kali",
   );
+  const [DialogChangeSale, confirmChangeSale] = useConfirm(
+    "[command]",
+    "Tindakan tidak bersifat permanen, anda dapat mengubahnya lagi lain kali",
+  );
 
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
   const { mutate: changeStatusProduct, isPending: isUpdating } =
     useChangeStatusProduct();
+  const { mutate: changeSaleProduct, isPending: isUpdatingSale } =
+    useChangeSaleProduct();
 
   const { search, searchValue, setSearch } = useSearchQuery();
   const { page, limit, metaPage, setPage, setLimit, setPaginationData } =
@@ -61,7 +68,7 @@ export const ProductClient = () => {
 
   const productList = list?.data ?? [];
 
-  const isDisabled = isDeleting || isUpdating || isPending;
+  const isDisabled = isDeleting || isUpdating || isUpdatingSale || isPending;
 
   const handleDelete = async (id: string, value: string) => {
     const ok = await confirmDelete(value, "name");
@@ -83,6 +90,20 @@ export const ProductClient = () => {
     changeStatusProduct({ params: { id } });
   };
 
+  const handleChangeSale = async (
+    id: string,
+    value: string,
+    isSale: boolean,
+  ) => {
+    const ok = await confirmChangeSale(
+      `${isSale ? "Aktifkan" : "Nonaktifkan"} Sale ${value}`,
+      "command",
+      isSale ? "default" : "destructive",
+    );
+    if (!ok) return;
+    changeSaleProduct({ params: { id } });
+  };
+
   useEffect(() => {
     if (list) {
       if (page > list.meta.last_page) {
@@ -97,6 +118,7 @@ export const ProductClient = () => {
     <div className="flex flex-col gap-6 pt-4">
       <DialogDelete />
       <DialogChangeStatus />
+      <DialogChangeSale />
       <div className="flex items-center justify-between">
         <h1 className="leading-none font-semibold text-2xl">Daftar Produk</h1>
         <div className="flex items-center gap-2">
@@ -156,6 +178,7 @@ export const ProductClient = () => {
             metaPage,
             handleDelete,
             handleChanngeStatus,
+            handleChangeSale,
             isDisabled,
           })}
           data={productList}

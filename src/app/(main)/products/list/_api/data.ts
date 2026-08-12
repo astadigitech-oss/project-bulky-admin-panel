@@ -1,5 +1,7 @@
 import { UseApiQueryProps } from "@/lib/query/use-query";
 import {
+  ChangeSaleProductParams,
+  ChangeSaleProductResponse,
   ChangeStatusProductParams,
   ChangeStatusProductResponse,
   CreateProductBody,
@@ -73,6 +75,11 @@ export const dataAPIProduct = {
       undefined,
       ChangeStatusProductParams
     >;
+    changeSale: UseMutateConfig<
+      ChangeSaleProductResponse,
+      undefined,
+      ChangeSaleProductParams
+    >;
     imageUpload: UseMutateConfig<
       UploadProductImageResponse,
       UploadProductImageBody,
@@ -132,6 +139,19 @@ export const dataAPIProduct = {
           ]);
       },
       onError: { title: "CHANGE_PRODUCT_STATUS" },
+    },
+    changeSale: {
+      endpoint: "/produk/:id/toggle-sale",
+      method: "patch",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient)
+          await invalidateQuery(queryClient, [
+            [key[0]],
+            [key[1], data.data.id],
+          ]);
+      },
+      onError: { title: "CHANGE_PRODUCT_SALE" },
     },
     imageUpload: {
       endpoint: "/produk/:id/gambar",

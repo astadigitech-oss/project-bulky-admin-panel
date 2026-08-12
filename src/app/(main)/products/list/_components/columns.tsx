@@ -18,6 +18,8 @@ import {
   ImageOffIcon,
   MoreHorizontal,
   ReceiptText,
+  Tag,
+  Tags,
   Trash,
   XIcon,
 } from "lucide-react";
@@ -52,6 +54,7 @@ export const column = ({
   metaPage,
   handleDelete,
   handleChanngeStatus,
+  handleChangeSale,
   isDisabled,
 }: {
   metaPage: MetaPagination;
@@ -60,6 +63,11 @@ export const column = ({
     id: string,
     value: string,
     status: boolean,
+  ) => Promise<void>;
+  handleChangeSale: (
+    id: string,
+    value: string,
+    isSale: boolean,
   ) => Promise<void>;
   isDisabled: boolean;
 }): ColumnDef<ProductPartIType>[] => [
@@ -166,6 +174,28 @@ export const column = ({
     ),
   },
   {
+    accessorKey: "is_sale",
+    header: "Label Sale",
+    cell: ({ row }) => (
+      <div
+        className={cn(
+          "flex items-center gap-2 text-xs px-2 py-0.5 rounded-full font-medium w-fit",
+          row.original.is_sale
+            ? "bg-orange-500/20 dark:bg-orange-500/30 dark:text-orange-100 text-orange-600"
+            : "bg-muted text-muted-foreground",
+        )}
+      >
+        <div
+          className={cn(
+            "size-2 rounded-full",
+            row.original.is_sale ? "bg-orange-500" : "bg-muted-foreground",
+          )}
+        />
+        {row.original.is_sale ? "Aktif" : "Nonaktif"}
+      </div>
+    ),
+  },
+  {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => (
@@ -217,7 +247,7 @@ export const column = ({
             <MoreHorizontal />
             <span className="sr-only">toggle action</span>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent className="w-48">
             <DropdownMenuGroup>
               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
               <DropdownMenuItem
@@ -236,6 +266,23 @@ export const column = ({
                   <CircleDot className="size-3.5" />
                 )}
                 {row.original.status ? "Draft" : "Publish"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className={"text-xs"}
+                onClick={() =>
+                  handleChangeSale(
+                    row.original.id,
+                    row.original.nama_id,
+                    !row.original.is_sale,
+                  )
+                }
+              >
+                {row.original.is_sale ? (
+                  <Tags className="size-3.5" />
+                ) : (
+                  <Tag className="size-3.5" />
+                )}
+                {row.original.is_sale ? "Nonaktifkan Sale" : "Aktifkan Sale"}
               </DropdownMenuItem>
               <Link href={`/products/list/${row.original.id}`}>
                 <DropdownMenuItem className={"text-xs"}>
