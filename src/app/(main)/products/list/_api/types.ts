@@ -10,6 +10,7 @@ export type ProductPartIType = {
   gambar_utama: null | string;
   id: string;
   is_sold: boolean;
+  is_sale: boolean;
   nama_en: string;
   nama_id: string;
   reference_id: null | string;
@@ -52,6 +53,7 @@ export type ProductDetailResponse = BaseResponse & {
     id_cargo: string;
     is_active: boolean;
     is_sold: boolean;
+    is_sale: boolean;
     kategori: { id: string; nama: string };
     kondisi: { id: string; nama: string };
     kondisi_paket: { id: string; nama: string };
@@ -97,6 +99,12 @@ export type ChangeStatusProductParams = BaseParams;
 
 export type ChangeStatusProductResponse = BaseResponse & {
   data: { id: string; is_active: boolean };
+};
+
+export type ChangeSaleProductParams = BaseParams;
+
+export type ChangeSaleProductResponse = BaseResponse & {
+  data: { id: string; is_sale: boolean };
 };
 
 export type UploadProductImageParams = BaseParams;

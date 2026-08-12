@@ -38,6 +38,9 @@ export const useDeleteProduct = () =>
 export const useChangeStatusProduct = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).changeStatus);
 
+export const useChangeSaleProduct = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).changeSale);
+
 export const useUploadProductImage = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).imageUpload);
 
