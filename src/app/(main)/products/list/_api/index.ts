@@ -41,6 +41,9 @@ export const useChangeStatusProduct = () =>
 export const useChangeSaleProduct = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).changeSale);
 
+export const useChangeQcPassProduct = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).changeQcPass);
+
 export const useUploadProductImage = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).imageUpload);
 

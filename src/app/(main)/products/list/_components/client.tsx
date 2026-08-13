@@ -15,6 +15,7 @@ import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import React, { useEffect } from "react";
 import { column } from "./columns";
 import {
+  useChangeQcPassProduct,
   useChangeSaleProduct,
   useChangeStatusProduct,
   useDeleteProduct,
@@ -41,12 +42,18 @@ export const ProductClient = () => {
     "[command]",
     "Tindakan tidak bersifat permanen, anda dapat mengubahnya lagi lain kali",
   );
+  const [DialogChangeQcPass, confirmChangeQcPass] = useConfirm(
+    "[command]",
+    "Tindakan tidak bersifat permanen, anda dapat mengubahnya lagi lain kali",
+  );
 
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
   const { mutate: changeStatusProduct, isPending: isUpdating } =
     useChangeStatusProduct();
   const { mutate: changeSaleProduct, isPending: isUpdatingSale } =
     useChangeSaleProduct();
+  const { mutate: changeQcPassProduct, isPending: isUpdatingQcPass } =
+    useChangeQcPassProduct();
 
   const { search, searchValue, setSearch } = useSearchQuery();
   const { page, limit, metaPage, setPage, setLimit, setPaginationData } =
@@ -68,7 +75,12 @@ export const ProductClient = () => {
 
   const productList = list?.data ?? [];
 
-  const isDisabled = isDeleting || isUpdating || isUpdatingSale || isPending;
+  const isDisabled =
+    isDeleting ||
+    isUpdating ||
+    isUpdatingSale ||
+    isUpdatingQcPass ||
+    isPending;
 
   const handleDelete = async (id: string, value: string) => {
     const ok = await confirmDelete(value, "name");
@@ -104,6 +116,20 @@ export const ProductClient = () => {
     changeSaleProduct({ params: { id } });
   };
 
+  const handleChangeQcPass = async (
+    id: string,
+    value: string,
+    isQcPass: boolean,
+  ) => {
+    const ok = await confirmChangeQcPass(
+      `${isQcPass ? "Tandai" : "Batalkan"} QC PASS ${value}`,
+      "command",
+      isQcPass ? "default" : "destructive",
+    );
+    if (!ok) return;
+    changeQcPassProduct({ params: { id } });
+  };
+
   useEffect(() => {
     if (list) {
       if (page > list.meta.last_page) {
@@ -119,6 +145,7 @@ export const ProductClient = () => {
       <DialogDelete />
       <DialogChangeStatus />
       <DialogChangeSale />
+      <DialogChangeQcPass />
       <div className="flex items-center justify-between">
         <h1 className="leading-none font-semibold text-2xl">Daftar Produk</h1>
         <div className="flex items-center gap-2">
@@ -179,6 +206,7 @@ export const ProductClient = () => {
             handleDelete,
             handleChanngeStatus,
             handleChangeSale,
+            handleChangeQcPass,
             isDisabled,
           })}
           data={productList}
