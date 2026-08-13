@@ -4,7 +4,7 @@ import { ForwarderMappingClient } from "./_components/client";
 import { auth } from "@/lib/action/auth";
 import { redirect } from "next/navigation";
 
-const pathname = "products/forwarder-mapping";
+const pathname = "settings/forwarder-mapping";
 const labelPage = "Forwarder Mapping";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ const ForwarderMappingPage = async () => {
   return (
     <MainContainer
       breadcrumbs={[
-        { label: "Produk", url: "/products/list" },
+        { label: "Pengaturan", url: "/settings/general" },
         { label: labelPage },
       ]}
     >

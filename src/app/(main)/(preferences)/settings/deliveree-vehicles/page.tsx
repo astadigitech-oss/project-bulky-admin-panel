@@ -4,7 +4,7 @@ import { DelivereeVehicleClient } from "./_components/client";
 import { auth } from "@/lib/action/auth";
 import { redirect } from "next/navigation";
 
-const pathname = "orders/deliveree-vehicles";
+const pathname = "settings/deliveree-vehicles";
 const labelPage = "Kendaraan Deliveree";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ const DelivereeVehiclePage = async () => {
   return (
     <MainContainer
       breadcrumbs={[
-        { label: "Pesanan", url: "/orders/list" },
+        { label: "Pengaturan", url: "/settings/general" },
         { label: labelPage },
       ]}
     >

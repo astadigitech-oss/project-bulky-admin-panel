@@ -71,11 +71,6 @@ const data = {
           url: "/orders/disclaimer-consent/list",
           permission: "system:read",
         },
-        {
-          title: "Kendaraan Deliveree",
-          url: "/orders/deliveree-vehicles",
-          permission: "deliveree_vehicle:read",
-        },
       ],
     },
     {
@@ -124,11 +119,6 @@ const data = {
           title: "Kondisi Paket",
           url: "/products/conditions/package",
           permission: "kondisi:read",
-        },
-        {
-          title: "Forwarder Mapping",
-          url: "/products/forwarder-mapping",
-          permission: "forwarder_mapping:read",
         },
       ],
     },
@@ -281,6 +271,16 @@ const data = {
           title: "Log Aktivitas",
           url: "/settings/activity-logs",
           permission: "activity_log:read",
+        },
+        {
+          title: "Forwarder Mapping",
+          url: "/settings/forwarder-mapping",
+          permission: "forwarder_mapping:read",
+        },
+        {
+          title: "Kendaraan Deliveree",
+          url: "/settings/deliveree-vehicles",
+          permission: "deliveree_vehicle:read",
         },
       ],
     },
