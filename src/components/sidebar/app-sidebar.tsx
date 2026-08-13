@@ -125,6 +125,11 @@ const data = {
           url: "/products/conditions/package",
           permission: "kondisi:read",
         },
+        {
+          title: "Forwarder Mapping",
+          url: "/products/forwarder-mapping",
+          permission: "forwarder_mapping:read",
+        },
       ],
     },
     {
