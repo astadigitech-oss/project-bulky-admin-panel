@@ -11,6 +11,7 @@ export type ProductPartIType = {
   id: string;
   is_sold: boolean;
   is_sale: boolean;
+  is_qc_pass: boolean;
   nama_en: string;
   nama_id: string;
   reference_id: null | string;
@@ -54,6 +55,7 @@ export type ProductDetailResponse = BaseResponse & {
     is_active: boolean;
     is_sold: boolean;
     is_sale: boolean;
+    is_qc_pass: boolean;
     kategori: { id: string; nama: string };
     kondisi: { id: string; nama: string };
     kondisi_paket: { id: string; nama: string };
@@ -105,6 +107,12 @@ export type ChangeSaleProductParams = BaseParams;
 
 export type ChangeSaleProductResponse = BaseResponse & {
   data: { id: string; is_sale: boolean };
+};
+
+export type ChangeQcPassProductParams = BaseParams;
+
+export type ChangeQcPassProductResponse = BaseResponse & {
+  data: { id: string; is_qc_pass: boolean };
 };
 
 export type UploadProductImageParams = BaseParams;

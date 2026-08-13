@@ -1,5 +1,7 @@
 import { UseApiQueryProps } from "@/lib/query/use-query";
 import {
+  ChangeQcPassProductParams,
+  ChangeQcPassProductResponse,
   ChangeSaleProductParams,
   ChangeSaleProductResponse,
   ChangeStatusProductParams,
@@ -80,6 +82,11 @@ export const dataAPIProduct = {
       undefined,
       ChangeSaleProductParams
     >;
+    changeQcPass: UseMutateConfig<
+      ChangeQcPassProductResponse,
+      undefined,
+      ChangeQcPassProductParams
+    >;
     imageUpload: UseMutateConfig<
       UploadProductImageResponse,
       UploadProductImageBody,
@@ -152,6 +159,19 @@ export const dataAPIProduct = {
           ]);
       },
       onError: { title: "CHANGE_PRODUCT_SALE" },
+    },
+    changeQcPass: {
+      endpoint: "/produk/:id/toggle-qc-pass",
+      method: "patch",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient)
+          await invalidateQuery(queryClient, [
+            [key[0]],
+            [key[1], data.data.id],
+          ]);
+      },
+      onError: { title: "CHANGE_PRODUCT_QC_PASS" },
     },
     imageUpload: {
       endpoint: "/produk/:id/gambar",

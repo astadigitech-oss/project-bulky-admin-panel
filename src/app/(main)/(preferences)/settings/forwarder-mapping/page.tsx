@@ -1,30 +1,30 @@
 import { MainContainer } from "@/components/container/main-container";
 import { Metadata } from "next";
-import { DelivereeVehicleClient } from "./_components/client";
+import { ForwarderMappingClient } from "./_components/client";
 import { auth } from "@/lib/action/auth";
 import { redirect } from "next/navigation";
 
-const pathname = "orders/deliveree-vehicles";
-const labelPage = "Kendaraan Deliveree";
+const pathname = "settings/forwarder-mapping";
+const labelPage = "Forwarder Mapping";
 
 export const metadata: Metadata = {
   title: labelPage,
 };
 
-const DelivereeVehiclePage = async () => {
+const ForwarderMappingPage = async () => {
   const isAuth = await auth();
   if (!isAuth) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
     <MainContainer
       breadcrumbs={[
-        { label: "Pesanan", url: "/orders/list" },
+        { label: "Pengaturan", url: "/settings/general" },
         { label: labelPage },
       ]}
     >
-      <DelivereeVehicleClient />
+      <ForwarderMappingClient />
     </MainContainer>
   );
 };
 
-export default DelivereeVehiclePage;
+export default ForwarderMappingPage;

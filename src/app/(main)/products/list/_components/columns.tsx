@@ -10,6 +10,8 @@ import {
 import { MetaPagination } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import {
+  BadgeCheck,
+  BadgeX,
   Circle,
   CircleDot,
   Edit,
@@ -55,6 +57,7 @@ export const column = ({
   handleDelete,
   handleChanngeStatus,
   handleChangeSale,
+  handleChangeQcPass,
   isDisabled,
 }: {
   metaPage: MetaPagination;
@@ -68,6 +71,11 @@ export const column = ({
     id: string,
     value: string,
     isSale: boolean,
+  ) => Promise<void>;
+  handleChangeQcPass: (
+    id: string,
+    value: string,
+    isQcPass: boolean,
   ) => Promise<void>;
   isDisabled: boolean;
 }): ColumnDef<ProductPartIType>[] => [
@@ -196,6 +204,28 @@ export const column = ({
     ),
   },
   {
+    accessorKey: "is_qc_pass",
+    header: "QC PASS",
+    cell: ({ row }) => (
+      <div
+        className={cn(
+          "flex items-center gap-2 text-xs px-2 py-0.5 rounded-full font-medium w-fit",
+          row.original.is_qc_pass
+            ? "bg-blue-500/20 dark:bg-blue-500/30 dark:text-blue-100 text-blue-600"
+            : "bg-muted text-muted-foreground",
+        )}
+      >
+        <div
+          className={cn(
+            "size-2 rounded-full",
+            row.original.is_qc_pass ? "bg-blue-500" : "bg-muted-foreground",
+          )}
+        />
+        {row.original.is_qc_pass ? "Lolos" : "Belum"}
+      </div>
+    ),
+  },
+  {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => (
@@ -283,6 +313,25 @@ export const column = ({
                   <Tag className="size-3.5" />
                 )}
                 {row.original.is_sale ? "Nonaktifkan Sale" : "Aktifkan Sale"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className={"text-xs"}
+                onClick={() =>
+                  handleChangeQcPass(
+                    row.original.id,
+                    row.original.nama_id,
+                    !row.original.is_qc_pass,
+                  )
+                }
+              >
+                {row.original.is_qc_pass ? (
+                  <BadgeX className="size-3.5" />
+                ) : (
+                  <BadgeCheck className="size-3.5" />
+                )}
+                {row.original.is_qc_pass
+                  ? "Batalkan QC PASS"
+                  : "Tandai QC PASS"}
               </DropdownMenuItem>
               <Link href={`/products/list/${row.original.id}`}>
                 <DropdownMenuItem className={"text-xs"}>
