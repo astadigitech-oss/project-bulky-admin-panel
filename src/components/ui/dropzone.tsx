@@ -15,7 +15,25 @@ type DropzoneProps = {
   maxFiles?: number;
   maxSize?: number;
   oldValue?: string;
+  /**
+   * Rasio "area aman" (width / height) yang akan digambar sebagai overlay di
+   * atas preview, mensimulasikan area yang tetap terlihat setelah gambar
+   * di-crop `object-fit: cover` pada rasio lain (mis. mobile app).
+   * Contoh: 2 untuk rasio 2:1.
+   */
+  safeAreaRatio?: number;
+  /** Label overlay safe area, default "Aman di mobile". */
+  safeAreaLabel?: string;
 };
+
+// Nilai numerik (width / height) untuk tiap opsi `ratio`, dipakai untuk
+// menghitung proporsi overlay safe area.
+const RATIO_ASPECT_VALUE = {
+  square: 1,
+  banner: 4,
+  hero: 2,
+  portrait: 9 / 16,
+} as const;
 
 export const Dropzone = ({
   value = [] as File[],
@@ -25,6 +43,8 @@ export const Dropzone = ({
   error,
   oldValue,
   ratio = "square",
+  safeAreaRatio,
+  safeAreaLabel,
   accept = {
     "image/jpeg": [],
     "image/png": [],
@@ -115,6 +135,13 @@ export const Dropzone = ({
               className="object-cover"
               loading="eager"
             />
+            {safeAreaRatio ? (
+              <SafeAreaOverlay
+                containerRatio={RATIO_ASPECT_VALUE[ratio]}
+                safeAreaRatio={safeAreaRatio}
+                label={safeAreaLabel}
+              />
+            ) : null}
           </div>
           <Button
             variant={"destructive"}
@@ -161,6 +188,50 @@ export const Dropzone = ({
           )}
         </div>
       )}
+    </div>
+  );
+};
+
+/**
+ * Menggambar overlay "safe area" di atas preview gambar: area di tengah yang
+ * tetap terlihat ketika gambar yang sama ditampilkan dengan `object-fit: cover`
+ * pada container dengan rasio berbeda (mis. rasio carousel di mobile app).
+ * Area di luar overlay diberi mask gelap sebagai indikasi "berpotensi terpotong".
+ */
+const SafeAreaOverlay = ({
+  containerRatio,
+  safeAreaRatio,
+  label = "Aman di mobile",
+}: {
+  containerRatio: number;
+  safeAreaRatio: number;
+  label?: string;
+}) => {
+  const widthPct = Math.min(1, safeAreaRatio / containerRatio) * 100;
+  const heightPct = Math.min(1, containerRatio / safeAreaRatio) * 100;
+
+  // Rasio sama persis → tidak ada bagian yang terpotong, tidak perlu overlay.
+  if (widthPct >= 99.9 && heightPct >= 99.9) return null;
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* safe area: pakai box-shadow raksasa sbg "spotlight" agar hanya area
+          di luar kotak yang di-dim, area aman di dalamnya tetap jernih */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-dashed border-yellow-400"
+        style={{
+          width: `${widthPct}%`,
+          height: `${heightPct}%`,
+          boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
+        }}
+      />
+      {/* label diletakkan di pojok kontainer (bukan di dalam kotak safe area)
+          karena pojok ini selalu jatuh di zona yang di-dim, apa pun arah
+          cropping-nya (horizontal atau vertikal) — jadi tidak pernah menutupi
+          konten penting di dalam gambar. */}
+      <span className="absolute top-1.5 left-1.5 rounded bg-yellow-400 px-1.5 py-0.5 text-[10px] font-medium leading-none text-black whitespace-nowrap shadow">
+        {label}
+      </span>
     </div>
   );
 };
