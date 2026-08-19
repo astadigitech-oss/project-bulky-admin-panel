@@ -12,6 +12,8 @@ import {
   DeleteProductImageResponse,
   DeleteProductParams,
   DeleteProductResponse,
+  ListWmsCargoRequest,
+  ListWmsCargoResponse,
   ProductDetailRequest,
   ProductDetailResponse,
   ProductListRequest,
@@ -19,6 +21,10 @@ import {
   ReorderProductImageBody,
   ReorderProductImageParams,
   ReorderProductImageResponse,
+  SetWmsCargoPriceBody,
+  SetWmsCargoPriceParams,
+  SetWmsCargoPriceResponse,
+  TestWmsConnectionResponse,
   UpdateProductBody,
   UpdateProductParams,
   UpdateProductResponse,
@@ -31,7 +37,7 @@ import { UseMutateConfig } from "@/lib/query/types";
 import { toast } from "sonner";
 import { invalidateQuery } from "@/lib/query";
 
-const key = ["product-list", "product-detail"];
+const key = ["product-list", "product-detail", "wms-cargo-ready-to-price"];
 
 export const dataAPIProduct = {
   query: ({
@@ -42,9 +48,13 @@ export const dataAPIProduct = {
     sort_by,
     order,
     status,
-  }: ProductListRequest & ProductDetailRequest): {
+    limit,
+  }: ProductListRequest &
+    ProductDetailRequest &
+    ListWmsCargoRequest): {
     list: UseApiQueryProps<ProductListResponse>;
     show: UseApiQueryProps<ProductDetailResponse>;
+    listWmsCargo: UseApiQueryProps<ListWmsCargoResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order, status }],
@@ -56,6 +66,14 @@ export const dataAPIProduct = {
       key: [key[1], id],
       endpoint: `/produk/${id}`,
       enabled: !!id,
+    },
+    listWmsCargo: {
+      key: [key[2], { page, limit, search }],
+      endpoint: `/wms/cargos/ready-to-price`,
+      searchParams: { page, limit, search },
+      placeholderData: keepPreviousData,
+      staleTime: 0,
+      refetchOnWindowFocus: false,
     },
   }),
   mutation: (
@@ -101,6 +119,12 @@ export const dataAPIProduct = {
       DeleteProductImageResponse,
       undefined,
       DeleteProductImageParams
+    >;
+    testWmsConnection: UseMutateConfig<TestWmsConnectionResponse>;
+    setWmsCargoPrice: UseMutateConfig<
+      SetWmsCargoPriceResponse,
+      SetWmsCargoPriceBody,
+      SetWmsCargoPriceParams
     >;
   } => ({
     create: {
@@ -196,6 +220,20 @@ export const dataAPIProduct = {
         toast.success(data.message);
       },
       onError: { title: "DELETE_PRODUCT_IMAGE" },
+    },
+    testWmsConnection: {
+      endpoint: "/wms/test-connection",
+      method: "post",
+      onError: { title: "TEST_WMS_CONNECTION" },
+    },
+    setWmsCargoPrice: {
+      endpoint: "/wms/cargos/:id/price",
+      method: "post",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient) await invalidateQuery(queryClient, [[key[2]]]);
+      },
+      onError: { title: "SET_WMS_CARGO_PRICE" },
     },
   }),
 };

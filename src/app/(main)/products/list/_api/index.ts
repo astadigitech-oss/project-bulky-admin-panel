@@ -1,6 +1,10 @@
 import { useApiQuery } from "@/lib/query/use-query";
 import { dataAPIProduct } from "./data";
-import { ProductDetailRequest, ProductListRequest } from "./types";
+import {
+  ListWmsCargoRequest,
+  ProductDetailRequest,
+  ProductListRequest,
+} from "./types";
 import { useMutate } from "@/lib/query";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -25,6 +29,17 @@ export const useGetProductList = ({
 
 export const useGetProductDetail = ({ id }: ProductDetailRequest) =>
   useApiQuery(dataAPIProduct.query({ id }).show);
+
+export const useListWmsCargo = ({
+  page,
+  limit,
+  search,
+  enabled,
+}: ListWmsCargoRequest & { enabled?: boolean }) =>
+  useApiQuery({
+    ...dataAPIProduct.query({ page, limit, search }).listWmsCargo,
+    enabled,
+  });
 
 // mutation
 export const useCreateProduct = () =>
@@ -52,3 +67,9 @@ export const useReorderProductImage = () =>
 
 export const useDeleteProductImage = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).imageDelete);
+
+export const useTestWmsConnection = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).testWmsConnection);
+
+export const useSetWmsCargoPrice = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).setWmsCargoPrice);

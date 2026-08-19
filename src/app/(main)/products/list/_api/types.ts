@@ -67,7 +67,7 @@ export type ProductDetailResponse = BaseResponse & {
     quantity: number;
     reference_id: null;
     slug: string;
-    sumber: { id: string; nama: string };
+    sumber: { id: string; nama: string } | null;
     tinggi: number;
     updated_at: string;
   };
@@ -137,3 +137,65 @@ export type ReorderProductImageResponse = BaseResponse & {
 export type DeleteProductImageParams = BaseParams & { imageId: string };
 
 export type DeleteProductImageResponse = BaseResponse;
+
+// Test koneksi WMS (fondasi sync produk palet dari inventory WMS jadi cargo
+// online). Bentuk `data.data` masih interface{} di BE karena belum
+// didokumentasikan detail oleh tim WMS.
+export type TestWmsConnectionResponse = BaseResponse & {
+  data: {
+    success: boolean;
+    message: string;
+    data: unknown;
+  };
+};
+
+// Sync produk palet dari WMS — daftar cargo yang siap diberi harga.
+export type WmsCargoRefType = { id: string; name: string };
+
+export type WmsCargoPricingType = {
+  id: string;
+  code: string;
+  length_cm: number;
+  width_cm: number;
+  height_cm: number;
+  weight_kg: number;
+  total_price: number;
+  bulky_category: WmsCargoRefType | null;
+  bulky_product_condition: WmsCargoRefType | null;
+  bulky_package_condition: WmsCargoRefType | null;
+  bulky_product_source: WmsCargoRefType | null;
+  bulky_brands: WmsCargoRefType[] | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ListWmsCargoRequest = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
+export type ListWmsCargoResponse = BaseResponse & {
+  data: WmsCargoPricingType[];
+  meta: MetaPagination;
+};
+
+export type SetWmsCargoPriceParams = { id: string };
+
+export type SetWmsCargoPriceBody = {
+  type: "discount" | "fix";
+  value: number;
+};
+
+export type SetWmsCargoPriceResponse = BaseResponse & {
+  data: {
+    id: string;
+    code: string;
+    pricing_type: string;
+    pricing_value: number;
+    total_price: number;
+    sale_price: number;
+    priced_at: string;
+    pricing_pdf_url: string;
+  };
+};

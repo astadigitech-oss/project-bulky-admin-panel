@@ -238,7 +238,7 @@ export const ProductIdClient = () => {
       kategori_id: detail ? detail.kategori.id : "",
       kondisi_id: detail ? detail.kondisi.id : "",
       kondisi_paket_id: detail ? detail.kondisi_paket.id : "",
-      sumber_id: detail ? detail.sumber.id : "",
+      sumber_id: detail?.sumber?.id ?? "",
       harga_sebelum_diskon: detail
         ? detail.harga_sebelum_diskon.toString()
         : "0",
@@ -545,7 +545,7 @@ export const ProductIdClient = () => {
                       <DropzonePDF
                         onChange={field.onChange}
                         value={field.value}
-                        oldValue={detail?.dokumen[0].file_url ?? ""}
+                        oldValue={detail?.dokumen[0]?.file_url ?? ""}
                       />
 
                       {fieldState.invalid && (

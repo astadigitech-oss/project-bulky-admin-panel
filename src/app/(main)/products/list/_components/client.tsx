@@ -9,10 +9,10 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useSearchQuery } from "@/hooks/use-search";
 import { cn } from "@/lib/utils";
 import { TooltipText } from "@/providers/tooltip-provider";
-import { Plus, RefreshCw } from "lucide-react";
+import { PackageSearch, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { column } from "./columns";
 import {
   useChangeQcPassProduct,
@@ -22,8 +22,16 @@ import {
   useGetProductList,
 } from "@api/product/list";
 import { useConfirm } from "@/hooks/use-confirm";
+import { DialogSyncWmsProduct } from "./_dialog/sync-wms-form";
+import { useMe } from "@/components/container/_api";
 
 export const ProductClient = () => {
+  const [isOpenSyncWms, setIsOpenSyncWms] = useState(false);
+  const { data: meData } = useMe();
+  const permissions = meData?.data?.permissions ?? [];
+  const canManageWmsSync =
+    permissions.includes("produk:create") ||
+    permissions.includes("produk:update");
   const [{ sort, order, status }, setQuery] = useQueryStates({
     sort: parseAsString.withDefault("created_at"),
     order: parseAsString.withDefault("desc"),
@@ -146,6 +154,11 @@ export const ProductClient = () => {
       <DialogChangeStatus />
       <DialogChangeSale />
       <DialogChangeQcPass />
+      <DialogSyncWmsProduct
+        open={isOpenSyncWms}
+        onOpenChange={setIsOpenSyncWms}
+        canManageWmsSync={canManageWmsSync}
+      />
       <div className="flex items-center justify-between">
         <h1 className="leading-none font-semibold text-2xl">Daftar Produk</h1>
         <div className="flex items-center gap-2">
@@ -190,6 +203,24 @@ export const ProductClient = () => {
             sort={sort}
             setSort={setQuery}
             disabled={isDisabled}
+          />
+          <TooltipText
+            value={
+              canManageWmsSync
+                ? "Sinkronisasi harga jual palet dari WMS"
+                : "Anda tidak memiliki izin untuk sinkronisasi produk (perlu izin produk:create atau produk:update)"
+            }
+            render={
+              <Button
+                variant={"outline"}
+                className={"text-xs"}
+                disabled={isDisabled || !canManageWmsSync}
+                onClick={() => setIsOpenSyncWms(true)}
+              >
+                <PackageSearch className="size-3.5" />
+                Sync Produk Palet WMS
+              </Button>
+            }
           />
           <Link href="/products/list/create">
             <Button className={"text-xs"} disabled={isDisabled}>
