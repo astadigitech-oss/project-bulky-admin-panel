@@ -199,3 +199,39 @@ export type SetWmsCargoPriceResponse = BaseResponse & {
     pricing_pdf_url: string;
   };
 };
+
+// Cargo WMS yang sudah diberi harga (dari cache lokal wms_cargo_priced) —
+// sumber dropdown "ID Cargo" saat create/edit produk.
+export type WmsCargoPricedItemType = {
+  cargo_id: string;
+  code: string;
+  length_cm: number;
+  width_cm: number;
+  height_cm: number;
+  weight_kg: number;
+  total_price: number;
+  sale_price: number;
+  pricing_pdf_url: string | null;
+  is_used_in_produk: boolean;
+};
+
+export type ListWmsCargoPricedRequest = {
+  search?: string;
+};
+
+export type ListWmsCargoPricedResponse = BaseResponse & {
+  data: WmsCargoPricedItemType[];
+};
+
+export type MarkWmsCargoSyncedParams = { id: string };
+
+export type MarkWmsCargoSyncedSearchParams = { produk_id?: string };
+
+export type MarkWmsCargoSyncedResponse = BaseResponse & {
+  data: {
+    id: string;
+    code: string;
+    is_sync: boolean;
+    synced_at: string;
+  };
+};

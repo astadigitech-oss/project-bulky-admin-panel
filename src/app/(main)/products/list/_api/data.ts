@@ -12,8 +12,13 @@ import {
   DeleteProductImageResponse,
   DeleteProductParams,
   DeleteProductResponse,
+  ListWmsCargoPricedRequest,
+  ListWmsCargoPricedResponse,
   ListWmsCargoRequest,
   ListWmsCargoResponse,
+  MarkWmsCargoSyncedParams,
+  MarkWmsCargoSyncedResponse,
+  MarkWmsCargoSyncedSearchParams,
   ProductDetailRequest,
   ProductDetailResponse,
   ProductListRequest,
@@ -37,7 +42,12 @@ import { UseMutateConfig } from "@/lib/query/types";
 import { toast } from "sonner";
 import { invalidateQuery } from "@/lib/query";
 
-const key = ["product-list", "product-detail", "wms-cargo-ready-to-price"];
+const key = [
+  "product-list",
+  "product-detail",
+  "wms-cargo-ready-to-price",
+  "wms-cargo-already-priced",
+];
 
 export const dataAPIProduct = {
   query: ({
@@ -51,10 +61,12 @@ export const dataAPIProduct = {
     limit,
   }: ProductListRequest &
     ProductDetailRequest &
-    ListWmsCargoRequest): {
+    ListWmsCargoRequest &
+    ListWmsCargoPricedRequest & { search?: string }): {
     list: UseApiQueryProps<ProductListResponse>;
     show: UseApiQueryProps<ProductDetailResponse>;
     listWmsCargo: UseApiQueryProps<ListWmsCargoResponse>;
+    listWmsCargoPriced: UseApiQueryProps<ListWmsCargoPricedResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order, status }],
@@ -71,6 +83,14 @@ export const dataAPIProduct = {
       key: [key[2], { page, limit, search }],
       endpoint: `/wms/cargos/ready-to-price`,
       searchParams: { page, limit, search },
+      placeholderData: keepPreviousData,
+      staleTime: 0,
+      refetchOnWindowFocus: false,
+    },
+    listWmsCargoPriced: {
+      key: [key[3], { search }],
+      endpoint: `/wms/cargos/already-priced`,
+      searchParams: { search },
       placeholderData: keepPreviousData,
       staleTime: 0,
       refetchOnWindowFocus: false,
@@ -125,6 +145,12 @@ export const dataAPIProduct = {
       SetWmsCargoPriceResponse,
       SetWmsCargoPriceBody,
       SetWmsCargoPriceParams
+    >;
+    markWmsCargoSynced: UseMutateConfig<
+      MarkWmsCargoSyncedResponse,
+      undefined,
+      MarkWmsCargoSyncedParams,
+      MarkWmsCargoSyncedSearchParams
     >;
   } => ({
     create: {
@@ -234,6 +260,14 @@ export const dataAPIProduct = {
         if (queryClient) await invalidateQuery(queryClient, [[key[2]]]);
       },
       onError: { title: "SET_WMS_CARGO_PRICE" },
+    },
+    markWmsCargoSynced: {
+      endpoint: "/wms/cargos/:id/status",
+      method: "post",
+      onSuccess: async () => {
+        if (queryClient) await invalidateQuery(queryClient, [[key[3]]]);
+      },
+      onError: { title: "MARK_WMS_CARGO_SYNCED" },
     },
   }),
 };

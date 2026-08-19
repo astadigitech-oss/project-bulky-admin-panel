@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -30,13 +31,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { cn, formatRupiah } from "@/lib/utils";
 import { useSearch } from "@/hooks/use-search";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CheckCircle2,
-  Info,
   Loader2,
   Plug,
   Send,
@@ -205,158 +206,108 @@ export const DialogSyncWmsProduct = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="md:min-w-xl">
+      <DialogContent
+        showCloseButton={false}
+        className="md:min-w-xl md:max-w-3xl flex flex-col"
+      >
         <DialogHeader>
           <DialogTitle>Sinkronisasi Harga Jual Palet dari WMS</DialogTitle>
           <DialogDescription>
-            Tentukan diskon untuk mengubah harga inventory dari WMS menjadi
-            harga jual
+            Harga dari WMS masih berupa <strong>harga inventory</strong>{" "}
+            (belum harga jual). Tentukan diskon di bawah untuk menghitung
+            harga jual.
           </DialogDescription>
         </DialogHeader>
 
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-6"
+          className="flex flex-col flex-1 min-h-0"
         >
-          <FieldGroup className="grid gap-4">
-            <div className="flex flex-col gap-2 px-2 lg:px-3 py-2.5 border rounded-md text-xs">
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-medium">Koneksi WMS</p>
-                <TooltipText
-                  value={
-                    canManageWmsSync
-                      ? "Uji koneksi ke WMS"
-                      : "Anda tidak memiliki izin untuk menguji koneksi WMS (perlu izin produk:create atau produk:update)"
-                  }
-                  render={
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs"
-                      disabled={isTestingWms || !canManageWmsSync}
-                      onClick={handleTestWmsConnection}
+          <DialogBody>
+          <div className="flex flex-col gap-5 sm:flex-row">
+            <FieldGroup className="sm:w-1/2">
+              <Controller
+                name="palet_id"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid} className="gap-1">
+                    <FieldLabel required>Pilih Palet (WMS)</FieldLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={field.disabled}
+                      data-invalid={fieldState.invalid}
                     >
-                      <Plug className="size-3.5" />
-                      {isTestingWms ? "Menguji..." : "Test Koneksi WMS"}
-                    </Button>
-                  }
-                />
-              </div>
-              {wmsStatus.state !== "idle" && (
-                <div
-                  className={cn(
-                    "flex items-start gap-1.5 rounded-md px-2 py-1.5",
-                    wmsStatus.state === "success" &&
-                      "bg-emerald-50 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300",
-                    wmsStatus.state === "error" &&
-                      "bg-red-50 dark:bg-red-400/10 text-red-700 dark:text-red-300",
-                  )}
-                >
-                  {wmsStatus.state === "success" ? (
-                    <CheckCircle2 className="size-3.5 flex-none mt-0.5" />
-                  ) : (
-                    <XCircle className="size-3.5 flex-none mt-0.5" />
-                  )}
-                  <p>{wmsStatus.message}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="px-2 lg:px-3 py-2 border rounded-md flex text-xs items-start gap-2 bg-blue-50 dark:bg-blue-400/10 border-blue-200 dark:border-blue-300/30">
-              <Info className="size-3.5 flex-none mt-0.5 text-blue-500" />
-              <p className="text-blue-700 dark:text-blue-300">
-                Harga dari WMS masih berupa <strong>harga inventory</strong>{" "}
-                (belum harga jual). Tentukan diskon di bawah untuk menghitung
-                harga jual.
-              </p>
-            </div>
-
-            <Controller
-              name="palet_id"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid} className="gap-1">
-                  <FieldLabel required>Pilih Palet (WMS)</FieldLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={field.disabled}
-                    data-invalid={fieldState.invalid}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Pilih palet dari WMS...">
-                        {(value: string) => {
-                          const item = cargoList.find((i) => i.id === value);
-                          return item ? formatCargoLabel(item) : "";
-                        }}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <div className="p-1 pb-1.5" onKeyDown={(e) => e.stopPropagation()}>
-                        <Input
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                          placeholder="Cari kode palet..."
-                        />
-                      </div>
-                      {isLoadingCargo || isFetchingCargo ? (
-                        <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
-                          <Loader2 className="size-3.5 animate-spin" />
-                          Memuat data...
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Pilih palet dari WMS...">
+                          {(value: string) => {
+                            const item = cargoList.find((i) => i.id === value);
+                            return item ? formatCargoLabel(item) : "";
+                          }}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="p-1 pb-1.5" onKeyDown={(e) => e.stopPropagation()}>
+                          <Input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Cari kode palet..."
+                          />
                         </div>
-                      ) : isErrorCargo ? (
-                        <div className="flex flex-col items-center gap-1.5 py-4 text-xs">
-                          <p className="text-destructive text-center">
-                            Gagal memuat daftar palet dari WMS
+                        {isLoadingCargo || isFetchingCargo ? (
+                          <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
+                            <Loader2 className="size-3.5 animate-spin" />
+                            Memuat data...
+                          </div>
+                        ) : isErrorCargo ? (
+                          <div className="flex flex-col items-center gap-1.5 py-4 text-xs">
+                            <p className="text-destructive text-center">
+                              Gagal memuat daftar palet dari WMS
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-xs"
+                              onClick={() => refetchCargo()}
+                            >
+                              Coba lagi
+                            </Button>
+                          </div>
+                        ) : cargoList.length === 0 ? (
+                          <p className="py-4 text-center text-xs text-muted-foreground">
+                            Tidak ada palet ditemukan
                           </p>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-6 text-xs"
-                            onClick={() => refetchCargo()}
-                          >
-                            Coba lagi
-                          </Button>
-                        </div>
-                      ) : cargoList.length === 0 ? (
-                        <p className="py-4 text-center text-xs text-muted-foreground">
-                          Tidak ada palet ditemukan
-                        </p>
-                      ) : (
-                        cargoList.map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            <div className="flex flex-col">
-                              <span>{item.code}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {item.length_cm}×{item.width_cm}×
-                                {item.height_cm} cm, {item.weight_kg} kg —{" "}
-                                {formatRupiah(item.total_price)}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
+                        ) : (
+                          cargoList.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              <div className="flex flex-col">
+                                <span>{item.code}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {item.length_cm}×{item.width_cm}×
+                                  {item.height_cm} cm, {item.weight_kg} kg —{" "}
+                                  {formatRupiah(item.total_price)}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-            {selectedPalet && (
-              <div className="flex flex-col border rounded-lg border-gray-300 dark:border-gray-300/50 text-xs overflow-hidden">
-                <div className="grid grid-cols-2 w-full min-h-8 border-b border-gray-300 dark:border-gray-300/50">
+              {selectedPalet ? (
+                <div className="flex flex-col border rounded-lg border-gray-300 dark:border-gray-300/50 text-xs overflow-hidden">
                   <InfoPaletRow label="Kode Palet" value={selectedPalet.code} />
                   <InfoPaletRow
                     label="Dimensi"
                     value={`${selectedPalet.length_cm}×${selectedPalet.width_cm}×${selectedPalet.height_cm} cm`}
                   />
-                </div>
-                <div className="grid grid-cols-2 w-full min-h-8 border-b border-gray-300 dark:border-gray-300/50">
                   <InfoPaletRow
                     label="Berat"
                     value={`${selectedPalet.weight_kg} kg`}
@@ -365,8 +316,6 @@ export const DialogSyncWmsProduct = ({
                     label="Harga Asal (Inventory)"
                     value={formatRupiah(selectedPalet.total_price)}
                   />
-                </div>
-                <div className="grid grid-cols-2 w-full min-h-8">
                   <InfoPaletRow
                     label="Kategori"
                     value={selectedPalet.bulky_category?.name ?? "-"}
@@ -375,8 +324,6 @@ export const DialogSyncWmsProduct = ({
                     label="Kondisi Produk"
                     value={selectedPalet.bulky_product_condition?.name ?? "-"}
                   />
-                </div>
-                <div className="grid grid-cols-2 w-full min-h-8 border-t border-gray-300 dark:border-gray-300/50">
                   <InfoPaletRow
                     label="Kondisi Paket"
                     value={selectedPalet.bulky_package_condition?.name ?? "-"}
@@ -385,112 +332,165 @@ export const DialogSyncWmsProduct = ({
                     label="Sumber"
                     value={selectedPalet.bulky_product_source?.name ?? "-"}
                   />
-                </div>
-                {selectedPalet.bulky_brands &&
-                  selectedPalet.bulky_brands.length > 0 && (
-                    <div className="grid grid-cols-1 w-full min-h-8 border-t border-gray-300 dark:border-gray-300/50">
+                  {selectedPalet.bulky_brands &&
+                    selectedPalet.bulky_brands.length > 0 && (
                       <InfoPaletRow
                         label="Merek"
                         value={selectedPalet.bulky_brands
                           .map((b) => b.name)
                           .join(", ")}
                       />
-                    </div>
-                  )}
-              </div>
-            )}
-
-            <Controller
-              name="diskon_type"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid} className="gap-1">
-                  <FieldLabel required>Tipe Diskon</FieldLabel>
-                  <RadioGroup
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={field.disabled}
-                    className="flex flex-row flex-wrap gap-4"
-                  >
-                    <Label className="flex items-center gap-1.5 font-normal cursor-pointer">
-                      <RadioGroupItem value="persentase" />
-                      Persentase (%)
-                    </Label>
-                    <Label className="flex items-center gap-1.5 font-normal cursor-pointer">
-                      <RadioGroupItem value="fixed" />
-                      Potongan Tetap (Rp)
-                    </Label>
-                  </RadioGroup>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="diskon_value"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid} className="gap-1">
-                  <FieldLabel required htmlFor={`${idForm}-${field.name}`}>
-                    {diskonType === "fixed"
-                      ? "Nominal Potongan Harga"
-                      : "Persentase Diskon"}
-                  </FieldLabel>
-                  <InputGroup>
-                    <InputGroupAddon>
-                      {diskonType === "fixed" ? "Rp" : "%"}
-                    </InputGroupAddon>
-                    <InputGroupInput
-                      value={(field.value as number | string | undefined) ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value),
-                        )
-                      }
-                      type="number"
-                      id={`${idForm}-${field.name}`}
-                      aria-invalid={fieldState.invalid}
-                      placeholder={
-                        diskonType === "fixed" ? "Contoh: 500000" : "Contoh: 10"
-                      }
-                      max={diskonType === "persentase" ? 100 : undefined}
-                    />
-                  </InputGroup>
-                  <p className="text-xs text-muted-foreground">
-                    {diskonType === "fixed"
-                      ? "Masukkan nominal rupiah potongan langsung dari harga asal."
-                      : "Masukkan angka persen. Contoh: 10 = potongan 10% dari harga asal."}
-                  </p>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Field className="gap-1">
-              <FieldLabel>Harga Jual</FieldLabel>
-              {hargaJual !== null ? (
-                <div
-                  className={cn(
-                    "rounded-lg border border-emerald-200 dark:border-emerald-300/30",
-                    "bg-emerald-50 dark:bg-emerald-400/10 px-3 py-2.5",
-                  )}
-                >
-                  <p className="text-base font-semibold text-emerald-700 dark:text-emerald-300 tabular-nums">
-                    {formatRupiah(hargaJual)}
-                  </p>
+                    )}
                 </div>
               ) : (
                 <div className="rounded-lg border border-dashed px-3 py-2.5 text-xs text-muted-foreground">
-                  Lengkapi palet, tipe diskon, dan nilai diskon untuk melihat
-                  harga jual
+                  Detail palet akan tampil di sini setelah Anda memilih palet
+                  dari daftar.
                 </div>
               )}
-            </Field>
-          </FieldGroup>
+            </FieldGroup>
+
+            <Separator orientation="vertical" className="hidden sm:block" />
+            <Separator orientation="horizontal" className="sm:hidden" />
+
+            <FieldGroup className="sm:w-1/2">
+              <div className="flex flex-col gap-2 px-2 lg:px-3 py-2.5 border rounded-md text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">Koneksi WMS</p>
+                  <TooltipText
+                    value={
+                      canManageWmsSync
+                        ? "Uji koneksi ke WMS"
+                        : "Anda tidak memiliki izin untuk menguji koneksi WMS (perlu izin produk:create atau produk:update)"
+                    }
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                        disabled={isTestingWms || !canManageWmsSync}
+                        onClick={handleTestWmsConnection}
+                      >
+                        <Plug className="size-3.5" />
+                        {isTestingWms ? "Menguji..." : "Test Koneksi WMS"}
+                      </Button>
+                    }
+                  />
+                </div>
+                {wmsStatus.state !== "idle" && (
+                  <div
+                    className={cn(
+                      "flex items-start gap-1.5 rounded-md px-2 py-1.5",
+                      wmsStatus.state === "success" &&
+                        "bg-emerald-50 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300",
+                      wmsStatus.state === "error" &&
+                        "bg-red-50 dark:bg-red-400/10 text-red-700 dark:text-red-300",
+                    )}
+                  >
+                    {wmsStatus.state === "success" ? (
+                      <CheckCircle2 className="size-3.5 flex-none mt-0.5" />
+                    ) : (
+                      <XCircle className="size-3.5 flex-none mt-0.5" />
+                    )}
+                    <p>{wmsStatus.message}</p>
+                  </div>
+                )}
+              </div>
+
+              <Controller
+                name="diskon_type"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid} className="gap-1">
+                    <FieldLabel required>Tipe Diskon</FieldLabel>
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={field.disabled}
+                      className="flex flex-row flex-wrap gap-4"
+                    >
+                      <Label className="flex items-center gap-1.5 font-normal cursor-pointer">
+                        <RadioGroupItem value="persentase" />
+                        Persentase (%)
+                      </Label>
+                      <Label className="flex items-center gap-1.5 font-normal cursor-pointer">
+                        <RadioGroupItem value="fixed" />
+                        Potongan Tetap (Rp)
+                      </Label>
+                    </RadioGroup>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="diskon_value"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid} className="gap-1">
+                    <FieldLabel required htmlFor={`${idForm}-${field.name}`}>
+                      {diskonType === "fixed"
+                        ? "Nominal Potongan Harga"
+                        : "Persentase Diskon"}
+                    </FieldLabel>
+                    <InputGroup>
+                      <InputGroupAddon>
+                        {diskonType === "fixed" ? "Rp" : "%"}
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        value={(field.value as number | string | undefined) ?? ""}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === "" ? "" : Number(e.target.value),
+                          )
+                        }
+                        type="number"
+                        id={`${idForm}-${field.name}`}
+                        aria-invalid={fieldState.invalid}
+                        placeholder={
+                          diskonType === "fixed" ? "Contoh: 500000" : "Contoh: 10"
+                        }
+                        max={diskonType === "persentase" ? 100 : undefined}
+                      />
+                    </InputGroup>
+                    <p className="text-xs text-muted-foreground">
+                      {diskonType === "fixed"
+                        ? "Masukkan nominal rupiah potongan langsung dari harga asal."
+                        : "Masukkan angka persen. Contoh: 10 = potongan 10% dari harga asal."}
+                    </p>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Field className="gap-1">
+                <FieldLabel>Harga Jual</FieldLabel>
+                {hargaJual !== null ? (
+                  <div
+                    className={cn(
+                      "rounded-lg border border-emerald-200 dark:border-emerald-300/30",
+                      "bg-emerald-50 dark:bg-emerald-400/10 px-3 py-2.5",
+                    )}
+                  >
+                    <p className="text-base font-semibold text-emerald-700 dark:text-emerald-300 tabular-nums">
+                      {formatRupiah(hargaJual)}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed px-3 py-2.5 text-xs text-muted-foreground">
+                    Lengkapi palet, tipe diskon, dan nilai diskon untuk
+                    melihat harga jual
+                  </div>
+                )}
+              </Field>
+            </FieldGroup>
+          </div>
+          </DialogBody>
 
           <DialogFooter>
             <Button
@@ -517,11 +517,11 @@ export const DialogSyncWmsProduct = ({
 };
 
 const InfoPaletRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex w-full">
-    <p className="w-32 bg-gray-100 dark:bg-gray-800 h-full flex items-center px-2 font-semibold flex-none">
+  <div className="flex w-full min-h-8 border-t border-gray-300 dark:border-gray-300/50 first:border-t-0">
+    <p className="w-28 sm:w-32 bg-gray-100 dark:bg-gray-800 flex items-center px-2 py-1.5 font-semibold flex-none">
       {label}
     </p>
-    <div className="flex flex-wrap gap-2 px-2 h-full items-center py-1.25">
+    <div className="flex flex-wrap gap-2 px-2 py-1.5 items-center">
       {value}
     </div>
   </div>

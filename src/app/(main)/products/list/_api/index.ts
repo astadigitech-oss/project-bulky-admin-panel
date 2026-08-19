@@ -1,6 +1,7 @@
 import { useApiQuery } from "@/lib/query/use-query";
 import { dataAPIProduct } from "./data";
 import {
+  ListWmsCargoPricedRequest,
   ListWmsCargoRequest,
   ProductDetailRequest,
   ProductListRequest,
@@ -41,6 +42,15 @@ export const useListWmsCargo = ({
     enabled,
   });
 
+export const useListWmsCargoPriced = ({
+  search,
+  enabled,
+}: ListWmsCargoPricedRequest & { enabled?: boolean } = {}) =>
+  useApiQuery({
+    ...dataAPIProduct.query({ search }).listWmsCargoPriced,
+    enabled,
+  });
+
 // mutation
 export const useCreateProduct = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).create);
@@ -73,3 +83,6 @@ export const useTestWmsConnection = () =>
 
 export const useSetWmsCargoPrice = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).setWmsCargoPrice);
+
+export const useMarkWmsCargoSynced = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).markWmsCargoSynced);

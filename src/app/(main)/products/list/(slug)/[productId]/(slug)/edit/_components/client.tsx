@@ -40,7 +40,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import React, { useId } from "react";
+import React, { useId, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 import ID from "country-flag-icons/react/1x1/ID";
@@ -57,7 +57,11 @@ import { useGetSourceSelect } from "@api/product/sources";
 import { useGetCategorySelect } from "@api/product/categories";
 import { useGetPackageConditionSelect } from "@api/product/conditions/package";
 import { useGetProductConditionSelect } from "@api/product/conditions/product";
-import { useGetProductDetail, useUpdateProduct } from "@api/product/list";
+import {
+  useGetProductDetail,
+  useMarkWmsCargoSynced,
+  useUpdateProduct,
+} from "@api/product/list";
 import {
   Dialog,
   DialogClose,
@@ -73,6 +77,7 @@ import { ImageSection } from "./_section/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { Spinner } from "@/components/ui/spinner";
+import { CargoIdField } from "@/app/(main)/products/list/_components/cargo-id-field";
 
 const reference_ids = [
   {
@@ -192,6 +197,8 @@ export const ProductIdClient = () => {
   const detail = productDetail?.data;
 
   const { mutate, isPending } = useUpdateProduct();
+  const { mutate: markWmsCargoSynced } = useMarkWmsCargoSynced();
+  const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
 
   const { data: brandSelectData, isSuccess: isSuccessBrand } =
     useGetBrandSelect();
@@ -298,7 +305,20 @@ export const ProductIdClient = () => {
 
     mutate(
       { body, params: { id: productId } },
-      { onSuccess: () => router.push(`/products/list/${productId}`) },
+      {
+        onSuccess: () => {
+          // Kalau id_cargo dipilih dari dropdown WMS (bukan manual), tandai
+          // cargo tsb sudah dikonfirmasi sinkron di WMS. Idempotent — aman
+          // kalau gagal, tidak menghalangi navigasi ke halaman detail produk.
+          if (selectedCargoId) {
+            markWmsCargoSynced({
+              params: { id: selectedCargoId },
+              searchParams: { produk_id: productId },
+            });
+          }
+          router.push(`/products/list/${productId}`);
+        },
+      },
     );
   };
 
@@ -514,26 +534,16 @@ export const ProductIdClient = () => {
                   name="id_cargo"
                   control={form.control}
                   render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid} className="gap-1">
-                      <FieldLabel
-                        required
-                        htmlFor={`${idFormProduct}_${field.name}`}
-                      >
-                        ID Cargo
-                      </FieldLabel>
-                      <Input
-                        {...field}
-                        id={`${idFormProduct}_${field.name}`}
-                        type="text"
-                        aria-invalid={fieldState.invalid}
-                        placeholder="ID cargo..."
-                        autoComplete="off"
-                      />
-
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
+                    <CargoIdField
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      disabled={field.disabled}
+                      error={fieldState.error}
+                      idFor={`${idFormProduct}_${field.name}`}
+                      currentCode={detail?.id_cargo}
+                      onSelectCargoId={setSelectedCargoId}
+                    />
                   )}
                 />
                 <Controller
