@@ -18,7 +18,6 @@ import {
   ListWmsCargoResponse,
   MarkWmsCargoSyncedParams,
   MarkWmsCargoSyncedResponse,
-  MarkWmsCargoSyncedSearchParams,
   ProductDetailRequest,
   ProductDetailResponse,
   ProductListRequest,
@@ -149,8 +148,7 @@ export const dataAPIProduct = {
     markWmsCargoSynced: UseMutateConfig<
       MarkWmsCargoSyncedResponse,
       undefined,
-      MarkWmsCargoSyncedParams,
-      MarkWmsCargoSyncedSearchParams
+      MarkWmsCargoSyncedParams
     >;
   } => ({
     create: {

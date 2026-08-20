@@ -8,6 +8,9 @@ import {
 } from "./types";
 import { useMutate } from "@/lib/query";
 import { useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { getCookie } from "cookies-next/client";
+import { apiUrl, cookiesKey } from "@/config";
 
 export const useGetProductList = ({
   page,
@@ -86,3 +89,17 @@ export const useSetWmsCargoPrice = () =>
 
 export const useMarkWmsCargoSynced = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).markWmsCargoSynced);
+
+/**
+ * Download PDF harga cargo WMS sebagai Blob (proxy dari BE, bukan URL
+ * publik) — dipakai untuk mengisi field "Dokumen PDF" form create produk
+ * seolah file diupload manual, saat admin memilih cargo dari dropdown.
+ */
+export const downloadWmsCargoPricingPdf = async (cargoId: string) => {
+  const token = getCookie(cookiesKey);
+  const res = await axios.get(`${apiUrl}/wms/cargos/${cargoId}/pricing-pdf`, {
+    headers: { Authorization: `Bearer ${token}` },
+    responseType: "blob",
+  });
+  return res.data as Blob;
+};

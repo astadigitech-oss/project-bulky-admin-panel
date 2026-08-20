@@ -49,9 +49,15 @@ import { useGetCategorySelect } from "@api/product/categories";
 import { useGetPackageConditionSelect } from "@api/product/conditions/package";
 import { useGetProductConditionSelect } from "@api/product/conditions/product";
 import { useGetSourceSelect } from "@api/product/sources";
-import { useCreateProduct, useMarkWmsCargoSynced } from "@api/product/list";
+import {
+  useCreateProduct,
+  useMarkWmsCargoSynced,
+  downloadWmsCargoPricingPdf,
+} from "@api/product/list";
+import { WmsCargoPricedItemType } from "@/app/(main)/products/list/_api/types";
 import { Spinner } from "@/components/ui/spinner";
 import { CargoIdField } from "@/app/(main)/products/list/_components/cargo-id-field";
+import { toast } from "sonner";
 
 const reference_ids = [
   {
@@ -171,6 +177,11 @@ export const ProductIdClient = () => {
   const { mutate, isPending } = useCreateProduct();
   const { mutate: markWmsCargoSynced } = useMarkWmsCargoSynced();
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
+  // true kalau id_cargo dipilih dari dropdown WMS — dipakai buat mengunci
+  // (disable) field harga supaya tidak menyimpang dari harga yang sudah
+  // ditetapkan di WMS.
+  const [isCargoFromWms, setIsCargoFromWms] = useState(false);
+  const [isDownloadingCargoPdf, setIsDownloadingCargoPdf] = useState(false);
 
   const { data: brandSelectData } = useGetBrandSelect();
   const { data: categorySelectData } = useGetCategorySelect();
@@ -216,6 +227,53 @@ export const ProductIdClient = () => {
     },
   });
 
+  // Dipanggil CargoIdField saat admin memilih cargo dari dropdown WMS (atau
+  // `null` saat beralih ke mode manual/dikosongkan). Auto-fill dimensi,
+  // harga (lalu dikunci read-only), kategori/kondisi/sumber/merek (ID dari
+  // WMS kompatibel dengan ID lokal Bulky), dan download PDF harga sebagai
+  // dokumen produk seolah diupload manual.
+  const handleSelectCargo = async (cargo: WmsCargoPricedItemType | null) => {
+    setSelectedCargoId(cargo?.id ?? null);
+    setIsCargoFromWms(!!cargo);
+
+    if (!cargo) return;
+
+    form.setValue("panjang", String(cargo.length_cm));
+    form.setValue("lebar", String(cargo.width_cm));
+    form.setValue("tinggi", String(cargo.height_cm));
+    form.setValue("berat", String(cargo.weight_kg));
+    form.setValue("harga_sebelum_diskon", String(cargo.total_price));
+    form.setValue("harga_sesudah_diskon", String(cargo.sale_price));
+    if (cargo.bulky_category?.id) {
+      form.setValue("kategori_id", cargo.bulky_category.id);
+    }
+    if (cargo.bulky_product_condition?.id) {
+      form.setValue("kondisi_id", cargo.bulky_product_condition.id);
+    }
+    if (cargo.bulky_package_condition?.id) {
+      form.setValue("kondisi_paket_id", cargo.bulky_package_condition.id);
+    }
+    if (cargo.bulky_product_source?.id) {
+      form.setValue("sumber_id", cargo.bulky_product_source.id);
+    }
+    if (cargo.bulky_brands && cargo.bulky_brands.length > 0) {
+      replace(cargo.bulky_brands.map((b) => ({ data: b.id })));
+    }
+
+    setIsDownloadingCargoPdf(true);
+    try {
+      const blob = await downloadWmsCargoPricingPdf(cargo.id);
+      const file = new File([blob], `Rincian Harga WMS - ${cargo.code}.pdf`, {
+        type: "application/pdf",
+      });
+      form.setValue("dokumen", [file], { shouldValidate: true });
+    } catch {
+      toast.error("Gagal mengunduh PDF harga dari WMS");
+    } finally {
+      setIsDownloadingCargoPdf(false);
+    }
+  };
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const body = new FormData();
     body.append("nama_en", values.nama_en);
@@ -259,15 +317,12 @@ export const ProductIdClient = () => {
     mutate(
       { body },
       {
-        onSuccess: (res) => {
+        onSuccess: () => {
           // Kalau id_cargo dipilih dari dropdown WMS (bukan manual), tandai
           // cargo tsb sudah dikonfirmasi sinkron di WMS. Idempotent — aman
           // kalau gagal, tidak menghalangi navigasi ke halaman daftar produk.
           if (selectedCargoId) {
-            markWmsCargoSynced({
-              params: { id: selectedCargoId },
-              searchParams: { produk_id: res.data.data.id },
-            });
+            markWmsCargoSynced({ params: { id: selectedCargoId } });
           }
           router.push("/products/list");
         },
@@ -397,7 +452,7 @@ export const ProductIdClient = () => {
                   disabled={field.disabled}
                   error={fieldState.error}
                   idFor={`${idFormProduct}_${field.name}`}
-                  onSelectCargoId={setSelectedCargoId}
+                  onSelectCargo={handleSelectCargo}
                 />
               )}
             />
@@ -407,8 +462,16 @@ export const ProductIdClient = () => {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid} className="gap-1">
                   <FieldLabel required>Dokumen PDF</FieldLabel>
-                  <DropzonePDF onChange={field.onChange} value={field.value} />
-
+                  <DropzonePDF
+                    onChange={field.onChange}
+                    value={field.value}
+                    disabled={isDownloadingCargoPdf}
+                  />
+                  {isDownloadingCargoPdf && (
+                    <p className="text-xs text-muted-foreground">
+                      Mengunduh PDF harga dari WMS...
+                    </p>
+                  )}
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
@@ -838,6 +901,7 @@ export const ProductIdClient = () => {
                         onChange={(e) =>
                           field.onChange(numericString(e.target.value))
                         }
+                        disabled={isCargoFromWms}
                         aria-invalid={fieldState.invalid}
                         placeholder="cth. 1000000"
                         autoComplete="off"
@@ -877,6 +941,7 @@ export const ProductIdClient = () => {
                         onChange={(e) =>
                           field.onChange(numericString(e.target.value))
                         }
+                        disabled={isCargoFromWms}
                         aria-invalid={fieldState.invalid}
                         placeholder="cth. 1000000"
                         autoComplete="off"

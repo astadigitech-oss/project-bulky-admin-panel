@@ -165,7 +165,9 @@ export const DialogSyncWmsProduct = ({
       );
     }
     if (diskonType === "fixed") {
-      return Math.max(selectedPalet.total_price - value, 0);
+      // "fixed" = harga jual (sale_price) langsung, BUKAN potongan yang
+      // dikurangkan dari harga asal.
+      return value;
     }
     return null;
   }, [selectedPalet, diskonType, diskonValue]);
@@ -416,7 +418,7 @@ export const DialogSyncWmsProduct = ({
                       </Label>
                       <Label className="flex items-center gap-1.5 font-normal cursor-pointer">
                         <RadioGroupItem value="fixed" />
-                        Potongan Tetap (Rp)
+                        Harga Tetap (Rp)
                       </Label>
                     </RadioGroup>
                     {fieldState.invalid && (
@@ -433,7 +435,7 @@ export const DialogSyncWmsProduct = ({
                   <Field data-invalid={fieldState.invalid} className="gap-1">
                     <FieldLabel required htmlFor={`${idForm}-${field.name}`}>
                       {diskonType === "fixed"
-                        ? "Nominal Potongan Harga"
+                        ? "Nominal Harga Jual"
                         : "Persentase Diskon"}
                     </FieldLabel>
                     <InputGroup>
@@ -451,14 +453,14 @@ export const DialogSyncWmsProduct = ({
                         id={`${idForm}-${field.name}`}
                         aria-invalid={fieldState.invalid}
                         placeholder={
-                          diskonType === "fixed" ? "Contoh: 500000" : "Contoh: 10"
+                          diskonType === "fixed" ? "Contoh: 750000" : "Contoh: 10"
                         }
                         max={diskonType === "persentase" ? 100 : undefined}
                       />
                     </InputGroup>
                     <p className="text-xs text-muted-foreground">
                       {diskonType === "fixed"
-                        ? "Masukkan nominal rupiah potongan langsung dari harga asal."
+                        ? "Masukkan nominal rupiah harga jual akhir secara langsung (bukan potongan dari harga asal)."
                         : "Masukkan angka persen. Contoh: 10 = potongan 10% dari harga asal."}
                     </p>
                     {fieldState.invalid && (

@@ -13,8 +13,9 @@ import {
 import { Loader2, PencilLine, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useListWmsCargoPriced } from "@api/product/list";
+import { WmsCargoPricedItemType } from "@/app/(main)/products/list/_api/types";
 import { useSearch } from "@/hooks/use-search";
-import { cn, formatRupiah } from "@/lib/utils";
+import { formatRupiah } from "@/lib/utils";
 
 const formatCargoLabel = (code: string, item?: { length_cm: number; width_cm: number; height_cm: number; weight_kg: number }) =>
   item
@@ -23,10 +24,11 @@ const formatCargoLabel = (code: string, item?: { length_cm: number; width_cm: nu
 
 /**
  * Field "ID Cargo" untuk form create/edit produk. Defaultnya dropdown berisi
- * cargo WMS yang sudah diberi harga (belum dipakai di produk manapun) —
- * memilih salah satu otomatis melampirkan PDF harga WMS ke dokumen produk
- * saat disimpan (lihat BE: attachWmsCargoPricingPDF). Ada toggle "isi manual"
- * untuk produk yang tidak berasal dari WMS.
+ * cargo WMS yang sudah diberi harga (belum dikonfirmasi sinkron) — memilih
+ * salah satu meng-auto-fill dimensi/harga/kategori/kondisi/sumber/merek di
+ * form induk (lihat `onSelectCargo`) dan mendownload PDF harga sebagai
+ * dokumen produk. Ada toggle "isi manual" untuk produk yang tidak berasal
+ * dari WMS.
  */
 export const CargoIdField = ({
   value,
@@ -36,7 +38,7 @@ export const CargoIdField = ({
   error,
   idFor,
   currentCode,
-  onSelectCargoId,
+  onSelectCargo,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -45,12 +47,12 @@ export const CargoIdField = ({
   error?: { message?: string };
   idFor: string;
   /** Kode id_cargo yang sudah tersimpan di produk (mode edit) — supaya tetap
-   * tampil di dropdown meski sudah is_used_in_produk (tidak lagi "unused"). */
+   * tampil di dropdown meski sudah tidak ada lagi di daftar "belum sinkron". */
   currentCode?: string;
-  /** Dipanggil dengan cargo_id (UUID WMS, BUKAN code) saat user memilih dari
-   * dropdown WMS, atau `null` saat mode manual/dikosongkan — dipakai form
-   * induk untuk memanggil mark-sync setelah create/update produk sukses. */
-  onSelectCargoId?: (cargoId: string | null) => void;
+  /** Dipanggil dengan data cargo WMS lengkap saat user memilih dari dropdown,
+   * atau `null` saat mode manual/dikosongkan — dipakai form induk untuk
+   * auto-fill field lain & mendownload PDF harga. */
+  onSelectCargo?: (cargo: WmsCargoPricedItemType | null) => void;
 }) => {
   const [isManual, setIsManual] = useState(false);
   const { search, searchValue, setSearch } = useSearch();
@@ -62,8 +64,8 @@ export const CargoIdField = ({
   const selected = cargoList.find((item) => item.code === value);
 
   // Kalau value saat ini (mis. dari data produk existing) tidak ditemukan di
-  // daftar "belum dipakai" WMS, anggap manual supaya tidak menampilkan
-  // dropdown kosong/membingungkan.
+  // daftar WMS terkini, anggap manual supaya tidak menampilkan dropdown
+  // kosong/membingungkan.
   useEffect(() => {
     if (value && currentCode && value === currentCode && !selected && !isLoading) {
       setIsManual(true);
@@ -86,7 +88,7 @@ export const CargoIdField = ({
           onClick={() => {
             setIsManual((prev) => !prev);
             onChange("");
-            onSelectCargoId?.(null);
+            onSelectCargo?.(null);
           }}
         >
           <PencilLine className="size-3" />
@@ -112,7 +114,7 @@ export const CargoIdField = ({
           onValueChange={(v) => {
             onChange(v ?? "");
             const item = cargoList.find((c) => c.code === v);
-            onSelectCargoId?.(item?.cargo_id ?? null);
+            onSelectCargo?.(item ?? null);
           }}
           disabled={disabled}
           data-invalid={!!error}
@@ -157,7 +159,7 @@ export const CargoIdField = ({
               </p>
             ) : (
               cargoList.map((item) => (
-                <SelectItem key={item.cargo_id} value={item.code}>
+                <SelectItem key={item.id} value={item.code}>
                   <div className="flex flex-col">
                     <span>{item.code}</span>
                     <span className="text-xs text-muted-foreground">

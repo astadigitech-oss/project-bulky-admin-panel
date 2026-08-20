@@ -200,19 +200,31 @@ export type SetWmsCargoPriceResponse = BaseResponse & {
   };
 };
 
-// Cargo WMS yang sudah diberi harga (dari cache lokal wms_cargo_priced) —
-// sumber dropdown "ID Cargo" saat create/edit produk.
+// Cargo WMS yang sudah diberi harga (langsung dari WMS, bukan cache lokal) —
+// sumber dropdown "ID Cargo" saat create produk. Memilih salah satu
+// meng-auto-fill dimensi, harga (before/after, jadi read-only), serta
+// kategori/kondisi/sumber/merek (ID dari WMS kompatibel dengan ID lokal
+// Bulky). PDF harga didownload terpisah lewat endpoint pricing-pdf.
 export type WmsCargoPricedItemType = {
-  cargo_id: string;
+  id: string;
   code: string;
   length_cm: number;
   width_cm: number;
   height_cm: number;
   weight_kg: number;
   total_price: number;
+  pricing_type: string;
+  pricing_value: number;
   sale_price: number;
-  pricing_pdf_url: string | null;
-  is_used_in_produk: boolean;
+  priced_at: string;
+  pricing_pdf_url: string;
+  bulky_category: WmsCargoRefType | null;
+  bulky_product_condition: WmsCargoRefType | null;
+  bulky_package_condition: WmsCargoRefType | null;
+  bulky_product_source: WmsCargoRefType | null;
+  bulky_brands: WmsCargoRefType[] | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type ListWmsCargoPricedRequest = {
@@ -223,9 +235,9 @@ export type ListWmsCargoPricedResponse = BaseResponse & {
   data: WmsCargoPricedItemType[];
 };
 
-export type MarkWmsCargoSyncedParams = { id: string };
+export type DownloadWmsCargoPricingPdfParams = { id: string };
 
-export type MarkWmsCargoSyncedSearchParams = { produk_id?: string };
+export type MarkWmsCargoSyncedParams = { id: string };
 
 export type MarkWmsCargoSyncedResponse = BaseResponse & {
   data: {

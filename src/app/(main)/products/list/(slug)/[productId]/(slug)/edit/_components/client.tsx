@@ -311,10 +311,7 @@ export const ProductIdClient = () => {
           // cargo tsb sudah dikonfirmasi sinkron di WMS. Idempotent — aman
           // kalau gagal, tidak menghalangi navigasi ke halaman detail produk.
           if (selectedCargoId) {
-            markWmsCargoSynced({
-              params: { id: selectedCargoId },
-              searchParams: { produk_id: productId },
-            });
+            markWmsCargoSynced({ params: { id: selectedCargoId } });
           }
           router.push(`/products/list/${productId}`);
         },
@@ -542,7 +539,9 @@ export const ProductIdClient = () => {
                       error={fieldState.error}
                       idFor={`${idFormProduct}_${field.name}`}
                       currentCode={detail?.id_cargo}
-                      onSelectCargoId={setSelectedCargoId}
+                      onSelectCargo={(cargo) =>
+                        setSelectedCargoId(cargo?.id ?? null)
+                      }
                     />
                   )}
                 />
