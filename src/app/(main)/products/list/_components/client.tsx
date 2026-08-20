@@ -2,6 +2,7 @@
 
 import Pagination from "@/components/pagination";
 import { SortTable } from "@/components/sort-table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/data-table";
 import { InputSearch } from "@/components/ui/input-search";
@@ -18,6 +19,7 @@ import {
   useChangeQcPassProduct,
   useChangeSaleProduct,
   useChangeStatusProduct,
+  useCountWmsCargoReadyToPrice,
   useDeleteProduct,
   useGetProductList,
 } from "@api/product/list";
@@ -32,6 +34,10 @@ export const ProductClient = () => {
   const canManageWmsSync =
     permissions.includes("produk:create") ||
     permissions.includes("produk:update");
+  const { data: countWmsCargoReady } = useCountWmsCargoReadyToPrice({
+    enabled: canManageWmsSync,
+  });
+  const readyToPriceCount = countWmsCargoReady?.data?.ready ?? 0;
   const [{ sort, order, status }, setQuery] = useQueryStates({
     sort: parseAsString.withDefault("created_at"),
     order: parseAsString.withDefault("desc"),
@@ -218,7 +224,12 @@ export const ProductClient = () => {
                 onClick={() => setIsOpenSyncWms(true)}
               >
                 <PackageSearch className="size-3.5" />
-                Sync Produk Palet WMS
+                Sync Palet WMS
+                {canManageWmsSync && readyToPriceCount > 0 && (
+                  <Badge className="bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900">
+                    {readyToPriceCount}
+                  </Badge>
+                )}
               </Button>
             }
           />

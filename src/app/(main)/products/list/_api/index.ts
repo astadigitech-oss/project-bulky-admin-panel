@@ -54,6 +54,14 @@ export const useListWmsCargoPriced = ({
     enabled,
   });
 
+export const useCountWmsCargoReadyToPrice = ({
+  enabled,
+}: { enabled?: boolean } = {}) =>
+  useApiQuery({
+    ...dataAPIProduct.query({}).countWmsCargoReadyToPrice,
+    enabled,
+  });
+
 // mutation
 export const useCreateProduct = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).create);

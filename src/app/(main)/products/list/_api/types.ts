@@ -180,6 +180,12 @@ export type ListWmsCargoResponse = BaseResponse & {
   meta: MetaPagination;
 };
 
+// Jumlah cargo yang siap diberi harga — untuk badge di tombol sync, tanpa
+// perlu menarik seluruh daftar cargo.
+export type CountWmsCargoReadyToPriceResponse = BaseResponse & {
+  data: { ready: number };
+};
+
 export type SetWmsCargoPriceParams = { id: string };
 
 export type SetWmsCargoPriceBody = {

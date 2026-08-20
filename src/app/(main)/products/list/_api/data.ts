@@ -6,6 +6,7 @@ import {
   ChangeSaleProductResponse,
   ChangeStatusProductParams,
   ChangeStatusProductResponse,
+  CountWmsCargoReadyToPriceResponse,
   CreateProductBody,
   CreateProductResponse,
   DeleteProductImageParams,
@@ -46,6 +47,7 @@ const key = [
   "product-detail",
   "wms-cargo-ready-to-price",
   "wms-cargo-already-priced",
+  "wms-cargo-ready-to-price-count",
 ];
 
 export const dataAPIProduct = {
@@ -66,6 +68,7 @@ export const dataAPIProduct = {
     show: UseApiQueryProps<ProductDetailResponse>;
     listWmsCargo: UseApiQueryProps<ListWmsCargoResponse>;
     listWmsCargoPriced: UseApiQueryProps<ListWmsCargoPricedResponse>;
+    countWmsCargoReadyToPrice: UseApiQueryProps<CountWmsCargoReadyToPriceResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order, status }],
@@ -91,6 +94,12 @@ export const dataAPIProduct = {
       endpoint: `/wms/cargos/already-priced`,
       searchParams: { search },
       placeholderData: keepPreviousData,
+      staleTime: 0,
+      refetchOnWindowFocus: false,
+    },
+    countWmsCargoReadyToPrice: {
+      key: [key[4]],
+      endpoint: `/wms/cargos/ready-to-price/count`,
       staleTime: 0,
       refetchOnWindowFocus: false,
     },
@@ -255,7 +264,8 @@ export const dataAPIProduct = {
       method: "post",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
-        if (queryClient) await invalidateQuery(queryClient, [[key[2]]]);
+        if (queryClient)
+          await invalidateQuery(queryClient, [[key[2]], [key[4]]]);
       },
       onError: { title: "SET_WMS_CARGO_PRICE" },
     },
