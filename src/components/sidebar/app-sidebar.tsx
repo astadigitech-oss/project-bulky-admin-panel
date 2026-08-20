@@ -27,6 +27,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Skeleton } from "../ui/skeleton";
 import { useMe } from "@/components/container/_api";
+import { useGetOrderCountPaidNotProcessed } from "@/app/(main)/orders/_api";
 
 const LogoNoSSR = dynamic(() => import("./logo-no-ssr"), {
   ssr: false,
@@ -292,6 +293,11 @@ export const AppSidebar = ({
 }: React.ComponentProps<typeof Sidebar>) => {
   const { data: meData } = useMe();
   const permissions = meData?.data?.permissions ?? [];
+  const canReadPesanan = permissions.includes("pesanan:read");
+  const { data: countPaidNotProcessed } = useGetOrderCountPaidNotProcessed({
+    enabled: canReadPesanan,
+  });
+  const pesananBadgeCount = countPaidNotProcessed?.data?.count ?? 0;
 
   const hasPermission = (perm?: string) =>
     !perm || permissions.includes(perm);
@@ -300,6 +306,7 @@ export const AppSidebar = ({
     nav
       .map((group) => ({
         ...group,
+        badgeCount: group.title === "Pesanan" ? pesananBadgeCount : undefined,
         items: group.items.filter((item) => hasPermission(item.permission)),
       }))
       .filter((group) => hasPermission(group.permission));

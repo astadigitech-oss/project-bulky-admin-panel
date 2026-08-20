@@ -26,6 +26,14 @@ export const useGetOrderDetail = ({ id }: OrderDetailRequest) =>
 export const useGetOrderStatistics = (params: OrderStatisticsRequest) =>
   useApiQuery(dataAPIOrder.query(params as any).statistics);
 
+export const useGetOrderCountPaidNotProcessed = ({
+  enabled,
+}: { enabled?: boolean } = {}) =>
+  useApiQuery({
+    ...dataAPIOrder.query({}).countPaidNotProcessed,
+    enabled,
+  });
+
 export const useGetOrderTracking = (
   params: OrderTrackingRequest & { enabled?: boolean },
 ) => useApiQuery(dataAPIOrderTracking(params));

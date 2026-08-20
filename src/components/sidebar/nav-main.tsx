@@ -15,6 +15,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "../ui/sidebar";
+import { Badge } from "../ui/badge";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -29,6 +30,7 @@ export interface NavValueProps {
   url: string;
   icon: LucideIcon;
   permission?: string;
+  badgeCount?: number;
   items: readonly {
     title: string;
     url: string;
@@ -102,6 +104,14 @@ export function NavMain({
                           <SidebarMenuButton tooltip={item.title}>
                             <item.icon />
                             <span>{item.title}</span>
+                            {!!item.badgeCount && item.badgeCount > 0 && (
+                              <Badge
+                                variant="destructive"
+                                className="ml-auto mr-1 group-data-[collapsible=icon]:hidden"
+                              >
+                                {item.badgeCount}
+                              </Badge>
+                            )}
                           </SidebarMenuButton>
                         }
                       />
