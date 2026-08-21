@@ -339,7 +339,7 @@ export const ProductIdClient = () => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    values: {
+    defaultValues: {
       nama_en: "",
       nama_id: "",
       discrepancy: "",
@@ -556,6 +556,18 @@ export const ProductIdClient = () => {
     ],
   });
 
+  const onInvalid = (errors: any) => {
+    console.error("[PRODUCT_CREATE][VALIDATION_ERRORS]:", errors);
+    const firstError = Object.values(errors)[0] as
+      | { message?: string }
+      | undefined;
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    } else {
+      toast.error("Mohon lengkapi semua kolom yang wajib diisi");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 pt-4 pb-20">
       <div className="flex items-center gap-2">
@@ -568,7 +580,7 @@ export const ProductIdClient = () => {
         <h1 className="leading-none font-semibold text-2xl">Tambah Produk</h1>
       </div>
       <Separator />
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)}>
         <FieldGroup className="grid gap-6 w-full max-w-5xl mx-auto">
           <Controller
             control={form.control}
