@@ -9,6 +9,7 @@ import {
   CancelOrderResponse,
   DeleteOrderParams,
   DeleteOrderResponse,
+  OrderCountPaidNotProcessedResponse,
   OrderDelivereeDetailRequest,
   OrderDelivereeDetailResponse,
   OrderDetailRequest,
@@ -29,7 +30,13 @@ import {
 } from "./types";
 
 // query-key
-const key = ["order-list", "order-detail", "order-statistics", "order-tracking"];
+const key = [
+  "order-list",
+  "order-detail",
+  "order-statistics",
+  "order-tracking",
+  "order-count-paid-not-processed",
+];
 
 export const dataAPIOrder = {
   query: ({
@@ -53,6 +60,7 @@ export const dataAPIOrder = {
     list: UseApiQueryProps<OrderListResponse>;
     show: UseApiQueryProps<OrderDetailResponse>;
     statistics: UseApiQueryProps<OrderStatisticsResponse>;
+    countPaidNotProcessed: UseApiQueryProps<OrderCountPaidNotProcessedResponse>;
   } => ({
     list: {
       key: [
@@ -99,6 +107,12 @@ export const dataAPIOrder = {
       endpoint: `/pesanan/statistics`,
       searchParams: { tahun, bulan, minggu, tanggal_dari, tanggal_sampai },
       placeholderData: keepPreviousData,
+    },
+    countPaidNotProcessed: {
+      key: [key[4]],
+      endpoint: `/pesanan/count-paid-not-processed`,
+      staleTime: 0,
+      refetchOnWindowFocus: false,
     },
   }),
 

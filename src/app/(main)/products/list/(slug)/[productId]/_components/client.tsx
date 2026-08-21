@@ -245,7 +245,7 @@ export const ProductDetailClient = () => {
                     Sumber
                   </p>
                   <div className="flex flex-wrap gap-2 px-2 h-full items-center py-1.25">
-                    {detail?.sumber.nama}
+                    {detail?.sumber?.nama ?? "-"}
                   </div>
                 </div>
               </div>
@@ -414,7 +414,7 @@ export const ProductDetailClient = () => {
                     <DialogTitle>PDF Preview</DialogTitle>
                   </DialogHeader>
                   <div className="flex items-center justify-center rounded-md overflow-hidden shadow">
-                    <PDFViewer file={detail?.dokumen[0].file_url} />
+                    <PDFViewer file={detail?.dokumen[0]?.file_url} />
                   </div>
                   <DialogFooter>
                     <DialogClose

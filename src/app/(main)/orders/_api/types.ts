@@ -177,6 +177,12 @@ export type UpdateOrderStatusResponse = BaseResponse & {
   };
 };
 
+// Jumlah pesanan sudah dibayar (PAID) tapi belum diproses admin (masih
+// PROCESSING) — untuk badge di sidebar menu Pesanan.
+export type OrderCountPaidNotProcessedResponse = BaseResponse & {
+  data: { count: number };
+};
+
 export type DeleteOrderResponse = BaseResponse;
 
 export type CancelOrderResponse = BaseResponse & {

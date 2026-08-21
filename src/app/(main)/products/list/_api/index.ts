@@ -1,8 +1,16 @@
 import { useApiQuery } from "@/lib/query/use-query";
 import { dataAPIProduct } from "./data";
-import { ProductDetailRequest, ProductListRequest } from "./types";
+import {
+  ListWmsCargoPricedRequest,
+  ListWmsCargoRequest,
+  ProductDetailRequest,
+  ProductListRequest,
+} from "./types";
 import { useMutate } from "@/lib/query";
 import { useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { getCookie } from "cookies-next/client";
+import { apiUrl, cookiesKey } from "@/config";
 
 export const useGetProductList = ({
   page,
@@ -25,6 +33,34 @@ export const useGetProductList = ({
 
 export const useGetProductDetail = ({ id }: ProductDetailRequest) =>
   useApiQuery(dataAPIProduct.query({ id }).show);
+
+export const useListWmsCargo = ({
+  page,
+  limit,
+  search,
+  enabled,
+}: ListWmsCargoRequest & { enabled?: boolean }) =>
+  useApiQuery({
+    ...dataAPIProduct.query({ page, limit, search }).listWmsCargo,
+    enabled,
+  });
+
+export const useListWmsCargoPriced = ({
+  search,
+  enabled,
+}: ListWmsCargoPricedRequest & { enabled?: boolean } = {}) =>
+  useApiQuery({
+    ...dataAPIProduct.query({ search }).listWmsCargoPriced,
+    enabled,
+  });
+
+export const useCountWmsCargoReadyToPrice = ({
+  enabled,
+}: { enabled?: boolean } = {}) =>
+  useApiQuery({
+    ...dataAPIProduct.query({}).countWmsCargoReadyToPrice,
+    enabled,
+  });
 
 // mutation
 export const useCreateProduct = () =>
@@ -52,3 +88,26 @@ export const useReorderProductImage = () =>
 
 export const useDeleteProductImage = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).imageDelete);
+
+export const useTestWmsConnection = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).testWmsConnection);
+
+export const useSetWmsCargoPrice = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).setWmsCargoPrice);
+
+export const useMarkWmsCargoSynced = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).markWmsCargoSynced);
+
+/**
+ * Download PDF harga cargo WMS sebagai Blob (proxy dari BE, bukan URL
+ * publik) — dipakai untuk mengisi field "Dokumen PDF" form create produk
+ * seolah file diupload manual, saat admin memilih cargo dari dropdown.
+ */
+export const downloadWmsCargoPricingPdf = async (cargoId: string) => {
+  const token = getCookie(cookiesKey);
+  const res = await axios.get(`${apiUrl}/wms/cargos/${cargoId}/pricing-pdf`, {
+    headers: { Authorization: `Bearer ${token}` },
+    responseType: "blob",
+  });
+  return res.data as Blob;
+};
