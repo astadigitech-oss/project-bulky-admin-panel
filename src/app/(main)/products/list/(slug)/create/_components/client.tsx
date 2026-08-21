@@ -32,7 +32,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRight, Package, Send } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useId, useState } from "react";
+import React, { useId, useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 import ID from "country-flag-icons/react/1x1/ID";
@@ -174,14 +174,24 @@ export const ProductIdClient = () => {
   const idFormProduct = useId();
   const router = useRouter();
 
-  const { mutate, isPending } = useCreateProduct();
-  const { mutate: markWmsCargoSynced } = useMarkWmsCargoSynced();
+  const { mutate, isPending: isCreatingProduct } = useCreateProduct();
+  const { mutate: markWmsCargoSynced, isPending: isSyncingCargo } =
+    useMarkWmsCargoSynced();
+  // Tombol submit tetap "loading" selama create produk ATAU konfirmasi
+  // sync WMS masih berjalan — supaya admin tidak submit ganda.
+  const isPending = isCreatingProduct || isSyncingCargo;
+  const [selectedCargo, setSelectedCargo] =
+    useState<WmsCargoPricedItemType | null>(null);
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
   // true kalau id_cargo dipilih dari dropdown WMS — dipakai buat mengunci
   // (disable) field harga supaya tidak menyimpang dari harga yang sudah
   // ditetapkan di WMS.
   const [isCargoFromWms, setIsCargoFromWms] = useState(false);
   const [isDownloadingCargoPdf, setIsDownloadingCargoPdf] = useState(false);
+  // Combobox base-ui tidak sinkron menampilkan label saat value di-set
+  // programatik (bukan lewat interaksi user) — remount paksa via key saat
+  // cargo WMS dipilih supaya label kategori/kondisi/sumber/merek tampil.
+  const [cargoRefreshKey, setCargoRefreshKey] = useState(0);
 
   const { data: brandSelectData } = useGetBrandSelect();
   const { data: categorySelectData } = useGetCategorySelect();
@@ -189,17 +199,143 @@ export const ProductIdClient = () => {
   const { data: productConditionSelectData } = useGetProductConditionSelect();
   const { data: sourceSelectData } = useGetSourceSelect();
 
-  const selectProduct = {
-    brand: normalizeSelectOptions(brandSelectData?.data ?? []),
-    category: normalizeSelectOptions(categorySelectData?.data ?? []),
-    packageCondition: normalizeSelectOptions(
+  const selectProduct = useMemo(() => {
+    const rawBrand = normalizeSelectOptions(brandSelectData?.data ?? []);
+    const rawCategory = normalizeSelectOptions(categorySelectData?.data ?? []);
+    const rawPackageCondition = normalizeSelectOptions(
       packageConditionSelectData?.data ?? [],
-    ),
-    productCondition: normalizeSelectOptions(
+    );
+    const rawProductCondition = normalizeSelectOptions(
       productConditionSelectData?.data ?? [],
-    ),
-    source: normalizeSelectOptions(sourceSelectData?.data ?? []),
-  };
+    );
+    const rawSource = normalizeSelectOptions(sourceSelectData?.data ?? []);
+
+    if (selectedCargo) {
+      const catId =
+        selectedCargo.bulky_category?.bulky_id ||
+        selectedCargo.bulky_category?.id;
+      if (
+        catId &&
+        !rawCategory.some(
+          (c) =>
+            c.id === catId ||
+            (selectedCargo.bulky_category?.name &&
+              getOptionLabel(c.nama).trim().toLowerCase() ===
+                selectedCargo.bulky_category.name.trim().toLowerCase()),
+        )
+      ) {
+        rawCategory.push({
+          id: catId,
+          nama: {
+            id: selectedCargo.bulky_category?.name,
+            en: selectedCargo.bulky_category?.name,
+          },
+        } as any);
+      }
+      const pCondId =
+        selectedCargo.bulky_product_condition?.bulky_id ||
+        selectedCargo.bulky_product_condition?.id;
+      if (
+        pCondId &&
+        !rawProductCondition.some(
+          (c) =>
+            c.id === pCondId ||
+            (selectedCargo.bulky_product_condition?.name &&
+              getOptionLabel(c.nama).trim().toLowerCase() ===
+                selectedCargo.bulky_product_condition.name
+                  .trim()
+                  .toLowerCase()),
+        )
+      ) {
+        rawProductCondition.push({
+          id: pCondId,
+          nama: {
+            id: selectedCargo.bulky_product_condition?.name,
+            en: selectedCargo.bulky_product_condition?.name,
+          },
+        } as any);
+      }
+      const pkgCondId =
+        selectedCargo.bulky_package_condition?.bulky_id ||
+        selectedCargo.bulky_package_condition?.id;
+      if (
+        pkgCondId &&
+        !rawPackageCondition.some(
+          (c) =>
+            c.id === pkgCondId ||
+            (selectedCargo.bulky_package_condition?.name &&
+              getOptionLabel(c.nama).trim().toLowerCase() ===
+                selectedCargo.bulky_package_condition.name
+                  .trim()
+                  .toLowerCase()),
+        )
+      ) {
+        rawPackageCondition.push({
+          id: pkgCondId,
+          nama: {
+            id: selectedCargo.bulky_package_condition?.name,
+            en: selectedCargo.bulky_package_condition?.name,
+          },
+        } as any);
+      }
+      const srcId =
+        selectedCargo.bulky_product_source?.bulky_id ||
+        selectedCargo.bulky_product_source?.id;
+      if (
+        srcId &&
+        !rawSource.some(
+          (s) =>
+            s.id === srcId ||
+            (selectedCargo.bulky_product_source?.name &&
+              getOptionLabel(s.nama).trim().toLowerCase() ===
+                selectedCargo.bulky_product_source.name.trim().toLowerCase()),
+        )
+      ) {
+        rawSource.push({
+          id: srcId,
+          nama: {
+            id: selectedCargo.bulky_product_source?.name,
+            en: selectedCargo.bulky_product_source?.name,
+          },
+        } as any);
+      }
+      if (selectedCargo.bulky_brands) {
+        for (const b of selectedCargo.bulky_brands) {
+          const brandId = b.bulky_id || b.id;
+          if (
+            brandId &&
+            !rawBrand.some(
+              (rb) =>
+                rb.id === brandId ||
+                (b.name &&
+                  getOptionLabel(rb.nama).trim().toLowerCase() ===
+                    b.name.trim().toLowerCase()),
+            )
+          ) {
+            rawBrand.push({
+              id: brandId,
+              nama: b.name,
+            } as any);
+          }
+        }
+      }
+    }
+
+    return {
+      brand: rawBrand,
+      category: rawCategory,
+      packageCondition: rawPackageCondition,
+      productCondition: rawProductCondition,
+      source: rawSource,
+    };
+  }, [
+    brandSelectData,
+    categorySelectData,
+    packageConditionSelectData,
+    productConditionSelectData,
+    sourceSelectData,
+    selectedCargo,
+  ]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -233,10 +369,33 @@ export const ProductIdClient = () => {
   // WMS kompatibel dengan ID lokal Bulky), dan download PDF harga sebagai
   // dokumen produk seolah diupload manual.
   const handleSelectCargo = async (cargo: WmsCargoPricedItemType | null) => {
+    setSelectedCargo(cargo);
     setSelectedCargoId(cargo?.id ?? null);
     setIsCargoFromWms(!!cargo);
 
     if (!cargo) return;
+
+    // Helper untuk mencari ID yang cocok di master data Bulky (cocokkan ID dulu, lalu Nama)
+    const findMatchingId = <T extends { id?: unknown; nama?: unknown }>(
+      items: T[],
+      ref?: { id: string; name: string; bulky_id?: string } | null,
+    ) => {
+      if (!ref) return "";
+      const targetId = ref.bulky_id || ref.id;
+      // 1. Cocokkan by ID
+      const byId = items.find((item) => item.id === targetId);
+      if (byId && typeof byId.id === "string") return byId.id;
+      // 2. Cocokkan by Nama
+      if (ref.name) {
+        const byName = items.find(
+          (item) =>
+            getOptionLabel(item.nama).trim().toLowerCase() ===
+            ref.name.trim().toLowerCase(),
+        );
+        if (byName && typeof byName.id === "string") return byName.id;
+      }
+      return targetId || "";
+    };
 
     form.setValue("panjang", String(cargo.length_cm));
     form.setValue("lebar", String(cargo.width_cm));
@@ -244,21 +403,44 @@ export const ProductIdClient = () => {
     form.setValue("berat", String(cargo.weight_kg));
     form.setValue("harga_sebelum_diskon", String(cargo.total_price));
     form.setValue("harga_sesudah_diskon", String(cargo.sale_price));
-    if (cargo.bulky_category?.id) {
-      form.setValue("kategori_id", cargo.bulky_category.id);
+    if (cargo.bulky_category) {
+      const matchedCategoryId = findMatchingId(
+        selectProduct.category,
+        cargo.bulky_category,
+      );
+      if (matchedCategoryId) form.setValue("kategori_id", matchedCategoryId);
     }
-    if (cargo.bulky_product_condition?.id) {
-      form.setValue("kondisi_id", cargo.bulky_product_condition.id);
+    if (cargo.bulky_product_condition) {
+      const matchedProductConditionId = findMatchingId(
+        selectProduct.productCondition,
+        cargo.bulky_product_condition,
+      );
+      if (matchedProductConditionId)
+        form.setValue("kondisi_id", matchedProductConditionId);
     }
-    if (cargo.bulky_package_condition?.id) {
-      form.setValue("kondisi_paket_id", cargo.bulky_package_condition.id);
+    if (cargo.bulky_package_condition) {
+      const matchedPackageConditionId = findMatchingId(
+        selectProduct.packageCondition,
+        cargo.bulky_package_condition,
+      );
+      if (matchedPackageConditionId)
+        form.setValue("kondisi_paket_id", matchedPackageConditionId);
     }
-    if (cargo.bulky_product_source?.id) {
-      form.setValue("sumber_id", cargo.bulky_product_source.id);
+    if (cargo.bulky_product_source) {
+      const matchedSourceId = findMatchingId(
+        selectProduct.source,
+        cargo.bulky_product_source,
+      );
+      if (matchedSourceId) form.setValue("sumber_id", matchedSourceId);
     }
     if (cargo.bulky_brands && cargo.bulky_brands.length > 0) {
-      replace(cargo.bulky_brands.map((b) => ({ data: b.id })));
+      const matchedBrandIds = cargo.bulky_brands
+        .map((b) => findMatchingId(selectProduct.brand, b))
+        .filter(Boolean)
+        .map((id) => ({ data: id }));
+      replace(matchedBrandIds);
     }
+    setCargoRefreshKey((k) => k + 1);
 
     setIsDownloadingCargoPdf(true);
     try {
@@ -317,14 +499,30 @@ export const ProductIdClient = () => {
     mutate(
       { body },
       {
-        onSuccess: () => {
-          // Kalau id_cargo dipilih dari dropdown WMS (bukan manual), tandai
-          // cargo tsb sudah dikonfirmasi sinkron di WMS. Idempotent — aman
-          // kalau gagal, tidak menghalangi navigasi ke halaman daftar produk.
+        onSuccess: (response) => {
+          // Produk sudah tersimpan di DB Bulky. Untuk produk asal cargo WMS,
+          // tandai cargo dikonfirmasi sinkron DULU — toast sukses & navigasi
+          // baru muncul setelah WMS benar-benar mengonfirmasi (bukan
+          // fire-and-forget lagi), supaya admin tahu kalau sync-nya gagal.
           if (selectedCargoId) {
-            markWmsCargoSynced({ params: { id: selectedCargoId } });
+            markWmsCargoSynced(
+              { params: { id: selectedCargoId } },
+              {
+                onSuccess: () => {
+                  toast.success(response.data.message);
+                  router.push("/products/list");
+                },
+                onError: () => {
+                  toast.error(
+                    "Produk berhasil dibuat, tetapi gagal menandai sinkronisasi ke WMS. Silakan tandai ulang secara manual.",
+                  );
+                },
+              },
+            );
+          } else {
+            toast.success(response.data.message);
+            router.push("/products/list");
           }
-          router.push("/products/list");
         },
       },
     );
@@ -465,7 +663,7 @@ export const ProductIdClient = () => {
                   <DropzonePDF
                     onChange={field.onChange}
                     value={field.value}
-                    disabled={isDownloadingCargoPdf}
+                    disabled={isCargoFromWms || isDownloadingCargoPdf}
                   />
                   {isDownloadingCargoPdf && (
                     <p className="text-xs text-muted-foreground">
@@ -579,14 +777,17 @@ export const ProductIdClient = () => {
                 Merek
               </FieldLabel>
               <Combobox
+                key={cargoRefreshKey}
                 id={`${idFormProduct}_brand`}
                 multiple
                 autoHighlight
+                disabled={isCargoFromWms}
                 items={selectProduct.brand}
                 value={fields.map((f) => f.data)}
-                onValueChange={(e) =>
-                  replace(getSelectIds(e).map((id) => ({ data: id })))
-                }
+                onValueChange={(e) => {
+                  if (isCargoFromWms) return;
+                  replace(getSelectIds(e).map((id) => ({ data: id })));
+                }}
                 isItemEqualToValue={(i: any, s: any) => {
                   if ((i as (typeof selectProduct.brand)[number]).id) {
                     return (i as (typeof selectProduct.brand)[number]).id === s;
@@ -596,40 +797,57 @@ export const ProductIdClient = () => {
               >
                 <ComboboxChips
                   ref={anchor}
-                  className="w-full bg-transparent dark:bg-transparent"
+                  className={cn(
+                    "w-full bg-transparent dark:bg-transparent",
+                    isCargoFromWms &&
+                      "pointer-events-none opacity-60 cursor-not-allowed bg-muted/40",
+                  )}
                 >
                   <ComboboxValue>
                     {(values) => (
                       <React.Fragment>
-                        {values.map((value: any) => (
-                          <ComboboxChip key={value}>
-                            {getOptionLabel(
-                              selectProduct.brand.find((i) => i.id === value)
-                                ?.nama,
-                            )}
-                          </ComboboxChip>
-                        ))}
-                        <ComboboxChipsInput
-                          className={"placeholder:text-xs bg-transparent"}
-                          placeholder="Pilih merek..."
-                        />
+                        {values.map((value: any, index: number) => {
+                          const valId = getSelectId(value);
+                          return (
+                            <ComboboxChip
+                              key={valId || `brand-chip-${index}`}
+                              showRemove={!isCargoFromWms}
+                            >
+                              {getOptionLabel(
+                                selectProduct.brand.find(
+                                  (i) => i.id === (valId || value),
+                                )?.nama ??
+                                  value?.nama ??
+                                  value,
+                              )}
+                            </ComboboxChip>
+                          );
+                        })}
+                        {!isCargoFromWms && (
+                          <ComboboxChipsInput
+                            className={"placeholder:text-xs bg-transparent"}
+                            placeholder="Pilih merek..."
+                          />
+                        )}
                       </React.Fragment>
                     )}
                   </ComboboxValue>
                 </ComboboxChips>
-                <ComboboxContent anchor={anchor}>
-                  <ComboboxEmpty>No items found.</ComboboxEmpty>
-                  <ComboboxList>
-                    {(item: (typeof selectProduct.brand)[number]) => (
-                      <ComboboxItem key={item.id} value={item.id}>
-                        {getOptionLabel(
-                          selectProduct.brand.find((i) => i.id === item.id)
-                            ?.nama,
-                        )}
-                      </ComboboxItem>
-                    )}
-                  </ComboboxList>
-                </ComboboxContent>
+                {!isCargoFromWms && (
+                  <ComboboxContent anchor={anchor}>
+                    <ComboboxEmpty>No items found.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(item: (typeof selectProduct.brand)[number]) => (
+                        <ComboboxItem key={item.id} value={item.id}>
+                          {getOptionLabel(
+                            selectProduct.brand.find((i) => i.id === item.id)
+                              ?.nama,
+                          )}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                )}
               </Combobox>
             </Field>
             <div className="grid lg:grid-cols-2 items-end gap-2 lg:gap-6">
@@ -644,7 +862,9 @@ export const ProductIdClient = () => {
                         Kategori
                       </FieldLabel>
                       <Combobox
+                        key={cargoRefreshKey}
                         autoHighlight
+                        disabled={isCargoFromWms}
                         id={`${idFormProduct}_${field.name}`}
                         items={categories}
                         value={field.value}
@@ -655,19 +875,20 @@ export const ProductIdClient = () => {
                           itemValue: any,
                           selectedValue: any,
                         ) => {
-                          if (
-                            (itemValue as (typeof categories)[number]).id ===
-                            selectedValue
-                          ) {
-                            return true;
-                          }
+                          const itemId = getSelectId(itemValue);
+                          const selId = getSelectId(selectedValue);
+                          if (itemId && selId) return itemId === selId;
                           return itemValue === selectedValue;
                         }}
-                        itemToStringLabel={(v: string) =>
-                          getOptionLabel(
-                            categories.find((i) => i.id === v)?.nama,
-                          )
-                        }
+                        itemToStringLabel={(v: any) => {
+                          const valId = getSelectId(v);
+                          return (
+                            getOptionLabel(
+                              categories.find((i) => i.id === (valId || v))
+                                ?.nama,
+                            ) || getOptionLabel(v)
+                          );
+                        }}
                         filter={(itemValue: any, query: any) => {
                           return getOptionLabel(
                             (itemValue as (typeof categories)[number]).nama,
@@ -707,7 +928,9 @@ export const ProductIdClient = () => {
                         Kondisi Produk
                       </FieldLabel>
                       <Combobox
+                        key={cargoRefreshKey}
                         autoHighlight
+                        disabled={isCargoFromWms}
                         id={`${idFormProduct}_${field.name}`}
                         items={productCondition}
                         value={field.value}
@@ -716,19 +939,21 @@ export const ProductIdClient = () => {
                           itemValue: any,
                           selectedValue: any,
                         ) => {
-                          if (
-                            (itemValue as (typeof productCondition)[number])
-                              .id === selectedValue
-                          ) {
-                            return true;
-                          }
+                          const itemId = getSelectId(itemValue);
+                          const selId = getSelectId(selectedValue);
+                          if (itemId && selId) return itemId === selId;
                           return itemValue === selectedValue;
                         }}
-                        itemToStringLabel={(v: string) =>
-                          getOptionLabel(
-                            productCondition.find((i) => i.id === v)?.nama,
-                          )
-                        }
+                        itemToStringLabel={(v: any) => {
+                          const valId = getSelectId(v);
+                          return (
+                            getOptionLabel(
+                              productCondition.find(
+                                (i) => i.id === (valId || v),
+                              )?.nama,
+                            ) || getOptionLabel(v)
+                          );
+                        }}
                         filter={(itemValue: any, query: any) => {
                           return getOptionLabel(
                             (itemValue as (typeof productCondition)[number])
@@ -769,7 +994,9 @@ export const ProductIdClient = () => {
                         Kondisi Paket
                       </FieldLabel>
                       <Combobox
+                        key={cargoRefreshKey}
                         autoHighlight
+                        disabled={isCargoFromWms}
                         id={`${idFormProduct}_${field.name}`}
                         items={packageCondition}
                         value={field.value}
@@ -778,19 +1005,21 @@ export const ProductIdClient = () => {
                           itemValue: any,
                           selectedValue: any,
                         ) => {
-                          if (
-                            (itemValue as (typeof packageCondition)[number])
-                              .id === selectedValue
-                          ) {
-                            return true;
-                          }
+                          const itemId = getSelectId(itemValue);
+                          const selId = getSelectId(selectedValue);
+                          if (itemId && selId) return itemId === selId;
                           return itemValue === selectedValue;
                         }}
-                        itemToStringLabel={(v: string) =>
-                          getOptionLabel(
-                            packageCondition.find((i) => i.id === v)?.nama,
-                          )
-                        }
+                        itemToStringLabel={(v: any) => {
+                          const valId = getSelectId(v);
+                          return (
+                            getOptionLabel(
+                              packageCondition.find(
+                                (i) => i.id === (valId || v),
+                              )?.nama,
+                            ) || getOptionLabel(v)
+                          );
+                        }}
                         filter={(itemValue: any, query: any) => {
                           return getOptionLabel(
                             (itemValue as (typeof packageCondition)[number])
@@ -831,7 +1060,9 @@ export const ProductIdClient = () => {
                         Sumber
                       </FieldLabel>
                       <Combobox
+                        key={cargoRefreshKey}
                         autoHighlight
+                        disabled={isCargoFromWms}
                         id={`${idFormProduct}_${field.name}`}
                         items={source}
                         value={field.value}
@@ -840,17 +1071,19 @@ export const ProductIdClient = () => {
                           itemValue: any,
                           selectedValue: any,
                         ) => {
-                          if (
-                            (itemValue as (typeof source)[number]).id ===
-                            selectedValue
-                          ) {
-                            return true;
-                          }
+                          const itemId = getSelectId(itemValue);
+                          const selId = getSelectId(selectedValue);
+                          if (itemId && selId) return itemId === selId;
                           return itemValue === selectedValue;
                         }}
-                        itemToStringLabel={(v: string) =>
-                          getOptionLabel(source.find((i) => i.id === v)?.nama)
-                        }
+                        itemToStringLabel={(v: any) => {
+                          const valId = getSelectId(v);
+                          return (
+                            getOptionLabel(
+                              source.find((i) => i.id === (valId || v))?.nama,
+                            ) || getOptionLabel(v)
+                          );
+                        }}
                         filter={(itemValue: any, query: any) => {
                           return getOptionLabel(
                             (itemValue as (typeof source)[number]).nama,
@@ -893,7 +1126,12 @@ export const ProductIdClient = () => {
                     >
                       Harga Sebelum Diskon
                     </FieldLabel>
-                    <InputGroup>
+                    <InputGroup
+                      className={cn(
+                        isCargoFromWms &&
+                          "pointer-events-none opacity-60 cursor-not-allowed bg-muted/40",
+                      )}
+                    >
                       <InputGroupInput
                         {...field}
                         id={`${idFormProduct}_${field.name}`}
@@ -902,6 +1140,7 @@ export const ProductIdClient = () => {
                           field.onChange(numericString(e.target.value))
                         }
                         disabled={isCargoFromWms}
+                        readOnly={isCargoFromWms}
                         aria-invalid={fieldState.invalid}
                         placeholder="cth. 1000000"
                         autoComplete="off"
@@ -933,7 +1172,12 @@ export const ProductIdClient = () => {
                     >
                       Harga Setelah Diskon
                     </FieldLabel>
-                    <InputGroup>
+                    <InputGroup
+                      className={cn(
+                        isCargoFromWms &&
+                          "pointer-events-none opacity-60 cursor-not-allowed bg-muted/40",
+                      )}
+                    >
                       <InputGroupInput
                         {...field}
                         id={`${idFormProduct}_${field.name}`}
@@ -942,6 +1186,7 @@ export const ProductIdClient = () => {
                           field.onChange(numericString(e.target.value))
                         }
                         disabled={isCargoFromWms}
+                        readOnly={isCargoFromWms}
                         aria-invalid={fieldState.invalid}
                         placeholder="cth. 1000000"
                         autoComplete="off"
@@ -1012,7 +1257,12 @@ export const ProductIdClient = () => {
                     >
                       Panjang
                     </FieldLabel>
-                    <InputGroup>
+                    <InputGroup
+                      className={cn(
+                        isCargoFromWms &&
+                          "pointer-events-none opacity-60 cursor-not-allowed bg-muted/40",
+                      )}
+                    >
                       <InputGroupInput
                         {...field}
                         id={`${idFormProduct}_${field.name}`}
@@ -1020,6 +1270,8 @@ export const ProductIdClient = () => {
                         onChange={(e) =>
                           field.onChange(numericString(e.target.value))
                         }
+                        disabled={isCargoFromWms}
+                        readOnly={isCargoFromWms}
                         aria-invalid={fieldState.invalid}
                         placeholder="cth. 1000000"
                         autoComplete="off"
@@ -1049,7 +1301,12 @@ export const ProductIdClient = () => {
                     >
                       Tinggi
                     </FieldLabel>
-                    <InputGroup>
+                    <InputGroup
+                      className={cn(
+                        isCargoFromWms &&
+                          "pointer-events-none opacity-60 cursor-not-allowed bg-muted/40",
+                      )}
+                    >
                       <InputGroupInput
                         {...field}
                         id={`${idFormProduct}_${field.name}`}
@@ -1057,6 +1314,8 @@ export const ProductIdClient = () => {
                         onChange={(e) =>
                           field.onChange(numericString(e.target.value))
                         }
+                        disabled={isCargoFromWms}
+                        readOnly={isCargoFromWms}
                         aria-invalid={fieldState.invalid}
                         placeholder="cth. 1000000"
                         autoComplete="off"
@@ -1085,7 +1344,12 @@ export const ProductIdClient = () => {
                     >
                       Lebar
                     </FieldLabel>
-                    <InputGroup>
+                    <InputGroup
+                      className={cn(
+                        isCargoFromWms &&
+                          "pointer-events-none opacity-60 cursor-not-allowed bg-muted/40",
+                      )}
+                    >
                       <InputGroupInput
                         {...field}
                         id={`${idFormProduct}_${field.name}`}
@@ -1093,6 +1357,8 @@ export const ProductIdClient = () => {
                         onChange={(e) =>
                           field.onChange(numericString(e.target.value))
                         }
+                        disabled={isCargoFromWms}
+                        readOnly={isCargoFromWms}
                         aria-invalid={fieldState.invalid}
                         placeholder="cth. 1000000"
                         autoComplete="off"
@@ -1123,7 +1389,12 @@ export const ProductIdClient = () => {
                     >
                       Berat
                     </FieldLabel>
-                    <InputGroup>
+                    <InputGroup
+                      className={cn(
+                        isCargoFromWms &&
+                          "pointer-events-none opacity-60 cursor-not-allowed bg-muted/40",
+                      )}
+                    >
                       <InputGroupInput
                         {...field}
                         id={`${idFormProduct}_${field.name}`}
@@ -1131,6 +1402,8 @@ export const ProductIdClient = () => {
                         onChange={(e) =>
                           field.onChange(numericString(e.target.value))
                         }
+                        disabled={isCargoFromWms}
+                        readOnly={isCargoFromWms}
                         aria-invalid={fieldState.invalid}
                         placeholder="cth. 1000000"
                         autoComplete="off"

@@ -17,10 +17,10 @@ import { WmsCargoPricedItemType } from "@/app/(main)/products/list/_api/types";
 import { useSearch } from "@/hooks/use-search";
 import { formatRupiah } from "@/lib/utils";
 
-const formatCargoLabel = (code: string, item?: { length_cm: number; width_cm: number; height_cm: number; weight_kg: number }) =>
-  item
-    ? `${code} — ${item.length_cm}×${item.width_cm}×${item.height_cm} cm, ${item.weight_kg} kg`
-    : code;
+const formatCargoLabel = (code: string, item?: WmsCargoPricedItemType) => {
+  if (!item) return code;
+  return `${code} — ${item.length_cm}×${item.width_cm}×${item.height_cm} cm, ${item.weight_kg} kg`;
+};
 
 /**
  * Field "ID Cargo" untuk form create/edit produk. Defaultnya dropdown berisi

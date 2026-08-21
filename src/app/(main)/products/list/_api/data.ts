@@ -163,8 +163,11 @@ export const dataAPIProduct = {
     create: {
       endpoint: "/produk",
       method: "post",
-      onSuccess: async ({ data }) => {
-        toast.success(data.message);
+      // Toast sukses TIDAK ditampilkan di sini — untuk produk asal cargo WMS,
+      // toast baru ditampilkan setelah markWmsCargoSynced sukses (lihat
+      // onSubmit di halaman create). invalidateQuery tetap jalan di sini agar
+      // daftar produk selalu segar begitu produk tersimpan di DB.
+      onSuccess: async () => {
         if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
       },
       onError: { title: "CREATE_PRODUCT" },

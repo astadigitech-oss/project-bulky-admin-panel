@@ -150,7 +150,9 @@ export type TestWmsConnectionResponse = BaseResponse & {
 };
 
 // Sync produk palet dari WMS — daftar cargo yang siap diberi harga.
-export type WmsCargoRefType = { id: string; name: string };
+// `bulky_id` = ID master data lokal Bulky yang kompatibel (dipakai untuk
+// auto-fill form), `id` = ID milik WMS sendiri (bukan ID lokal Bulky).
+export type WmsCargoRefType = { id: string; name: string; bulky_id?: string };
 
 export type WmsCargoPricingType = {
   id: string;

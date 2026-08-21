@@ -40,7 +40,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import React, { useId, useState } from "react";
+import React, { useId, useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 import ID from "country-flag-icons/react/1x1/ID";
@@ -78,6 +78,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { Spinner } from "@/components/ui/spinner";
 import { CargoIdField } from "@/app/(main)/products/list/_components/cargo-id-field";
+import { WmsCargoPricedItemType } from "@/app/(main)/products/list/_api/types";
 
 const reference_ids = [
   {
@@ -198,6 +199,8 @@ export const ProductIdClient = () => {
 
   const { mutate, isPending } = useUpdateProduct();
   const { mutate: markWmsCargoSynced } = useMarkWmsCargoSynced();
+  const [selectedCargo, setSelectedCargo] =
+    useState<WmsCargoPricedItemType | null>(null);
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
 
   const { data: brandSelectData, isSuccess: isSuccessBrand } =
@@ -215,17 +218,143 @@ export const ProductIdClient = () => {
   const { data: sourceSelectData, isSuccess: isSuccessSource } =
     useGetSourceSelect();
 
-  const selectProduct = {
-    brand: normalizeSelectOptions(brandSelectData?.data ?? []),
-    category: normalizeSelectOptions(categorySelectData?.data ?? []),
-    packageCondition: normalizeSelectOptions(
+  const selectProduct = useMemo(() => {
+    const rawBrand = normalizeSelectOptions(brandSelectData?.data ?? []);
+    const rawCategory = normalizeSelectOptions(categorySelectData?.data ?? []);
+    const rawPackageCondition = normalizeSelectOptions(
       packageConditionSelectData?.data ?? [],
-    ),
-    productCondition: normalizeSelectOptions(
+    );
+    const rawProductCondition = normalizeSelectOptions(
       productConditionSelectData?.data ?? [],
-    ),
-    source: normalizeSelectOptions(sourceSelectData?.data ?? []),
-  };
+    );
+    const rawSource = normalizeSelectOptions(sourceSelectData?.data ?? []);
+
+    if (selectedCargo) {
+      const catId =
+        selectedCargo.bulky_category?.bulky_id ||
+        selectedCargo.bulky_category?.id;
+      if (
+        catId &&
+        !rawCategory.some(
+          (c) =>
+            c.id === catId ||
+            (selectedCargo.bulky_category?.name &&
+              getOptionLabel(c.nama).trim().toLowerCase() ===
+                selectedCargo.bulky_category.name.trim().toLowerCase()),
+        )
+      ) {
+        rawCategory.push({
+          id: catId,
+          nama: {
+            id: selectedCargo.bulky_category?.name,
+            en: selectedCargo.bulky_category?.name,
+          },
+        } as any);
+      }
+      const pCondId =
+        selectedCargo.bulky_product_condition?.bulky_id ||
+        selectedCargo.bulky_product_condition?.id;
+      if (
+        pCondId &&
+        !rawProductCondition.some(
+          (c) =>
+            c.id === pCondId ||
+            (selectedCargo.bulky_product_condition?.name &&
+              getOptionLabel(c.nama).trim().toLowerCase() ===
+                selectedCargo.bulky_product_condition.name
+                  .trim()
+                  .toLowerCase()),
+        )
+      ) {
+        rawProductCondition.push({
+          id: pCondId,
+          nama: {
+            id: selectedCargo.bulky_product_condition?.name,
+            en: selectedCargo.bulky_product_condition?.name,
+          },
+        } as any);
+      }
+      const pkgCondId =
+        selectedCargo.bulky_package_condition?.bulky_id ||
+        selectedCargo.bulky_package_condition?.id;
+      if (
+        pkgCondId &&
+        !rawPackageCondition.some(
+          (c) =>
+            c.id === pkgCondId ||
+            (selectedCargo.bulky_package_condition?.name &&
+              getOptionLabel(c.nama).trim().toLowerCase() ===
+                selectedCargo.bulky_package_condition.name
+                  .trim()
+                  .toLowerCase()),
+        )
+      ) {
+        rawPackageCondition.push({
+          id: pkgCondId,
+          nama: {
+            id: selectedCargo.bulky_package_condition?.name,
+            en: selectedCargo.bulky_package_condition?.name,
+          },
+        } as any);
+      }
+      const srcId =
+        selectedCargo.bulky_product_source?.bulky_id ||
+        selectedCargo.bulky_product_source?.id;
+      if (
+        srcId &&
+        !rawSource.some(
+          (s) =>
+            s.id === srcId ||
+            (selectedCargo.bulky_product_source?.name &&
+              getOptionLabel(s.nama).trim().toLowerCase() ===
+                selectedCargo.bulky_product_source.name.trim().toLowerCase()),
+        )
+      ) {
+        rawSource.push({
+          id: srcId,
+          nama: {
+            id: selectedCargo.bulky_product_source?.name,
+            en: selectedCargo.bulky_product_source?.name,
+          },
+        } as any);
+      }
+      if (selectedCargo.bulky_brands) {
+        for (const b of selectedCargo.bulky_brands) {
+          const brandId = b.bulky_id || b.id;
+          if (
+            brandId &&
+            !rawBrand.some(
+              (rb) =>
+                rb.id === brandId ||
+                (b.name &&
+                  getOptionLabel(rb.nama).trim().toLowerCase() ===
+                    b.name.trim().toLowerCase()),
+            )
+          ) {
+            rawBrand.push({
+              id: brandId,
+              nama: b.name,
+            } as any);
+          }
+        }
+      }
+    }
+
+    return {
+      brand: rawBrand,
+      category: rawCategory,
+      packageCondition: rawPackageCondition,
+      productCondition: rawProductCondition,
+      source: rawSource,
+    };
+  }, [
+    brandSelectData,
+    categorySelectData,
+    packageConditionSelectData,
+    productConditionSelectData,
+    sourceSelectData,
+    selectedCargo,
+  ]);
 
   const isSuccessAllSelect =
     isSuccessBrand &&
@@ -539,9 +668,10 @@ export const ProductIdClient = () => {
                       error={fieldState.error}
                       idFor={`${idFormProduct}_${field.name}`}
                       currentCode={detail?.id_cargo}
-                      onSelectCargo={(cargo) =>
-                        setSelectedCargoId(cargo?.id ?? null)
-                      }
+                      onSelectCargo={(cargo) => {
+                        setSelectedCargo(cargo);
+                        setSelectedCargoId(cargo?.id ?? null);
+                      }}
                     />
                   )}
                 />
@@ -691,15 +821,22 @@ export const ProductIdClient = () => {
                       <ComboboxValue>
                         {(values) => (
                           <React.Fragment>
-                            {values.map((value: any) => (
-                              <ComboboxChip key={value}>
-                                {getOptionLabel(
-                                  selectProduct.brand.find(
-                                    (i) => i.id === value,
-                                  )?.nama,
-                                )}
-                              </ComboboxChip>
-                            ))}
+                            {values.map((value: any, index: number) => {
+                              const valId = getSelectId(value);
+                              return (
+                                <ComboboxChip
+                                  key={valId || `brand-chip-${index}`}
+                                >
+                                  {getOptionLabel(
+                                    selectProduct.brand.find(
+                                      (i) => i.id === (valId || value),
+                                    )?.nama ??
+                                      value?.nama ??
+                                      value,
+                                  )}
+                                </ComboboxChip>
+                              );
+                            })}
                             <ComboboxChipsInput
                               className={"placeholder:text-xs bg-transparent"}
                               placeholder="Pilih merek..."
@@ -751,19 +888,20 @@ export const ProductIdClient = () => {
                               itemValue: any,
                               selectedValue: any,
                             ) => {
-                              if (
-                                (itemValue as (typeof categories)[number])
-                                  .id === selectedValue
-                              ) {
-                                return true;
-                              }
+                              const itemId = getSelectId(itemValue);
+                              const selId = getSelectId(selectedValue);
+                              if (itemId && selId) return itemId === selId;
                               return itemValue === selectedValue;
                             }}
-                            itemToStringLabel={(v: string) =>
-                              getOptionLabel(
-                                categories.find((i) => i.id === v)?.nama,
-                              )
-                            }
+                            itemToStringLabel={(v: any) => {
+                              const valId = getSelectId(v);
+                              return (
+                                getOptionLabel(
+                                  categories.find((i) => i.id === (valId || v))
+                                    ?.nama,
+                                ) || getOptionLabel(v)
+                              );
+                            }}
                             filter={(itemValue: any, query: any) => {
                               return getOptionLabel(
                                 (itemValue as (typeof categories)[number]).nama,
@@ -819,19 +957,21 @@ export const ProductIdClient = () => {
                               itemValue: any,
                               selectedValue: any,
                             ) => {
-                              if (
-                                (itemValue as (typeof productCondition)[number])
-                                  .id === selectedValue
-                              ) {
-                                return true;
-                              }
+                              const itemId = getSelectId(itemValue);
+                              const selId = getSelectId(selectedValue);
+                              if (itemId && selId) return itemId === selId;
                               return itemValue === selectedValue;
                             }}
-                            itemToStringLabel={(v: string) =>
-                              getOptionLabel(
-                                productCondition.find((i) => i.id === v),
-                              )
-                            }
+                            itemToStringLabel={(v: any) => {
+                              const valId = getSelectId(v);
+                              return (
+                                getOptionLabel(
+                                  productCondition.find(
+                                    (i) => i.id === (valId || v),
+                                  )?.nama,
+                                ) || getOptionLabel(v)
+                              );
+                            }}
                             filter={(itemValue: any, query: any) => {
                               return getOptionLabel(
                                 (itemValue as (typeof productCondition)[number])
@@ -888,19 +1028,21 @@ export const ProductIdClient = () => {
                               itemValue: any,
                               selectedValue: any,
                             ) => {
-                              if (
-                                (itemValue as (typeof packageCondition)[number])
-                                  .id === selectedValue
-                              ) {
-                                return true;
-                              }
+                              const itemId = getSelectId(itemValue);
+                              const selId = getSelectId(selectedValue);
+                              if (itemId && selId) return itemId === selId;
                               return itemValue === selectedValue;
                             }}
-                            itemToStringLabel={(v: string) =>
-                              getOptionLabel(
-                                packageCondition.find((i) => i.id === v),
-                              )
-                            }
+                            itemToStringLabel={(v: any) => {
+                              const valId = getSelectId(v);
+                              return (
+                                getOptionLabel(
+                                  packageCondition.find(
+                                    (i) => i.id === (valId || v),
+                                  )?.nama,
+                                ) || getOptionLabel(v)
+                              );
+                            }}
                             filter={(itemValue: any, query: any) => {
                               return getOptionLabel(
                                 (itemValue as (typeof packageCondition)[number])
@@ -957,19 +1099,20 @@ export const ProductIdClient = () => {
                               itemValue: any,
                               selectedValue: any,
                             ) => {
-                              if (
-                                (itemValue as (typeof source)[number]).id ===
-                                selectedValue
-                              ) {
-                                return true;
-                              }
+                              const itemId = getSelectId(itemValue);
+                              const selId = getSelectId(selectedValue);
+                              if (itemId && selId) return itemId === selId;
                               return itemValue === selectedValue;
                             }}
-                            itemToStringLabel={(v: string) =>
-                              getOptionLabel(
-                                source.find((i) => i.id === v)?.nama,
-                              )
-                            }
+                            itemToStringLabel={(v: any) => {
+                              const valId = getSelectId(v);
+                              return (
+                                getOptionLabel(
+                                  source.find((i) => i.id === (valId || v))
+                                    ?.nama,
+                                ) || getOptionLabel(v)
+                              );
+                            }}
                             filter={(itemValue: any, query: any) => {
                               return getOptionLabel(
                                 (itemValue as (typeof source)[number]).nama,
