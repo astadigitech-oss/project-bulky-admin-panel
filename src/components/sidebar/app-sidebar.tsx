@@ -283,6 +283,11 @@ const data = {
           url: "/settings/deliveree-vehicles",
           permission: "deliveree_vehicle:read",
         },
+        {
+          title: "Backup Database",
+          url: "/settings/backups",
+          permission: "backup:read",
+        },
       ],
     },
   ],
