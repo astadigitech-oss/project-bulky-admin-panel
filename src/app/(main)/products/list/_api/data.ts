@@ -19,6 +19,12 @@ import {
   ListWmsCargoResponse,
   MarkWmsCargoSyncedParams,
   MarkWmsCargoSyncedResponse,
+  UpdateWmsCargoActualPriceBody,
+  UpdateWmsCargoActualPriceParams,
+  UpdateWmsCargoActualPriceResponse,
+  UpdateWmsProdukActualPriceBody,
+  UpdateWmsProdukActualPriceParams,
+  UpdateWmsProdukActualPriceResponse,
   ProductDetailRequest,
   ProductDetailResponse,
   ProductListRequest,
@@ -159,6 +165,16 @@ export const dataAPIProduct = {
       undefined,
       MarkWmsCargoSyncedParams
     >;
+    updateWmsCargoActualPrice: UseMutateConfig<
+      UpdateWmsCargoActualPriceResponse,
+      UpdateWmsCargoActualPriceBody,
+      UpdateWmsCargoActualPriceParams
+    >;
+    updateWmsProdukActualPrice: UseMutateConfig<
+      UpdateWmsProdukActualPriceResponse,
+      UpdateWmsProdukActualPriceBody,
+      UpdateWmsProdukActualPriceParams
+    >;
   } => ({
     create: {
       endpoint: "/produk",
@@ -279,6 +295,22 @@ export const dataAPIProduct = {
         if (queryClient) await invalidateQuery(queryClient, [[key[3]]]);
       },
       onError: { title: "MARK_WMS_CARGO_SYNCED" },
+    },
+    updateWmsCargoActualPrice: {
+      endpoint: "/wms/cargos/:id/actual-price",
+      method: "post",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+      },
+      onError: { title: "UPDATE_WMS_CARGO_ACTUAL_PRICE" },
+    },
+    updateWmsProdukActualPrice: {
+      endpoint: "/wms/produk/:id/actual-price",
+      method: "post",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+      },
+      onError: { title: "UPDATE_WMS_PRODUK_ACTUAL_PRICE" },
     },
   }),
 };

@@ -255,3 +255,46 @@ export type MarkWmsCargoSyncedResponse = BaseResponse & {
     synced_at: string;
   };
 };
+
+export type UpdateWmsCargoActualPriceBody = {
+  value: number;
+};
+
+export type UpdateWmsCargoActualPriceParams = {
+  id: string;
+};
+
+export type UpdateWmsCargoActualPriceResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    code: string;
+    sale_price: number;
+    actual_price: number;
+    actual_price_updated_at: string;
+  };
+};
+
+export type UpdateWmsProdukActualPriceBody = {
+  actual_price?: number;
+  value?: number;
+};
+
+export type UpdateWmsProdukActualPriceParams = {
+  id: string;
+};
+
+export type UpdateWmsProdukActualPriceResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    is_wms: boolean;
+    produk_id: string;
+    cargo_id?: string;
+    code?: string;
+    sale_price?: number;
+    actual_price?: number;
+    actual_price_updated_at?: string;
+  } | null;
+};
