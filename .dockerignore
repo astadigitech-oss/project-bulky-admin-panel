@@ -11,7 +11,3 @@ README.md
 *.pem
 *.log
 
-# Ignore Bun files to force npm usage
-bun.lockb
-bun.lock
-.bun/
