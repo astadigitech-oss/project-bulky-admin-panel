@@ -154,7 +154,7 @@ const getSelectIds = (values: unknown[]) =>
     .filter((value) => typeof value === "string" && value.trim());
 
 export const formSchema = z.object({
-  reference_id: z.string(),
+  reference_code: z.string().optional(),
   nama_id: z.string().min(1, "Nama ID tidak boleh kosong"),
   nama_en: z.string().min(1, "Nama EN tidak boleh kosong"),
   id_cargo: z.string().min(1, "Id Cargo tidak boleh kosong"),
@@ -370,7 +370,7 @@ export const ProductIdClient = () => {
       nama_id: detail?.nama_id ?? "",
       discrepancy: detail?.discrepancy ?? "",
       id_cargo: detail?.id_cargo ?? "",
-      reference_id: detail?.reference_id ?? "",
+      reference_code: detail?.reference_code ?? "",
       kategori_id: detail ? detail.kategori.id : "",
       kondisi_id: detail ? detail.kondisi.id : "",
       kondisi_paket_id: detail ? detail.kondisi_paket.id : "",
@@ -403,7 +403,7 @@ export const ProductIdClient = () => {
       body.append("discrepancy", values.discrepancy);
     }
     body.append("id_cargo", values.id_cargo);
-    // body.append("reference_id", values.reference_id);
+    if (values.reference_code) body.append("reference_code", values.reference_code);
     body.append("kategori_id", values.kategori_id);
     body.append("kondisi_id", values.kondisi_id);
     body.append("kondisi_paket_id", values.kondisi_paket_id);
@@ -671,6 +671,9 @@ export const ProductIdClient = () => {
                       onSelectCargo={(cargo) => {
                         setSelectedCargo(cargo);
                         setSelectedCargoId(cargo?.id ?? null);
+                        if (cargo) {
+                          form.setValue("reference_code", cargo.code);
+                        }
                       }}
                     />
                   )}

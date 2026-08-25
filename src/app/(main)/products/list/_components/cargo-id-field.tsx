@@ -61,7 +61,7 @@ export const CargoIdField = ({
     useListWmsCargoPriced({ search: searchValue, enabled: !isManual });
 
   const cargoList = data?.data ?? [];
-  const selected = cargoList.find((item) => item.code === value);
+  const selected = cargoList.find((item) => item.id === value || item.code === value);
 
   // Kalau value saat ini (mis. dari data produk existing) tidak ditemukan di
   // daftar WMS terkini, anggap manual supaya tidak menampilkan dropdown
@@ -113,7 +113,7 @@ export const CargoIdField = ({
           value={value}
           onValueChange={(v) => {
             onChange(v ?? "");
-            const item = cargoList.find((c) => c.code === v);
+            const item = cargoList.find((c) => c.id === v || c.code === v);
             onSelectCargo?.(item ?? null);
           }}
           disabled={disabled}
@@ -121,7 +121,7 @@ export const CargoIdField = ({
         >
           <SelectTrigger id={idFor} className="w-full">
             <SelectValue placeholder="Pilih cargo dari WMS...">
-              {(v: string) => formatCargoLabel(v, selected)}
+              {(v: string) => formatCargoLabel(selected ? selected.code : v, selected)}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -159,7 +159,7 @@ export const CargoIdField = ({
               </p>
             ) : (
               cargoList.map((item) => (
-                <SelectItem key={item.id} value={item.code}>
+                <SelectItem key={item.id} value={item.id}>
                   <div className="flex flex-col">
                     <span>{item.code}</span>
                     <span className="text-xs text-muted-foreground">

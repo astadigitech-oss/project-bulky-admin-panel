@@ -14,7 +14,7 @@ export type ProductPartIType = {
   is_qc_pass: boolean;
   nama_en: string;
   nama_id: string;
-  reference_id: null | string;
+  reference_code: null | string;
   status: boolean;
 };
 
@@ -65,7 +65,7 @@ export type ProductDetailResponse = BaseResponse & {
     nama_id: string;
     panjang: number;
     quantity: number;
-    reference_id: null;
+    reference_code: string | null;
     slug: string;
     sumber: { id: string; nama: string } | null;
     tinggi: number;

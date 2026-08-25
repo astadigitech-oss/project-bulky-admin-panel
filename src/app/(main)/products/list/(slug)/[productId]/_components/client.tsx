@@ -378,7 +378,7 @@ export const ProductDetailClient = () => {
           <div className="col-span-1 flex-col gap-6 flex">
             <div className="flex flex-col text-xs rounded-lg overflow-hidden border border-gray-300 dark:border-gray-300/50">
               <div className="bg-gray-100 dark:bg-gray-800 min-h-8 flex items-center justify-between px-2">
-                <p>Referensi Id</p>
+                <p>Kode Referensi</p>
                 <Link href={"#"}>
                   <Button size={"icon-xs"} variant={"ghost"}>
                     <ArrowUpRight />
@@ -386,7 +386,7 @@ export const ProductDetailClient = () => {
                 </Link>
               </div>
               <p className="flex items-center min-h-8 flex-wrap px-2">
-                {detail?.reference_id}
+                {detail?.reference_code || "-"}
               </p>
             </div>
             <div className="flex flex-col text-xs rounded-lg overflow-hidden border border-gray-300 dark:border-gray-300/50">
