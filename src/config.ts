@@ -1,5 +1,5 @@
 const rawApiUrl = (process.env.NEXT_PUBLIC_BASE_API_URL || "").trim();
-const defaultBaseUrl = "https://api.bulky.id";
+const defaultBaseUrl = "https://api-panel-bulky.astadigitalagency.com";
 
 // Normalisasi URL agar fleksibel baik saat diisi dengan /api maupun tanpa /api,
 // dan mencegah fallback kosong saat build-time Docker standalone.
@@ -8,9 +8,9 @@ const resolvedBaseUrl = (rawApiUrl || defaultBaseUrl)
   .replace(/\/api$/, "");
 
 export const baseUrlToko =
-  process.env.NEXT_PUBLIC_BASE_URL_TOKO || "http://localhost:3000";
+  process.env.NEXT_PUBLIC_BASE_URL_TOKO || "https://bulky.id";
 export const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001";
+  process.env.NEXT_PUBLIC_BASE_URL || "https://panel-bulky.astadigitalagency.com";
 export const baseApiUrl = resolvedBaseUrl;
 export const apiUrl = `${resolvedBaseUrl}/api/panel`;
 export const cookiesKey =
