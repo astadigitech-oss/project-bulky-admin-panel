@@ -9,6 +9,8 @@ import {
   DatabaseBackup,
   FileSearch,
   FileWarning,
+  Sparkles,
+  Zap,
   HardDriveDownload,
   HardDriveUpload,
   ListChecks,
@@ -35,6 +37,7 @@ import type {
   CleanupStaleV1UploadsResponse,
   ImportV1FileItem,
   ListPendingV1UploadsResponse,
+  OptimizeWebPResponse,
   PruneOrphansResponse,
   VerifyAssetsResponse,
 } from "../../_api/types";
@@ -117,12 +120,22 @@ export const AssetMigrationSection = () => {
   // Token dry-run untuk cleanup chunk basi (pola sama dengan prune).
   const [cleanupToken, setCleanupToken] = useState<string | null>(null);
   const [cleanupTokenExpiry, setCleanupTokenExpiry] = useState<number | null>(null);
+  const [optimizeResult, setOptimizeResult] = useState<OptimizeWebPResponse["data"] | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizeToken, setOptimizeToken] = useState<string | null>(null);
+  const [optimizeTokenExpiry, setOptimizeTokenExpiry] = useState<number | null>(null);
+  const [optimizeScope, setOptimizeScope] = useState<string>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const v1InputRef = useRef<HTMLInputElement>(null);
   const [ConfirmPruneDialog, confirmPrune] = useConfirm(
     "Hapus file tak terpakai?",
     "File yang tidak direferensikan database akan dihapus permanen. Lanjutkan?",
     "destructive",
+  );
+  const [ConfirmOptimizeDialog, confirmOptimize] = useConfirm(
+    "Konversi Media ke WebP?",
+    "Semua gambar yang belum berformat WebP atau > 200KB akan dikonversi ke WebP dan database akan diperbarui. File asli lama tetap aman di disk. Lanjutkan?",
+    "default",
   );
   const [ConfirmCleanupDialog, confirmCleanup] = useConfirm(
     "Hapus chunk upload basi?",
@@ -552,6 +565,65 @@ export const AssetMigrationSection = () => {
     }
   };
 
+  // Optimize WebP dry-run — pratinjau kalkulasi estimasi & daftar kandidat
+  const handleOptimizeDryRun = async () => {
+    setIsOptimizing(true);
+    try {
+      const token = getCookie(cookiesKey);
+      const res = await axios.post<OptimizeWebPResponse>(
+        `${assetApiUrl}/optimize-webp`,
+        { dry_run: true, scope: optimizeScope },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = res.data.data;
+      setOptimizeResult({
+        ...data,
+        items: data.items ?? [],
+      });
+      setOptimizeToken(data.dry_run_token ?? null);
+      setOptimizeTokenExpiry(data.token_expiry_s ?? null);
+      toast.success(res.data.message ?? "Pemindaian WebP selesai");
+    } catch {
+      toast.error("Gagal memindai media untuk optimasi WebP");
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  // Eksekusi optimasi WebP — pakai token dari dry-run terakhir
+  const handleOptimizeExecute = async () => {
+    if (!optimizeToken) {
+      toast.error("Jalankan dry-run dulu untuk mengaktifkan eksekusi konversi");
+      return;
+    }
+    const confirmed = await confirmOptimize();
+    if (!confirmed) return;
+
+    setIsOptimizing(true);
+    try {
+      const token = getCookie(cookiesKey);
+      const res = await axios.post<OptimizeWebPResponse>(
+        `${assetApiUrl}/optimize-webp`,
+        { dry_run: false, dry_run_token: optimizeToken, scope: optimizeScope },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = res.data.data;
+      setOptimizeResult({
+        ...data,
+        items: data.items ?? [],
+      });
+      setOptimizeToken(null);
+      setOptimizeTokenExpiry(null);
+      toast.success(res.data.message ?? "Optimasi WebP selesai");
+    } catch {
+      toast.error("Optimasi WebP gagal — jalankan dry-run ulang");
+      setOptimizeToken(null);
+      setOptimizeTokenExpiry(null);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
   const skippedFiles = importResult?.files.filter(
     (f) => f.status === "skipped",
   );
@@ -695,6 +767,81 @@ export const AssetMigrationSection = () => {
 
         {/* ============ Perawatan Storage ============ */}
         <div className="flex flex-col gap-5 border p-4 rounded-lg dark:bg-gray-900/70">
+          {/* Optimasi Gambar WebP */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-medium text-sm">
+                  Optimasi Gambar ke WebP (&lt; 200KB)
+                </p>
+                <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                  Non-Destructive
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Konversi seluruh gambar di database (Produk, Banner, Hero, Blog, Kategori, Brand, dll) ke format WebP berkualitas tinggi &lt; 200KB. File asli tetap aman di disk dan dapat dibersihkan kapan saja via menu <strong>Bersihkan File Tak Terpakai (Prune)</strong>.
+              </p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <span className="text-xs text-muted-foreground">Scope:</span>
+                <select
+                  value={optimizeScope}
+                  onChange={(e) => {
+                    setOptimizeScope(e.target.value);
+                    setOptimizeToken(null);
+                  }}
+                  className="h-7 rounded-md border border-input bg-background px-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="all">Semua Media (All)</option>
+                  <option value="products">Produk</option>
+                  <option value="banners">Banner & Promo</option>
+                  <option value="hero">Hero Section</option>
+                  <option value="blogs">Blog Articles</option>
+                  <option value="categories">Kategori Produk</option>
+                  <option value="brands">Merek / Brand</option>
+                  <option value="videos">Thumbnail Video</option>
+                  <option value="reviews">Ulasan</option>
+                  <option value="buyers">Foto Profil Buyer</option>
+                </select>
+                {optimizeToken && (
+                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                    <CheckCircle2 className="size-3.5" /> Siap dikonversi ({optimizeResult?.total_candidates ?? 0} file)
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0 self-start mt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                disabled={isOptimizing}
+                onClick={handleOptimizeDryRun}
+              >
+                {isOptimizing ? (
+                  <Spinner className="size-4 mr-2" />
+                ) : (
+                  <Sparkles className="size-4 mr-2 text-blue-500" />
+                )}
+                Dry-run
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={isOptimizing || !optimizeToken || optimizeResult?.total_candidates === 0}
+                onClick={handleOptimizeExecute}
+              >
+                {isOptimizing ? (
+                  <Spinner className="size-4 mr-2" />
+                ) : (
+                  <Zap className="size-4 mr-2" />
+                )}
+                {optimizeToken ? `Konversi (${optimizeResult?.total_candidates ?? 0})` : "Konversi"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="border-t" />
           {/* Verifikasi konsistensi DB ↔ file */}
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -1364,6 +1511,7 @@ export const AssetMigrationSection = () => {
 
       <ConfirmPruneDialog />
       <ConfirmCleanupDialog />
+      <ConfirmOptimizeDialog />
     </div>
   );
 };

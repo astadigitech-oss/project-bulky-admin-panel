@@ -29,3 +29,5 @@ export const useImportV1 = () =>
   useMutate(dataAPIGeneral.mutation().importV1);
 export const usePruneOrphans = () =>
   useMutate(dataAPIGeneral.mutation().pruneOrphans);
+export const useOptimizeWebP = () =>
+  useMutate(dataAPIGeneral.mutation().optimizeWebP);
