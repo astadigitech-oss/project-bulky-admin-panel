@@ -131,7 +131,7 @@ const getSelectIds = (values: unknown[]) =>
     .filter((value) => typeof value === "string" && value.trim());
 
 const formSchema = z.object({
-  reference_id: z.string().optional(),
+  reference_code: z.string().optional(),
   nama_id: z.string().min(1, "Nama ID tidak boleh kosong"),
   nama_en: z.string().min(1, "Nama EN tidak boleh kosong"),
   id_cargo: z.string().min(1, "Id Cargo tidak boleh kosong"),
@@ -344,7 +344,7 @@ export const ProductIdClient = () => {
       nama_id: "",
       discrepancy: "",
       id_cargo: "",
-      reference_id: "",
+      reference_code: "",
       kategori_id: "",
       kondisi_id: "",
       kondisi_paket_id: "",
@@ -373,7 +373,12 @@ export const ProductIdClient = () => {
     setSelectedCargoId(cargo?.id ?? null);
     setIsCargoFromWms(!!cargo);
 
-    if (!cargo) return;
+    if (!cargo) {
+      form.setValue("reference_code", "");
+      return;
+    }
+
+    form.setValue("reference_code", cargo.code);
 
     // Helper untuk mencari ID yang cocok di master data Bulky (cocokkan ID dulu, lalu Nama)
     const findMatchingId = <T extends { id?: unknown; nama?: unknown }>(
@@ -462,7 +467,7 @@ export const ProductIdClient = () => {
     body.append("nama_id", values.nama_id);
     body.append("discrepancy", values.discrepancy ?? "");
     body.append("id_cargo", values.id_cargo);
-    // body.append("reference_id", values.reference_id ?? "");
+    if (values.reference_code) body.append("reference_code", values.reference_code);
     body.append("kategori_id", values.kategori_id);
     body.append("kondisi_id", values.kondisi_id);
     body.append("kondisi_paket_id", values.kondisi_paket_id);

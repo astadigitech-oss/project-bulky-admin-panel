@@ -4,6 +4,24 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: "standalone",
   reactCompiler: true,
+  async rewrites() {
+    const rawApiUrl = (
+      process.env.NEXT_PUBLIC_BASE_API_URL ||
+      process.env.BASE_API_URL ||
+      "https://api-panel-bulky.astadigitalagency.com"
+    ).trim();
+    const backendUrl = rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "");
+    return [
+      {
+        source: "/api/panel/:path*",
+        destination: `${backendUrl}/api/panel/:path*`,
+      },
+      {
+        source: "/uploads/:path*",
+        destination: `${backendUrl}/uploads/:path*`,
+      },
+    ];
+  },
   images: {
     dangerouslyAllowLocalIP: true,
     localPatterns: [

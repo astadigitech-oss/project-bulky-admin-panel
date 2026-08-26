@@ -14,7 +14,7 @@ export type ProductPartIType = {
   is_qc_pass: boolean;
   nama_en: string;
   nama_id: string;
-  reference_id: null | string;
+  reference_code: null | string;
   status: boolean;
 };
 
@@ -65,7 +65,7 @@ export type ProductDetailResponse = BaseResponse & {
     nama_id: string;
     panjang: number;
     quantity: number;
-    reference_id: null;
+    reference_code: string | null;
     slug: string;
     sumber: { id: string; nama: string } | null;
     tinggi: number;
@@ -254,4 +254,47 @@ export type MarkWmsCargoSyncedResponse = BaseResponse & {
     is_sync: boolean;
     synced_at: string;
   };
+};
+
+export type UpdateWmsCargoActualPriceBody = {
+  value: number;
+};
+
+export type UpdateWmsCargoActualPriceParams = {
+  id: string;
+};
+
+export type UpdateWmsCargoActualPriceResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    code: string;
+    sale_price: number;
+    actual_price: number;
+    actual_price_updated_at: string;
+  };
+};
+
+export type UpdateWmsProdukActualPriceBody = {
+  actual_price?: number;
+  value?: number;
+};
+
+export type UpdateWmsProdukActualPriceParams = {
+  id: string;
+};
+
+export type UpdateWmsProdukActualPriceResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    is_wms: boolean;
+    produk_id: string;
+    cargo_id?: string;
+    code?: string;
+    sale_price?: number;
+    actual_price?: number;
+    actual_price_updated_at?: string;
+  } | null;
 };

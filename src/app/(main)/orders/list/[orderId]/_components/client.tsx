@@ -1262,7 +1262,36 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                             </span>
                           </p>
                           {h.note && (
-                            <p className="text-muted-foreground">{h.note}</p>
+                            <div className="mt-1">
+                              {h.note.startsWith("[WMS]") ? (
+                                <div className="rounded-md border bg-muted/40 p-2 text-xs">
+                                  <div className="flex items-center gap-1.5 font-medium">
+                                    <Badge
+                                      variant={h.note.includes("Gagal") ? "destructive" : "secondary"}
+                                      className="text-[10px] px-1.5 py-0"
+                                    >
+                                      WMS Sync
+                                    </Badge>
+                                    <span className={h.note.includes("Gagal") ? "text-destructive" : "text-foreground font-normal"}>
+                                      {h.note.replace("[WMS] ", "")}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : h.note.startsWith("[DISCLAIMER]") ? (
+                                <div className="rounded-md border bg-muted/30 p-2 text-xs">
+                                  <div className="flex items-center gap-1.5 font-medium">
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                      Disclaimer
+                                    </Badge>
+                                    <span className="text-muted-foreground font-normal">
+                                      {h.note.replace("[DISCLAIMER] ", "")}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-muted-foreground">{h.note}</p>
+                              )}
+                            </div>
                           )}
                           <p className="text-muted-foreground">
                             {format(new Date(h.created_at), "dd MMM yyyy, HH:mm")}

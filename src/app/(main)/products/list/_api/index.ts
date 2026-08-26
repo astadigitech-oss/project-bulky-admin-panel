@@ -98,6 +98,12 @@ export const useSetWmsCargoPrice = () =>
 export const useMarkWmsCargoSynced = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).markWmsCargoSynced);
 
+export const useUpdateWmsCargoActualPrice = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).updateWmsCargoActualPrice);
+
+export const useUpdateWmsProdukActualPrice = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).updateWmsProdukActualPrice);
+
 /**
  * Download PDF harga cargo WMS sebagai Blob (proxy dari BE, bukan URL
  * publik) — dipakai untuk mengisi field "Dokumen PDF" form create produk

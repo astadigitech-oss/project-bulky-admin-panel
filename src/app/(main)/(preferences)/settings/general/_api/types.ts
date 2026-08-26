@@ -218,3 +218,44 @@ export type CleanupStaleV1UploadsResponse = BaseResponse & {
     token_expiry_s: number;
   };
 };
+
+// --- Global WebP Image Optimizer ---
+export type OptimizeWebPBody = {
+  dry_run: boolean;
+  dry_run_token?: string;
+  scope?: string;
+};
+
+export type OptimizeWebPItem = {
+  scope: string;
+  table: string;
+  column: string;
+  record_id: string;
+  old_path: string;
+  new_path?: string;
+  old_size_bytes: number;
+  new_size_bytes?: number;
+  saved_bytes?: number;
+  status: "converted" | "candidate" | "already_optimal" | "missing" | "failed";
+  error_message?: string;
+};
+
+export type OptimizeWebPResponse = BaseResponse & {
+  data: {
+    dry_run: boolean;
+    scope: string;
+    total_scanned: number;
+    total_candidates: number;
+    total_converted: number;
+    total_skipped: number;
+    total_missing: number;
+    total_failed: number;
+    original_size_bytes: number;
+    new_size_bytes: number;
+    saved_size_bytes: number;
+    saved_percentage: number;
+    dry_run_token: string;
+    token_expiry_s: number;
+    items: OptimizeWebPItem[];
+  };
+};

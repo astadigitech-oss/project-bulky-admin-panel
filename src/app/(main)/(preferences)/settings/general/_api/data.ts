@@ -10,6 +10,8 @@ import {
   GetWarehouseResponse,
   ImportV1Body,
   ImportV1Response,
+  OptimizeWebPBody,
+  OptimizeWebPResponse,
   PruneOrphansBody,
   PruneOrphansResponse,
   UpdatePaymentParams,
@@ -83,6 +85,7 @@ export const dataAPIGeneral = {
     >;
     importV1: UseMutateConfig<ImportV1Response, ImportV1Body>;
     pruneOrphans: UseMutateConfig<PruneOrphansResponse, PruneOrphansBody>;
+    optimizeWebP: UseMutateConfig<OptimizeWebPResponse, OptimizeWebPBody>;
   } => ({
     updateProfile: {
       endpoint: "/auth/profile",
@@ -152,6 +155,14 @@ export const dataAPIGeneral = {
         toast.success(data.message);
       },
       onError: { title: "PRUNE_ORPHANS" },
+    },
+    optimizeWebP: {
+      endpoint: `/assets/optimize-webp`,
+      method: "post",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+      },
+      onError: { title: "OPTIMIZE_WEBP" },
     },
   }),
 };
