@@ -24,10 +24,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Support build-time environment variables for Next.js (NEXT_PUBLIC_*)
-# Default to staging domain so build never produces empty fallback
-ARG NEXT_PUBLIC_BASE_URL="https://panel-bulky.astadigitalagency.com"
+ARG NEXT_PUBLIC_BASE_URL=""
 ARG NEXT_PUBLIC_BASE_URL_TOKO="https://bulky.id"
-ARG NEXT_PUBLIC_BASE_API_URL="https://api-panel-bulky.astadigitalagency.com"
+ARG NEXT_PUBLIC_BASE_API_URL=""
 ARG NEXT_PUBLIC_COOKIES_KEY="ACCESS_TOKEN"
 
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL

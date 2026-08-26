@@ -8,8 +8,11 @@ const nextConfig: NextConfig = {
     const rawApiUrl = (
       process.env.NEXT_PUBLIC_BASE_API_URL ||
       process.env.BASE_API_URL ||
-      "https://api-panel-bulky.astadigitalagency.com"
+      ""
     ).trim();
+    if (!rawApiUrl) {
+      return [];
+    }
     const backendUrl = rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "");
     return [
       {
@@ -33,10 +36,6 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "**.bulky.id",
-      },
-      {
-        protocol: "https",
-        hostname: "**.astadigitalagency.com",
       },
       {
         protocol: "http",
