@@ -144,6 +144,13 @@ export type OrderDetailResponse = BaseResponse & {
     biaya_lainnya: string;
     potongan_kupon: string;
     total_bayar: string;
+    kupon: {
+      id: string;
+      kupon_id: string;
+      kode_kupon: string;
+      nama_kupon?: string | null;
+      nilai_potongan: string;
+    } | null;
     catatan_buyer: string | null;
     catatan_admin: string | null;
     created_at: string;
