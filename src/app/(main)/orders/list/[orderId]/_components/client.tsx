@@ -678,6 +678,24 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                   <span className="text-muted-foreground">Biaya Produk</span>
                   <span>{formatRupiah(order.biaya_produk)}</span>
                 </div>
+                {(order.kupon || Number(order.potongan_kupon) > 0) && (
+                  <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Tag className="size-3.5 shrink-0" />
+                      <span className="truncate">
+                        Potongan Kupon
+                        {order.kupon?.kode_kupon && (
+                          <span className="ml-1.5 font-mono text-[11px] font-semibold bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                            {order.kupon.kode_kupon}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <span className="font-medium shrink-0">
+                      - {formatRupiah(order.kupon?.nilai_potongan ?? order.potongan_kupon)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
                     Biaya Pengiriman
