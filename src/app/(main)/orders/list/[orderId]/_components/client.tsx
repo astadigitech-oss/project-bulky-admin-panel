@@ -42,6 +42,7 @@ import {
   FileText,
   Download,
   XCircle,
+  Tag,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -695,12 +696,6 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                     <span>{formatRupiah(order.biaya_lainnya)}</span>
                   </div>
                 )}
-                {Number(order.potongan_kupon) > 0 && (
-                  <div className="flex justify-between text-emerald-600">
-                    <span>Potongan Kupon</span>
-                    <span>- {formatRupiah(order.potongan_kupon)}</span>
-                  </div>
-                )}
                 <Separator />
                 <div className="flex justify-between font-semibold text-base">
                   <span>Total Bayar</span>
@@ -806,6 +801,42 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
 
         {/* Kolom kanan */}
         <div className="flex flex-col gap-4">
+          {/* Kupon Digunakan */}
+          {(order.kupon || Number(order.potongan_kupon) > 0) && (
+            <Card className="border-emerald-500/30 bg-emerald-500/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                    <Tag className="size-4" />
+                    Kupon Digunakan
+                  </div>
+                  {order.kupon?.kode_kupon && (
+                    <Badge className="bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-mono text-xs">
+                      {order.kupon.kode_kupon}
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-1.5 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Potongan Kupon</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    - {formatRupiah(order.kupon?.nilai_potongan ?? order.potongan_kupon)}
+                  </span>
+                </div>
+                {order.kupon?.nama_kupon && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Nama Promo</span>
+                    <span className="font-medium text-foreground">{order.kupon.nama_kupon}</span>
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground pt-1 border-t border-emerald-500/20">
+                  * Kupon langsung memotong subtotal belanja produk saat checkout.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Info pembeli */}
           <Card>
             <CardHeader className="pb-3">
