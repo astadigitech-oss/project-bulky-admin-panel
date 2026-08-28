@@ -848,9 +848,7 @@ export const OrderDetailClient = ({ orderId }: { orderId: string }) => {
                     <span className="font-medium text-foreground">{order.kupon.nama_kupon}</span>
                   </div>
                 )}
-                <p className="text-[11px] text-muted-foreground pt-1 border-t border-emerald-500/20">
-                  * Kupon langsung memotong subtotal belanja produk saat checkout.
-                </p>
+
               </CardContent>
             </Card>
           )}
