@@ -172,12 +172,18 @@ export const DialogSyncWmsProduct = ({
     return null;
   }, [selectedPalet, diskonType, diskonValue]);
 
-  const handleClose = () => {
-    onOpenChange(false);
+  const resetDialog = () => {
     form.reset();
     setSearch("");
     setWmsStatus({ state: "idle", message: "" });
   };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange(nextOpen);
+    if (!nextOpen) resetDialog();
+  };
+
+  const handleClose = () => handleOpenChange(false);
 
   const onSubmit = () => {
     if (!selectedPalet || !diskonValue) return;
@@ -200,14 +206,11 @@ export const DialogSyncWmsProduct = ({
   useEffect(() => {
     if (open) {
       runTestWmsConnection({ silent: true });
-    } else {
-      handleClose();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         showCloseButton={false}
         className="md:min-w-xl md:max-w-3xl flex flex-col"

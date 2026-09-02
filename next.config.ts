@@ -35,6 +35,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "**.astadigitalagency.com",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
         hostname: "**.bulky.id",
       },
       {

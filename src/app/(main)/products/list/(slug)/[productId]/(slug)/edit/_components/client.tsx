@@ -45,13 +45,11 @@ import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 import ID from "country-flag-icons/react/1x1/ID";
 import GB from "country-flag-icons/react/1x1/GB";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { cn, formatRupiah, numericString } from "@/lib/utils";
 import { DropzonePDF } from "@/components/ui/dropzone-pdf";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { useGetBrandSelect } from "@api/product/brands";
 import { useGetSourceSelect } from "@api/product/sources";
 import { useGetCategorySelect } from "@api/product/categories";
@@ -79,21 +77,6 @@ import { TooltipText } from "@/providers/tooltip-provider";
 import { Spinner } from "@/components/ui/spinner";
 import { CargoIdField } from "@/app/(main)/products/list/_components/cargo-id-field";
 import { WmsCargoPricedItemType } from "@/app/(main)/products/list/_api/types";
-
-const reference_ids = [
-  {
-    id: "cargo_1",
-    name: "Bundle Cargo 1",
-  },
-  {
-    id: "cargo_2",
-    name: "Bundle Cargo 2",
-  },
-  {
-    id: "cargo_3",
-    name: "Bundle Cargo 3",
-  },
-];
 
 const FILE_RULES = {
   docMimeTypes: ["application/pdf"],

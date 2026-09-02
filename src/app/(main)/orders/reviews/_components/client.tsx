@@ -113,10 +113,32 @@ export const OrderReviewsClient = () => {
     }
   }, [listData]);
 
-  // Clear selection when data changes
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [page, limit, search, selectedStatus, appliedRating]);
+  const clearSelection = () => setSelectedIds([]);
+
+  const handleSearchChange: typeof setSearch = (value, options) => {
+    clearSelection();
+    return setSearch(value, options);
+  };
+
+  const handleStatusChange = (value: boolean | undefined) => {
+    clearSelection();
+    setSelectedStatus(value);
+  };
+
+  const handleRatingChange = (value: number | undefined) => {
+    clearSelection();
+    setAppliedRating(value);
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    clearSelection();
+    setPage(nextPage);
+  };
+
+  const handleLimitChange = (nextLimit: number) => {
+    clearSelection();
+    setLimit(nextLimit);
+  };
 
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -152,6 +174,7 @@ export const OrderReviewsClient = () => {
   };
 
   const handleResetFilters = () => {
+    clearSelection();
     setSelectedStatus(undefined);
     setAppliedRating(undefined);
     setSearch("");
@@ -186,7 +209,7 @@ export const OrderReviewsClient = () => {
             placeholder="Cari ulasan..."
             classNameWrap="w-60"
             value={search}
-            setValue={setSearch}
+            setValue={handleSearchChange}
           />
           <TooltipText
             value="Perbarui Data"
@@ -267,7 +290,7 @@ export const OrderReviewsClient = () => {
                           key={String(opt.value)}
                           className="text-xs"
                           onSelect={() =>
-                            setSelectedStatus(
+                            handleStatusChange(
                               isSelected ? undefined : opt.value,
                             )
                           }
@@ -307,7 +330,7 @@ export const OrderReviewsClient = () => {
                       <CommandGroup>
                         <CommandItem
                           className="text-xs font-medium justify-center"
-                          onSelect={() => setSelectedStatus(undefined)}
+                          onSelect={() => handleStatusChange(undefined)}
                         >
                           Clear filter
                         </CommandItem>
@@ -360,7 +383,7 @@ export const OrderReviewsClient = () => {
                           key={r}
                           className="text-xs"
                           onSelect={() =>
-                            setAppliedRating(isSelected ? undefined : r)
+                            handleRatingChange(isSelected ? undefined : r)
                           }
                         >
                           <div
@@ -384,7 +407,7 @@ export const OrderReviewsClient = () => {
                       <CommandGroup>
                         <CommandItem
                           className="text-xs font-medium justify-center"
-                          onSelect={() => setAppliedRating(undefined)}
+                          onSelect={() => handleRatingChange(undefined)}
                         >
                           Clear filter
                         </CommandItem>
@@ -432,8 +455,8 @@ export const OrderReviewsClient = () => {
         />
         <Pagination
           pagination={metaPage}
-          setPage={setPage}
-          setLimit={setLimit}
+          setPage={handlePageChange}
+          setLimit={handleLimitChange}
         />
       </div>
     </div>

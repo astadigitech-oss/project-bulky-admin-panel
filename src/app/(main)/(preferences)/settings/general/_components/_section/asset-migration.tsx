@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import axios from "axios";
 import { getCookie } from "cookies-next/client";
 import { toast } from "sonner";
@@ -123,7 +123,6 @@ export const AssetMigrationSection = () => {
   const [optimizeResult, setOptimizeResult] = useState<OptimizeWebPResponse["data"] | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeToken, setOptimizeToken] = useState<string | null>(null);
-  const [optimizeTokenExpiry, setOptimizeTokenExpiry] = useState<number | null>(null);
   const [optimizeScope, setOptimizeScope] = useState<string>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const v1InputRef = useRef<HTMLInputElement>(null);
@@ -581,7 +580,6 @@ export const AssetMigrationSection = () => {
         items: data.items ?? [],
       });
       setOptimizeToken(data.dry_run_token ?? null);
-      setOptimizeTokenExpiry(data.token_expiry_s ?? null);
       toast.success(res.data.message ?? "Pemindaian WebP selesai");
     } catch {
       toast.error("Gagal memindai media untuk optimasi WebP");
@@ -613,12 +611,10 @@ export const AssetMigrationSection = () => {
         items: data.items ?? [],
       });
       setOptimizeToken(null);
-      setOptimizeTokenExpiry(null);
       toast.success(res.data.message ?? "Optimasi WebP selesai");
     } catch {
       toast.error("Optimasi WebP gagal — jalankan dry-run ulang");
       setOptimizeToken(null);
-      setOptimizeTokenExpiry(null);
     } finally {
       setIsOptimizing(false);
     }
