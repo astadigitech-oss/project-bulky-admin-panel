@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import axios from "axios";
 import { getCookie } from "cookies-next/client";
 import { toast } from "sonner";
@@ -123,7 +123,6 @@ export const AssetMigrationSection = () => {
   const [optimizeResult, setOptimizeResult] = useState<OptimizeWebPResponse["data"] | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeToken, setOptimizeToken] = useState<string | null>(null);
-  const [optimizeTokenExpiry, setOptimizeTokenExpiry] = useState<number | null>(null);
   const [optimizeScope, setOptimizeScope] = useState<string>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const v1InputRef = useRef<HTMLInputElement>(null);

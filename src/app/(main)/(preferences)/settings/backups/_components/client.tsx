@@ -139,7 +139,7 @@ export const BackupClient = () => {
       window.URL.revokeObjectURL(blobUrl);
 
       toast.success(`Berhasil mengunduh ${filename}`, { id: toastId });
-    } catch (err: any) {
+    } catch {
       toast.error("Gagal mengunduh file backup", { id: toastId });
     }
   };

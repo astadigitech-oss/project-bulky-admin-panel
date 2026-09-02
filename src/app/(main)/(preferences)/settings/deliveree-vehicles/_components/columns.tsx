@@ -24,7 +24,6 @@ import {
   Weight,
 } from "lucide-react";
 import { MetaPagination } from "@/lib/types";
-import { Dispatch, SetStateAction } from "react";
 import { DelivereeVehicle } from "../_api/types";
 
 export const formatKubikasi = (value: number | null | undefined) =>

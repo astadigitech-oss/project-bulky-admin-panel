@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, PencilLine, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useListWmsCargoPriced } from "@api/product/list";
 import { WmsCargoPricedItemType } from "@/app/(main)/products/list/_api/types";
 import { useSearch } from "@/hooks/use-search";
@@ -54,7 +54,9 @@ export const CargoIdField = ({
    * auto-fill field lain & mendownload PDF harga. */
   onSelectCargo?: (cargo: WmsCargoPricedItemType | null) => void;
 }) => {
-  const [isManual, setIsManual] = useState(false);
+  const [manualModeOverride, setManualModeOverride] = useState<boolean | null>(
+    null,
+  );
   const { search, searchValue, setSearch } = useSearch();
 
   const { data, isLoading, isFetching, isError, refetch } =
@@ -64,14 +66,10 @@ export const CargoIdField = ({
   const selected = cargoList.find((item) => item.id === value || item.code === value);
 
   // Kalau value saat ini (mis. dari data produk existing) tidak ditemukan di
-  // daftar WMS terkini, anggap manual supaya tidak menampilkan dropdown
-  // kosong/membingungkan.
-  useEffect(() => {
-    if (value && currentCode && value === currentCode && !selected && !isLoading) {
-      setIsManual(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCode, isLoading]);
+  // daftar WMS terkini, tampilkan input manual supaya dropdown tidak kosong.
+  const isManual =
+    manualModeOverride ??
+    Boolean(value && currentCode && value === currentCode && !selected && !isLoading);
 
   return (
     <Field data-invalid={!!error} className="gap-1">
@@ -86,7 +84,7 @@ export const CargoIdField = ({
           className="h-6 text-xs px-2"
           disabled={disabled}
           onClick={() => {
-            setIsManual((prev) => !prev);
+            setManualModeOverride(!isManual);
             onChange("");
             onSelectCargo?.(null);
           }}

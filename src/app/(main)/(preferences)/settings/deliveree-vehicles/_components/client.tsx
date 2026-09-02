@@ -108,7 +108,6 @@ export const DelivereeVehicleClient = () => {
     vehicleList.length > 0 && vehicleList.every((v) => selectedIds.has(v.id));
   const someSelected =
     vehicleList.some((v) => selectedIds.has(v.id)) && !allSelected;
-  const selectedCount = selectedIds.size;
 
   const toggleSelect = (id: string) =>
     setSelectedIds((prev) => {

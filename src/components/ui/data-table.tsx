@@ -27,6 +27,7 @@ export function DataTable<TData, TValue>({
   isInitialLoading,
 }: DataTableProps<TData, TValue> & { isInitialLoading?: boolean }) {
   "use no memo";
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table is intentionally excluded from React Compiler memoization.
   const table = useReactTable({
     data,
     columns,
