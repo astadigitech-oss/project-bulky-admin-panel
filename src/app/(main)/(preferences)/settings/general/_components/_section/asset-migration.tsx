@@ -580,7 +580,6 @@ export const AssetMigrationSection = () => {
         items: data.items ?? [],
       });
       setOptimizeToken(data.dry_run_token ?? null);
-      setOptimizeTokenExpiry(data.token_expiry_s ?? null);
       toast.success(res.data.message ?? "Pemindaian WebP selesai");
     } catch {
       toast.error("Gagal memindai media untuk optimasi WebP");
@@ -612,12 +611,10 @@ export const AssetMigrationSection = () => {
         items: data.items ?? [],
       });
       setOptimizeToken(null);
-      setOptimizeTokenExpiry(null);
       toast.success(res.data.message ?? "Optimasi WebP selesai");
     } catch {
       toast.error("Optimasi WebP gagal — jalankan dry-run ulang");
       setOptimizeToken(null);
-      setOptimizeTokenExpiry(null);
     } finally {
       setIsOptimizing(false);
     }

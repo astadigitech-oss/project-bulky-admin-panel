@@ -60,7 +60,10 @@ export const CargoIdField = ({
   const { search, searchValue, setSearch } = useSearch();
 
   const { data, isLoading, isFetching, isError, refetch } =
-    useListWmsCargoPriced({ search: searchValue, enabled: !isManual });
+    useListWmsCargoPriced({
+      search: searchValue,
+      enabled: manualModeOverride !== true,
+    });
 
   const cargoList = data?.data ?? [];
   const selected = cargoList.find((item) => item.id === value || item.code === value);
