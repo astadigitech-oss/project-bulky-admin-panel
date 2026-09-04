@@ -8,12 +8,13 @@ import {
 // types
 // ------partials------
 export type TypeForceUpdateEnum = "OPTIONAL" | "MANDATORY";
-export type TypePlatformEnum = "ALL" | "ANDROID" | "IOS";
+export type TypePlatformEnum = "ANDROID" | "IOS";
 export type ForceUpdateType = {
   created_at: string;
   id: string;
   is_active: boolean;
   kode_versi: string;
+  minimum_build_number: number;
   update_type: TypeForceUpdateEnum;
   platform: TypePlatformEnum;
 };
@@ -44,6 +45,7 @@ export type CreateForceUpdateBody = {
   informasi_update: string;
   informasi_update_en: string;
   kode_versi: string;
+  minimum_build_number: number;
   update_type: TypeForceUpdateEnum;
   platform: TypePlatformEnum;
 };
@@ -58,6 +60,7 @@ export type UpdateForceUpdateBody = {
   informasi_update: string;
   informasi_update_en?: string;
   kode_versi: string;
+  minimum_build_number: number;
   update_type: TypeForceUpdateEnum;
   platform?: TypePlatformEnum;
 };

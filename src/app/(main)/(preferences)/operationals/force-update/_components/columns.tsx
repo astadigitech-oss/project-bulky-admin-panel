@@ -47,6 +47,15 @@ export const column = ({
     header: "Versi",
   },
   {
+    accessorKey: "minimum_build_number",
+    header: "Minimum Build",
+    cell: ({ row }) => (
+      <div className="tabular-nums">
+        {row.original.minimum_build_number.toLocaleString()}
+      </div>
+    ),
+  },
+  {
     accessorKey: "update_type",
     header: "Jenis Update",
     cell: ({ row }) => (
@@ -71,7 +80,7 @@ export const column = ({
     ),
   },
   {
-    accessorKey: "is_active:",
+    accessorKey: "is_active",
     header: "Status",
     cell: ({ row }) => (
       <div

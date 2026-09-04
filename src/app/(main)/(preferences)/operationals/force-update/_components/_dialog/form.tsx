@@ -35,10 +35,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { typeForceUpdates, typePlatforms } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 
+const forceUpdatePlatforms = typePlatforms.filter(
+  (platform) => platform.value !== "ALL",
+);
+
 const formSchema = z.object({
   kode_versi: z.string().min(3, "Judul harus memiliki minimal 3 karakter"),
+  minimum_build_number: z.coerce
+    .number()
+    .int("Build number harus bilangan bulat")
+    .positive("Build number harus lebih besar dari 0"),
   update_type: z.enum(["OPTIONAL", "MANDATORY"]),
-  platform: z.enum(["ALL", "ANDROID", "IOS"]),
+  platform: z.enum(["ANDROID", "IOS"]),
   informasi_update: z
     .string()
     .min(3, "Deskripsi harus memiliki minimal 3 karakter"),
@@ -68,10 +76,11 @@ export const DialogFormForceUpdate = ({
     resolver: zodResolver(formSchema),
     values: {
       kode_versi: detail?.kode_versi ?? "",
+      minimum_build_number: detail?.minimum_build_number ?? 0,
       informasi_update: detail?.informasi_update ?? "",
       informasi_update_en: detail?.informasi_update_en ?? "",
       update_type: detail?.update_type ?? "OPTIONAL",
-      platform: detail?.platform ?? "ALL",
+      platform: detail?.platform ?? "ANDROID",
     },
   });
 
@@ -153,6 +162,38 @@ export const DialogFormForceUpdate = ({
                 )}
               />
               <Controller
+                name="minimum_build_number"
+                control={form.control}
+                disabled={isDisabled}
+                render={({ field, fieldState }) => (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className="gap-1 col-span-3"
+                  >
+                    <FieldLabel
+                      required
+                      htmlFor={`${idFormForceUpdate}-${field.name}`}
+                    >
+                      Minimum Build Number
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={`${idFormForceUpdate}-${field.name}`}
+                      type="number"
+                      min={1}
+                      step={1}
+                      aria-invalid={fieldState.invalid}
+                      placeholder="contoh: 141"
+                      autoComplete="off"
+                    />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
                 name="update_type"
                 control={form.control}
                 disabled={isDisabled}
@@ -208,7 +249,7 @@ export const DialogFormForceUpdate = ({
                       Platform
                     </FieldLabel>
                     <Select
-                      items={typePlatforms}
+                      items={forceUpdatePlatforms}
                       value={field.value}
                       onValueChange={field.onChange}
                       disabled={field.disabled}
@@ -218,7 +259,7 @@ export const DialogFormForceUpdate = ({
                         <SelectValue placeholder={"Pilih platform..."} />
                       </SelectTrigger>
                       <SelectContent>
-                        {typePlatforms.map((item) => (
+                        {forceUpdatePlatforms.map((item) => (
                           <SelectItem key={item.value} value={item.value}>
                             {item.label}
                           </SelectItem>

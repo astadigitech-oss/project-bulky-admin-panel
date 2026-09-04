@@ -36,7 +36,7 @@ export const ForceUpdateSettingsClient = () => {
       forceUpdateId: parseAsString.withDefault(""),
       sort: parseAsString.withDefault("created_at"),
       order: parseAsString.withDefault("desc"),
-      platform: parseAsStringLiteral(["", "ALL", "ANDROID", "IOS"] as const).withDefault(""),
+      platform: parseAsStringLiteral(["", "ANDROID", "IOS"] as const).withDefault(""),
     },
     { urlKeys: { forceUpdateId: "id" } },
   );
