@@ -41,7 +41,7 @@ const forceUpdatePlatforms = typePlatforms.filter(
 
 const formSchema = z.object({
   kode_versi: z.string().min(3, "Judul harus memiliki minimal 3 karakter"),
-  minimum_build_number: z.coerce
+  minimum_build_number: z
     .number()
     .int("Build number harus bilangan bulat")
     .positive("Build number harus lebih besar dari 0"),
@@ -185,6 +185,12 @@ export const DialogFormForceUpdate = ({
                       aria-invalid={fieldState.invalid}
                       placeholder="contoh: 141"
                       autoComplete="off"
+                      onChange={(event) => {
+                        const buildNumber = event.target.valueAsNumber;
+                        field.onChange(
+                          Number.isNaN(buildNumber) ? 0 : buildNumber,
+                        );
+                      }}
                     />
 
                     {fieldState.invalid && (
