@@ -39,7 +39,7 @@ export const dataAPIForceUpdate = {
     list: {
       key: [key[0], { page, per_page, search, sort_by, order, platform }],
       endpoint: `/force-update`,
-      searchParams: { page, per_page, search, sort_by, order, platform },
+      searchParams: { page, limit: per_page, platform },
       placeholderData: keepPreviousData,
     },
     show: {

@@ -11,7 +11,10 @@ export type MeData = {
   id: string;
   nama: string;
   permissions: string[];
-  role: { nama: string };
+  role: {
+    nama: string;
+    kode: string;
+  };
 };
 
 type MeResponse = BaseResponse & {

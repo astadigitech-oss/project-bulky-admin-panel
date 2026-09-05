@@ -30,11 +30,13 @@ export interface NavValueProps {
   url: string;
   icon: LucideIcon;
   permission?: string;
+  superAdminOnly?: boolean;
   badgeCount?: number;
   items: readonly {
     title: string;
     url: string;
     permission?: string;
+    superAdminOnly?: boolean;
   }[];
 }
 

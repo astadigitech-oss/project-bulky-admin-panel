@@ -240,6 +240,7 @@ const data = {
         {
           title: "Force Update",
           url: "/operationals/force-update",
+          superAdminOnly: true,
         },
         {
           title: "Banner Hero",
@@ -298,23 +299,28 @@ export const AppSidebar = ({
 }: React.ComponentProps<typeof Sidebar>) => {
   const { data: meData } = useMe();
   const permissions = meData?.data?.permissions ?? [];
+  const isSuperAdmin = meData?.data?.role?.kode === "SUPER_ADMIN";
   const canReadPesanan = permissions.includes("pesanan:read");
   const { data: countPaidNotProcessed } = useGetOrderCountPaidNotProcessed({
     enabled: canReadPesanan,
   });
   const pesananBadgeCount = countPaidNotProcessed?.data?.count ?? 0;
 
-  const hasPermission = (perm?: string) =>
-    !perm || permissions.includes(perm);
+  const canAccess = (item: {
+    permission?: string;
+    superAdminOnly?: boolean;
+  }) =>
+    (!item.permission || permissions.includes(item.permission)) &&
+    (!item.superAdminOnly || isSuperAdmin);
 
   const filterNav = (nav: readonly NavValueProps[]) =>
     nav
       .map((group) => ({
         ...group,
         badgeCount: group.title === "Pesanan" ? pesananBadgeCount : undefined,
-        items: group.items.filter((item) => hasPermission(item.permission)),
+        items: group.items.filter(canAccess),
       }))
-      .filter((group) => hasPermission(group.permission));
+      .filter(canAccess);
 
   const filteredData = {
     navMain: filterNav(data.navMain),
