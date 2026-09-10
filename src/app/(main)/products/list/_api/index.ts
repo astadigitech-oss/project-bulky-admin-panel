@@ -117,3 +117,17 @@ export const downloadWmsCargoPricingPdf = async (cargoId: string) => {
   });
   return res.data as Blob;
 };
+
+/**
+ * Mengambil PDF harga paling baru untuk produk yang sudah tersimpan di Bulky.
+ * Endpoint BE akan resolve produk lalu memakai id_cargo yang tersimpan untuk
+ * meminta dokumen terbaru dari WMS.
+ */
+export const downloadProductPricingPdf = async (productId: string) => {
+  const token = getCookie(cookiesKey);
+  const res = await axios.get(`${apiUrl}/produk/${productId}/pricing-pdf`, {
+    headers: { Authorization: `Bearer ${token}` },
+    responseType: "blob",
+  });
+  return res.data as Blob;
+};

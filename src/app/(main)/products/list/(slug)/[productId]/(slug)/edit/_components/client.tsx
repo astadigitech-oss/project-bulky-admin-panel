@@ -30,6 +30,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ChevronRight,
+  Download,
   Edit,
   Eye,
   Package,
@@ -56,10 +57,12 @@ import { useGetCategorySelect } from "@api/product/categories";
 import { useGetPackageConditionSelect } from "@api/product/conditions/package";
 import { useGetProductConditionSelect } from "@api/product/conditions/product";
 import {
+  downloadProductPricingPdf,
   useGetProductDetail,
   useMarkWmsCargoSynced,
   useUpdateProduct,
 } from "@api/product/list";
+import axios from "axios";
 import {
   Dialog,
   DialogClose,
@@ -77,6 +80,7 @@ import { TooltipText } from "@/providers/tooltip-provider";
 import { Spinner } from "@/components/ui/spinner";
 import { CargoIdField } from "@/app/(main)/products/list/_components/cargo-id-field";
 import { WmsCargoPricedItemType } from "@/app/(main)/products/list/_api/types";
+import { toast } from "sonner";
 
 const FILE_RULES = {
   docMimeTypes: ["application/pdf"],
@@ -136,6 +140,34 @@ const getSelectIds = (values: unknown[]) =>
     .map((value) => getSelectId(value))
     .filter((value) => typeof value === "string" && value.trim());
 
+const getPricingPdfErrorMessage = async (error: unknown) => {
+  if (!axios.isAxiosError(error)) return "Gagal mengunduh PDF harga dari WMS";
+
+  const responseData = error.response?.data;
+  try {
+    // Karena request memakai responseType blob, respons error JSON dari BE juga
+    // diterima sebagai Blob. Baca message-nya agar admin tahu penyebab 404.
+    const data =
+      responseData instanceof Blob
+        ? JSON.parse(await responseData.text())
+        : responseData;
+
+    if (
+      data &&
+      typeof data === "object" &&
+      "message" in data &&
+      typeof data.message === "string" &&
+      data.message.trim()
+    ) {
+      return data.message;
+    }
+  } catch {
+    // Gunakan pesan fallback bila body error tidak berbentuk JSON.
+  }
+
+  return "Gagal mengunduh PDF harga dari WMS";
+};
+
 export const formSchema = z.object({
   reference_code: z.string().optional(),
   nama_id: z.string().min(1, "Nama ID tidak boleh kosong"),
@@ -182,6 +214,7 @@ export const ProductIdClient = () => {
 
   const { mutate, isPending } = useUpdateProduct();
   const { mutate: markWmsCargoSynced } = useMarkWmsCargoSynced();
+  const [isDownloadingPricingPdf, setIsDownloadingPricingPdf] = useState(false);
   const [selectedCargo, setSelectedCargo] =
     useState<WmsCargoPricedItemType | null>(null);
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
@@ -377,6 +410,30 @@ export const ProductIdClient = () => {
       dokumen: [],
     },
   });
+
+  const handleDownloadPricingPdf = async () => {
+    setIsDownloadingPricingPdf(true);
+    try {
+      const blob = await downloadProductPricingPdf(productId);
+      const productIdentifier =
+        detail?.reference_code || detail?.id_cargo || productId;
+      const file = new File(
+        [blob],
+        `Rincian Harga WMS - ${productIdentifier}.pdf`,
+        { type: "application/pdf" },
+      );
+
+      form.setValue("dokumen", [file], {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      toast.success("PDF harga terbaru dari WMS siap disimpan");
+    } catch (error) {
+      toast.error(await getPricingPdfErrorMessage(error));
+    } finally {
+      setIsDownloadingPricingPdf(false);
+    }
+  };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const body = new FormData();
@@ -666,12 +723,32 @@ export const ProductIdClient = () => {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid} className="gap-1">
-                      <FieldLabel required>Dokumen PDF</FieldLabel>
+                      <div className="flex items-center justify-between gap-3">
+                        <FieldLabel required>Dokumen PDF</FieldLabel>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDownloadPricingPdf}
+                          disabled={isDownloadingPricingPdf}
+                        >
+                          {isDownloadingPricingPdf ? <Spinner /> : <Download />}
+                          {isDownloadingPricingPdf
+                            ? "Mengunduh..."
+                            : "Ambil PDF harga terbaru"}
+                        </Button>
+                      </div>
                       <DropzonePDF
                         onChange={field.onChange}
                         value={field.value}
                         oldValue={detail?.dokumen[0]?.file_url ?? ""}
                       />
+
+                      {isDownloadingPricingPdf && (
+                        <p className="text-xs text-muted-foreground">
+                          Mengunduh PDF harga terbaru dari WMS...
+                        </p>
+                      )}
 
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
