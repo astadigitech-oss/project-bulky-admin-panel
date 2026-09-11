@@ -131,3 +131,23 @@ export const downloadProductPricingPdf = async (productId: string) => {
   });
   return res.data as Blob;
 };
+
+/**
+ * Generate ulang PDF harga terbaru di halaman edit produk. BE menetapkan ulang
+ * harga cargo WMS (type "fix", value = harga_sesudah_diskon dari form) lewat
+ * POST /api/integration/cargos/{id}/price, lalu mengunduh PDF hasil render
+ * ulang menggunakan pricing_pdf_url dari respons — dikembalikan sebagai Blob
+ * (proxy dari BE), FE memperlakukannya sebagai dokumen produk.
+ */
+export const refreshProductPricingPdf = async (
+  productId: string,
+  value: number,
+) => {
+  const token = getCookie(cookiesKey);
+  const res = await axios.post(
+    `${apiUrl}/produk/${productId}/refresh-pricing-pdf`,
+    { value },
+    { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" },
+  );
+  return res.data as Blob;
+};

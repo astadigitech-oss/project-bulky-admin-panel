@@ -57,7 +57,7 @@ import { useGetCategorySelect } from "@api/product/categories";
 import { useGetPackageConditionSelect } from "@api/product/conditions/package";
 import { useGetProductConditionSelect } from "@api/product/conditions/product";
 import {
-  downloadProductPricingPdf,
+  refreshProductPricingPdf,
   useGetProductDetail,
   useMarkWmsCargoSynced,
   useUpdateProduct,
@@ -218,6 +218,11 @@ export const ProductIdClient = () => {
   const [selectedCargo, setSelectedCargo] =
     useState<WmsCargoPricedItemType | null>(null);
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
+
+  // Mode edit produk WMS: hanya "Dokumen PDF" & "Harga Setelah Diskon" yang bisa
+  // diubah. Semua field lain tetap tampil (menampilkan nilai saat ini) tapi
+  // di-disable supaya admin tidak mengubah data yang bersumber dari WMS.
+  const isFormLocked = true;
 
   const { data: brandSelectData, isSuccess: isSuccessBrand } =
     useGetBrandSelect();
@@ -414,7 +419,11 @@ export const ProductIdClient = () => {
   const handleDownloadPricingPdf = async () => {
     setIsDownloadingPricingPdf(true);
     try {
-      const blob = await downloadProductPricingPdf(productId);
+      // Kirim harga_sesudah_diskon dari form (live value) supaya BE menetapkan
+      // ulang harga cargo WMS (type "fix") lalu WMS me-render PDF terbaru.
+      const hargaSesudahDiskon =
+        Number(form.getValues("harga_sesudah_diskon")) || 0;
+      const blob = await refreshProductPricingPdf(productId, hargaSesudahDiskon);
       const productIdentifier =
         detail?.reference_code || detail?.id_cargo || productId;
       const file = new File(
@@ -704,7 +713,7 @@ export const ProductIdClient = () => {
                       value={field.value}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
-                      disabled={field.disabled}
+                      disabled={isFormLocked}
                       error={fieldState.error}
                       idFor={`${idFormProduct}_${field.name}`}
                       currentCode={detail?.id_cargo}
@@ -776,6 +785,7 @@ export const ProductIdClient = () => {
                             {...field}
                             id={`${idFormProduct}_${field.name}`}
                             type="text"
+                            disabled={isFormLocked}
                             aria-invalid={fieldState.invalid}
                             placeholder="Nama produk..."
                             autoComplete="off"
@@ -803,6 +813,7 @@ export const ProductIdClient = () => {
                             {...field}
                             id={`${idFormProduct}_${field.name}`}
                             type="text"
+                            disabled={isFormLocked}
                             aria-invalid={fieldState.invalid}
                             placeholder="Product name..."
                             autoComplete="off"
@@ -836,6 +847,7 @@ export const ProductIdClient = () => {
                           type="number"
                           min={0}
                           max={100}
+                          disabled={isFormLocked}
                           onChange={(e) =>
                             field.onChange(numericString(e.target.value))
                           }
@@ -862,6 +874,7 @@ export const ProductIdClient = () => {
                   <Combobox
                     id={`${idFormProduct}_brand`}
                     multiple
+                    disabled={isFormLocked}
                     autoHighlight
                     items={selectProduct.brand}
                     value={fields.map((f) => f.data)}
@@ -941,6 +954,7 @@ export const ProductIdClient = () => {
                           </FieldLabel>
                           <Combobox
                             autoHighlight
+                            disabled={isFormLocked}
                             id={`${idFormProduct}_${field.name}`}
                             items={categories}
                             value={field.value}
@@ -1010,6 +1024,7 @@ export const ProductIdClient = () => {
                           </FieldLabel>
                           <Combobox
                             autoHighlight
+                            disabled={isFormLocked}
                             id={`${idFormProduct}_${field.name}`}
                             items={productCondition}
                             value={field.value}
@@ -1081,6 +1096,7 @@ export const ProductIdClient = () => {
                           </FieldLabel>
                           <Combobox
                             autoHighlight
+                            disabled={isFormLocked}
                             id={`${idFormProduct}_${field.name}`}
                             items={packageCondition}
                             value={field.value}
@@ -1152,6 +1168,7 @@ export const ProductIdClient = () => {
                           </FieldLabel>
                           <Combobox
                             autoHighlight
+                            disabled={isFormLocked}
                             id={`${idFormProduct}_${field.name}`}
                             items={source}
                             value={field.value}
@@ -1226,6 +1243,7 @@ export const ProductIdClient = () => {
                             {...field}
                             id={`${idFormProduct}_${field.name}`}
                             type="number"
+                            disabled={isFormLocked}
                             onChange={(e) =>
                               field.onChange(numericString(e.target.value))
                             }
@@ -1310,6 +1328,7 @@ export const ProductIdClient = () => {
                             {...field}
                             id={`${idFormProduct}_${field.name}`}
                             type="number"
+                            disabled={isFormLocked}
                             onChange={(e) =>
                               field.onChange(numericString(e.target.value))
                             }
@@ -1354,6 +1373,7 @@ export const ProductIdClient = () => {
                             {...field}
                             id={`${idFormProduct}_${field.name}`}
                             type="number"
+                            disabled={isFormLocked}
                             onChange={(e) =>
                               field.onChange(numericString(e.target.value))
                             }
@@ -1396,6 +1416,7 @@ export const ProductIdClient = () => {
                             {...field}
                             id={`${idFormProduct}_${field.name}`}
                             type="number"
+                            disabled={isFormLocked}
                             onChange={(e) =>
                               field.onChange(numericString(e.target.value))
                             }
@@ -1438,6 +1459,7 @@ export const ProductIdClient = () => {
                             {...field}
                             id={`${idFormProduct}_${field.name}`}
                             type="number"
+                            disabled={isFormLocked}
                             onChange={(e) =>
                               field.onChange(numericString(e.target.value))
                             }
@@ -1480,6 +1502,7 @@ export const ProductIdClient = () => {
                             {...field}
                             id={`${idFormProduct}_${field.name}`}
                             type="number"
+                            disabled={isFormLocked}
                             onChange={(e) =>
                               field.onChange(numericString(e.target.value))
                             }
