@@ -15,6 +15,7 @@ export const useMutate = <
   TSearchParams = undefined,
 >({
   endpoint,
+  baseUrl = apiUrl,
   method,
   onSuccess,
   onError,
@@ -27,7 +28,7 @@ export const useMutate = <
     MutationVariables<TBody, TParams, TSearchParams>
   >({
     mutationFn: async (variables) => {
-      let url = apiUrl + endpoint;
+      let url = baseUrl + endpoint;
 
       if (
         variables &&

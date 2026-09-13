@@ -140,6 +140,11 @@ const data = {
           permission: "marketing:read",
         },
         {
+          title: "Campaign Seasonal",
+          url: "/marketing/seasonal-campaigns",
+          permission: "marketing:read",
+        },
+        {
           title: "Formulir Grosir",
           url: "/marketing/wholesaler",
           permission: "system:read",
