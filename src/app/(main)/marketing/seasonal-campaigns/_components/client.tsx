@@ -33,7 +33,9 @@ const DeleteCampaignDialog = ({ campaign, isDeleting, onClose, onConfirm }: {
   <Dialog open={campaign !== null} onOpenChange={(open) => { if (!open && !isDeleting) onClose(); }}>
     <DialogContent className="w-[min(36rem,calc(100vw-2rem))] gap-0 overflow-hidden p-0 sm:max-w-xl" showCloseButton={false}>
       <div className="grid items-center gap-5 px-6 py-6 sm:grid-cols-[172px_minmax(0,1fr)]">
-        <Lottie src="/assets/lottie/delete-files-loop.json" loop autoplay className="mx-auto h-32 w-40 sm:mx-0" aria-label="Animasi penghapusan campaign" />
+        <div className="flex h-36 items-center justify-center overflow-hidden sm:justify-start">
+          <Lottie src="/assets/lottie/delete-files-loop.json" loop autoplay className="h-40 w-44 -translate-y-5 scale-125" aria-label="Animasi penghapusan campaign" />
+        </div>
         <DialogHeader className="items-start gap-2 text-left">
           <DialogTitle>{isDeleting ? "Menghapus campaign" : "Hapus campaign?"}</DialogTitle>
           <DialogDescription className="max-w-sm text-left leading-relaxed">
