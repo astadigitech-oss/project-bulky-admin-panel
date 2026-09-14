@@ -64,25 +64,28 @@ const toDateTimeLocal = (value?: string | null) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
-const SaveProgressDialog = ({ stage }: { stage: SaveStage }) => {
+const SaveProgressDialog = ({ stage, mode }: { stage: SaveStage; mode: "create" | "edit" | null }) => {
   const isOpen = stage !== null;
   const isFraming = stage === "framing";
+  const isUpdating = mode === "edit";
 
   return <Dialog open={isOpen}>
     <DialogContent className="w-[min(36rem,calc(100vw-2rem))] gap-0 overflow-hidden p-0 sm:max-w-xl" showCloseButton={false}>
       <div className="grid items-center gap-5 px-6 py-6 sm:grid-cols-[172px_minmax(0,1fr)]">
         <Lottie src="/assets/lottie/pc-to-cloud-server.json" loop autoplay className="mx-auto h-32 w-40 sm:mx-0" aria-label="Animasi proses penyimpanan aset" />
         <DialogHeader className="items-start gap-2 text-left">
-          <DialogTitle>{isFraming ? "Menyiapkan aset" : "Menyimpan campaign"}</DialogTitle>
+          <DialogTitle>{isFraming ? "Menyiapkan aset" : isUpdating ? "Memperbarui campaign" : "Menyimpan campaign baru"}</DialogTitle>
           <DialogDescription className="max-w-sm text-left leading-relaxed">
           {isFraming
             ? "Framing aset sedang disiapkan untuk setiap platform."
-            : "Aset sedang dioptimalkan ke WebP dan disimpan ke storage serta database. Jangan tutup halaman ini."}
+            : isUpdating
+              ? "Perubahan dan aset sedang dioptimalkan ke WebP, lalu disimpan ke storage serta database. Jangan tutup halaman ini."
+              : "Campaign dan aset sedang dioptimalkan ke WebP, lalu disimpan ke storage serta database. Jangan tutup halaman ini."}
           </DialogDescription>
         </DialogHeader>
       </div>
       <div className="border-t bg-muted/30 px-6 py-3 text-center text-xs text-muted-foreground sm:text-right" aria-live="polite">
-        {isFraming ? "Menyiapkan ukuran platform…" : "Menunggu konfirmasi dari server…"}
+        {isFraming ? "Menyiapkan ukuran platform…" : isUpdating ? "Menunggu pembaruan dikonfirmasi server…" : "Menunggu penyimpanan dikonfirmasi server…"}
       </div>
     </DialogContent>
   </Dialog>;
@@ -146,6 +149,9 @@ export const SeasonalCampaignForm = ({
     if (values.tanggal_mulai && values.tanggal_selesai) {
       body.append("tanggal_mulai", new Date(values.tanggal_mulai).toISOString());
       body.append("tanggal_selesai", new Date(values.tanggal_selesai).toISOString());
+    } else if (mode === "edit") {
+      body.append("tanggal_mulai", "");
+      body.append("tanggal_selesai", "");
     }
     if (webLogoFile) body.append("web_logo", webLogoFile);
     if (webNavbarDecorationFile) body.append("web_navbar_decoration", webNavbarDecorationFile);
@@ -168,7 +174,7 @@ export const SeasonalCampaignForm = ({
   const assetVisualPreviewFor = (assetName: keyof CropByAsset, file: File, nextCrop: AssetCrop) => <SeasonalCampaignVisualPreview previewTarget={assetName} webLogo={assetName === "web_logo" ? [file] : webLogo} mobileLoadingLogo={assetName === "web_logo" ? [file] : webLogo} webNavbarDecoration={assetName === "web_navbar_decoration" ? [file] : webNavbarDecoration} mobileTopAppBarOrnament={assetName === "mobile_top_app_bar_ornament" ? [file] : mobileTopAppBarOrnament} existing={{ webLogo: detail?.assets.web_logo_url, mobileLoadingLogo: detail?.assets.mobile_loading_logo_url, webNavbarDecoration: detail?.assets.web_navbar_decoration_url, mobileTopAppBarOrnament: detail?.assets.mobile_top_app_bar_ornament_url }} removed={{ webLogo: assetName === "web_logo" ? false : removeWebLogo, mobileLoadingLogo: assetName === "web_logo" ? false : removeWebLogo, webNavbarDecoration: assetName === "web_navbar_decoration" ? false : removeWebNavbarDecoration, mobileTopAppBarOrnament: assetName === "mobile_top_app_bar_ornament" ? false : removeMobileTopAppBarOrnament }} crops={{ webLogo: assetName === "web_logo" ? nextCrop : crops.web_logo, mobileLoadingLogo: assetName === "web_logo" ? nextCrop : crops.web_logo, webNavbarDecoration: assetName === "web_navbar_decoration" ? nextCrop : crops.web_navbar_decoration, mobileTopAppBarOrnament: assetName === "mobile_top_app_bar_ornament" ? nextCrop : crops.mobile_top_app_bar_ornament }} />;
 
   return (
-    <><SaveProgressDialog stage={saveStage} /><div className="mx-auto w-full max-w-4xl pb-8 pt-4">
+    <><SaveProgressDialog stage={saveStage} mode={mode} /><div className="mx-auto w-full max-w-4xl pb-8 pt-4">
       <div className="mb-6"><h1 className="font-semibold text-2xl">{mode === "edit" ? "Ubah Campaign Seasonal" : "Tambah Campaign Seasonal"}</h1><p className="mt-1 text-sm text-muted-foreground">Atur periode dan asset branding campaign. Asset bersifat opsional.</p></div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
           {mode === "edit" && !detail ? <Skeleton className="h-96 w-full" /> : <FieldGroup className="grid gap-5">

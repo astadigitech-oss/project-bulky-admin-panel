@@ -80,11 +80,11 @@ export const column = ({
           <DropdownMenuTrigger disabled={disabled} className={buttonVariants({ size: "icon-xs", variant: "ghost" })}>
             <MoreHorizontal /><span className="sr-only">Aksi campaign</span>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-auto min-w-40">
             <DropdownMenuGroup>
               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
               {canPublish && <DropdownMenuItem className="text-xs" onClick={() => onPublish(campaign)}><Rocket className="size-3.5" />Publish</DropdownMenuItem>}
-              {canCancel && <DropdownMenuItem className="text-xs" onClick={() => onCancel(campaign)} variant="destructive"><XCircle className="size-3.5" />Batalkan</DropdownMenuItem>}
+              {canCancel && <DropdownMenuItem className="whitespace-nowrap text-xs" onClick={() => onCancel(campaign)} variant="destructive"><XCircle className="size-3.5" />Hentikan campaign</DropdownMenuItem>}
               <DropdownMenuItem className="text-xs" onClick={() => onEdit(campaign)}><Edit className="size-3.5" />Edit</DropdownMenuItem>
               <DropdownMenuItem className="text-xs" onClick={() => onDelete(campaign)} variant="destructive"><Trash className="size-3.5" />Hapus</DropdownMenuItem>
             </DropdownMenuGroup>
