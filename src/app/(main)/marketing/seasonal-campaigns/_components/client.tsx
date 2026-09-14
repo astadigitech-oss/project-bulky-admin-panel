@@ -45,7 +45,7 @@ const DeleteCampaignDialog = ({ campaign, isDeleting, onClose, onConfirm }: {
           </DialogDescription>
         </DialogHeader>
       </div>
-      {!isDeleting && <DialogFooter className="border-t bg-muted/30 px-6 py-3 sm:justify-end">
+      {!isDeleting && <DialogFooter className="flex flex-row justify-end gap-3 border-t bg-muted/30 px-6 py-3">
         <Button type="button" variant="outline" onClick={onClose}>Batal</Button>
         <Button type="button" variant="destructive" onClick={onConfirm}>Hapus campaign</Button>
       </DialogFooter>}
