@@ -3,7 +3,7 @@
 import DataTable from "@/components/ui/data-table";
 import Pagination from "@/components/pagination";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { InputSearch } from "@/components/ui/input-search";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { useConfirm } from "@/hooks/use-confirm";
@@ -45,10 +45,10 @@ const DeleteCampaignDialog = ({ campaign, isDeleting, onClose, onConfirm }: {
           </DialogDescription>
         </DialogHeader>
       </div>
-      {!isDeleting && <DialogFooter className="flex flex-row justify-end gap-3 border-t bg-muted/30 px-6 py-3">
+      {!isDeleting && <div className="flex items-center justify-end gap-2 border-t bg-muted/30 px-6 py-4">
         <Button type="button" variant="outline" onClick={onClose}>Batal</Button>
         <Button type="button" variant="destructive" onClick={onConfirm}>Hapus campaign</Button>
-      </DialogFooter>}
+      </div>}
     </DialogContent>
   </Dialog>
 );
