@@ -84,7 +84,7 @@ export const SeasonalCampaignClient = () => {
     else cancelCampaign(variables);
   };
 
-  const handleDelete = (campaign: SeasonalCampaign) => {
+  const handleDelete = async (campaign: SeasonalCampaign) => {
     setCampaignToDelete(campaign);
   };
 
