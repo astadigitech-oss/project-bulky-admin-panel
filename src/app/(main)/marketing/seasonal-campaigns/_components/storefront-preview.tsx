@@ -106,7 +106,6 @@ export const SeasonalCampaignVisualPreview = ({
         </div></div>
         {!isNavbarDecorationPreview && <div className="grid justify-items-center gap-3">
           <div><p className="mb-2 text-center text-[11px] font-medium text-muted-foreground">Loading screen aplikasi</p><div className="h-[390px] w-[180px] overflow-hidden rounded-sm border bg-white shadow-sm"><div className="grid h-[780px] w-[360px] origin-top-left scale-50 place-items-center bg-white"><div className="grid justify-items-center">{displayMobileLogo && <img src={displayMobileLogo} alt="Logo Bulky di loading screen aplikasi" className="h-auto w-[200px] object-contain" />}<span className="-mt-[15px] whitespace-nowrap text-sm font-bold text-black">Belanja Mudah dan Cepat</span></div></div></div></div>
-          {mobileOrnament && <div className="w-[180px]"><p className="mb-1 text-center text-[10px] text-muted-foreground">Ornamen header aplikasi</p><div className="h-7 overflow-hidden rounded border"><img src={mobileOrnament} alt="Ornamen header aplikasi" className="size-full object-cover" /></div></div>}
         </div>}
       </div>
     </section>
