@@ -14,7 +14,7 @@ import {
 } from "./dialog";
 import dynamic from "next/dynamic";
 import { Spinner } from "./spinner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
   ssr: false,
   loading: () => (
@@ -32,6 +32,7 @@ type DropzoneProps = {
   error?: boolean;
   onError?: (message: string) => void;
   oldValue?: string;
+  onRemoveOld?: () => void;
 };
 
 export const DropzonePDF = ({
@@ -40,8 +41,13 @@ export const DropzonePDF = ({
   disabled,
   error,
   oldValue,
+  onRemoveOld,
 }: DropzoneProps) => {
   const [preview, setPreview] = useState(oldValue ?? "");
+
+  useEffect(() => {
+    setPreview(oldValue ?? "");
+  }, [oldValue]);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     disabled,
     accept: { "application/pdf": [".pdf"] },
@@ -125,6 +131,7 @@ export const DropzonePDF = ({
               onClick={() => {
                 if (preview) {
                   setPreview("");
+                  onRemoveOld?.();
                 } else {
                   onChange([]);
                 }

@@ -134,6 +134,11 @@ const data = {
           title: "Daftar Batch",
           url: "/auctions/list",
         },
+        {
+          title: "Banner Edukasi",
+          url: "/auctions/education-banners",
+          permission: "auction:read",
+        },
       ],
     },
     {

@@ -68,9 +68,9 @@ export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {(batch.items ?? []).map((item) => (
-                      <tr key={item.produk_id} className="border-t">
-                        <td className="px-3 py-2">{item.nama_snapshot}</td>
+                    {(batch.items ?? []).map((item, index) => (
+                      <tr key={item.produk_id ?? `manual-${index}`} className="border-t">
+                        <td className="px-3 py-2"><div>{item.nama_snapshot}</div><span className="text-[10px] text-muted-foreground">{item.source_type === "MANUAL" ? "Input manual" : "Katalog Bulky"}</span></td>
                         <td className="px-3 py-2 text-right tabular-nums">
                           {formatRupiah(item.unit_price_snapshot)}
                         </td>
@@ -166,6 +166,11 @@ export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
               label="Discrepancy"
               value={`${batch.discrepancy_percentage}%`}
             />
+            <InfoRow label="Asal Pengiriman" value={batch.origin_type === "SUPPLIER" ? "Gudang Supplier" : "Gudang Bulky"} />
+            {batch.origin_type === "SUPPLIER" && <>
+              <InfoRow label="Supplier" value={batch.supplier_name ?? "-"} />
+              <InfoRow label="Kota Asal" value={batch.supplier_city ?? "-"} />
+            </>}
           </CardContent>
         </Card>
 

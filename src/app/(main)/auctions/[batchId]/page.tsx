@@ -3,6 +3,7 @@ import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuctionDetailClient } from "./_components/detail-client";
+import { BreadcrumbBatchName } from "./_components/breadcrumb-batch-name";
 
 const pathname = "auctions/[batchId]";
 
@@ -25,7 +26,8 @@ const AuctionDetailPage = async ({
       breadcrumbs={[
         { label: "Lelang" },
         { label: "Daftar", url: "/auctions/list" },
-        { label: batchId },
+        { label: <BreadcrumbBatchName batchId={batchId} />, key: "batch-name" },
+        { label: "Detail Batch" },
       ]}
     >
       <AuctionDetailClient batchId={batchId} />

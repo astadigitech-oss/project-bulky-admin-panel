@@ -22,7 +22,8 @@ import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ChevronRight, Plus, Save, Send, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Gavel, Plus, Save, Send, Trash2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
@@ -31,6 +32,14 @@ import z from "zod";
 import { toast } from "sonner";
 import { cn, formatRupiah } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Lottie } from "lottie-react";
 import {
   useCreateAuction,
   useGetAuctionDetail,
@@ -48,6 +57,7 @@ import {
 import {
   AuctionBatchDetail,
   AuctionDraftInput,
+  AuctionItemSourceType,
   AuctionProductOption,
 } from "../../_api/types";
 
@@ -55,7 +65,11 @@ const formSchema = z.object({
   nama_id: z.string().min(1, "Nama ID wajib diisi"),
   nama_en: z.string().optional(),
   description: z.string().optional(),
+  origin_type: z.enum(["BULKY_WAREHOUSE", "SUPPLIER"]),
   warehouse_id: z.string().optional(),
+  supplier_name: z.string().optional(),
+  supplier_address: z.string().optional(),
+  supplier_city: z.string().optional(),
   kategori_id: z.string().optional(),
   kondisi_id: z.string().optional(),
   kondisi_paket_id: z.string().optional(),
@@ -71,7 +85,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 type BatchItem = {
-  produk_id: string;
+  source_type: AuctionItemSourceType;
+  produk_id?: string;
   nama_snapshot: string;
   quantity: number;
   unit_price: string;
@@ -83,6 +98,56 @@ type UploadedAsset = {
   url?: string;
   kind: "IMAGE" | "PDF";
   original_name?: string;
+};
+
+type SaveStage = "uploading" | "saving" | null;
+
+const SaveProgressDialog = ({
+  stage,
+  isEdit,
+}: {
+  stage: SaveStage;
+  isEdit: boolean;
+}) => {
+  const uploading = stage === "uploading";
+
+  return (
+    <Dialog open={stage !== null}>
+      <DialogContent
+        className="w-[min(36rem,calc(100vw-2rem))] gap-0 overflow-hidden p-0 sm:max-w-xl"
+        showCloseButton={false}
+      >
+        <div className="grid items-center gap-5 px-6 py-6 sm:grid-cols-[172px_minmax(0,1fr)]">
+          <Lottie
+            src="/assets/lottie/pc-to-cloud-server.json"
+            loop
+            autoplay
+            className="mx-auto h-32 w-40 sm:mx-0"
+            aria-label="Animasi proses penyimpanan batch"
+          />
+          <DialogHeader className="items-start gap-2 text-left">
+            <DialogTitle>
+              {uploading
+                ? "Mengunggah aset batch"
+                : isEdit
+                  ? "Memperbarui batch"
+                  : "Menyimpan batch baru"}
+            </DialogTitle>
+            <DialogDescription className="max-w-sm text-left leading-relaxed">
+              {uploading
+                ? "Gambar sedang dikompresi ke WebP dan diunggah ke storage. Jangan tutup halaman ini."
+                : isEdit
+                  ? "Perubahan batch sedang disimpan ke database. Jangan tutup halaman ini."
+                  : "Batch sedang disimpan ke database. Jangan tutup halaman ini."}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        <div className="border-t bg-muted/30 px-6 py-3 text-center text-xs text-muted-foreground sm:text-right" aria-live="polite">
+          {uploading ? "Menunggu aset dikonfirmasi server…" : "Menunggu penyimpanan dikonfirmasi server…"}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 const getSelectLabel = (item: any) => {
@@ -124,7 +189,9 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
 
   const [items, setItems] = useState<BatchItem[]>([]);
   const [images, setImages] = useState<UploadedAsset[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [pdf, setPdf] = useState<UploadedAsset | null>(null);
+  const [pdfFiles, setPdfFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const form = useForm<FormValues>({
@@ -133,7 +200,11 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       nama_id: "",
       nama_en: "",
       description: "",
+      origin_type: "BULKY_WAREHOUSE",
       warehouse_id: "",
+      supplier_name: "",
+      supplier_address: "",
+      supplier_city: "",
       kategori_id: "",
       kondisi_id: "",
       kondisi_paket_id: "",
@@ -154,7 +225,11 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       nama_id: batch.nama_id,
       nama_en: batch.nama_en ?? "",
       description: batch.description ?? "",
+      origin_type: batch.origin_type ?? "BULKY_WAREHOUSE",
       warehouse_id: batch.warehouse_id ?? "",
+      supplier_name: batch.supplier_name ?? "",
+      supplier_address: batch.supplier_address ?? "",
+      supplier_city: batch.supplier_city ?? "",
       kategori_id: batch.kategori_id ?? "",
       kondisi_id: batch.kondisi_id ?? "",
       kondisi_paket_id: batch.kondisi_paket_id ?? "",
@@ -168,7 +243,8 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
     });
     setItems(
       (batch.items ?? []).map((i) => ({
-        produk_id: i.produk_id,
+        source_type: i.source_type,
+        produk_id: i.produk_id ?? undefined,
         nama_snapshot: i.nama_snapshot,
         quantity: i.quantity,
         unit_price: i.unit_price_snapshot,
@@ -196,7 +272,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [batch]);
 
-  const [panjangCm, lebarCm, tinggiCm, beratKg, discrepancy] = useWatch({
+  const [panjangCm, lebarCm, tinggiCm, beratKg, discrepancy, originType] = useWatch({
     control: form.control,
     name: [
       "panjang_cm",
@@ -204,6 +280,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       "tinggi_cm",
       "berat_kg",
       "discrepancy_percentage",
+      "origin_type",
     ],
   });
 
@@ -236,9 +313,11 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   const { mutate: uploadAsset, isPending: isUploading } = useUploadAuctionAsset();
 
   const isSaving = isCreating || isUpdating;
-  const isDisabled = isSaving || isPublishing || isUploading;
+  const isDisabled = isSaving || isPublishing || isUploading || uploading;
+  const saveStage: SaveStage = uploading || isUploading ? "uploading" : isSaving ? "saving" : null;
 
   const handleImageChange = async (files: File[]) => {
+    setImageFiles(files);
     if (files.length === 0) return;
     setUploading(true);
     const newAssets: UploadedAsset[] = [];
@@ -263,11 +342,13 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
     } catch {
       toast.error("Gagal mengupload gambar");
     } finally {
+      setImageFiles([]);
       setUploading(false);
     }
   };
 
   const handlePdfChange = async (files: File[]) => {
+    setPdfFiles(files);
     if (files.length === 0) {
       setPdf(null);
       return;
@@ -290,8 +371,19 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
     } catch {
       toast.error("Gagal mengupload PDF");
     } finally {
+      setPdfFiles([]);
       setUploading(false);
     }
+  };
+
+  const moveImage = (index: number, direction: "up" | "down") => {
+    setImages((previous) => {
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= previous.length) return previous;
+      const next = [...previous];
+      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+      return next;
+    });
   };
 
   const handleSubmit = async (values: FormValues) => {
@@ -299,14 +391,22 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       nama_id: values.nama_id,
       nama_en: values.nama_en || null,
       description: values.description || null,
-      warehouse_id: values.warehouse_id || null,
+      origin_type: values.origin_type,
+      warehouse_id: values.origin_type === "BULKY_WAREHOUSE" ? values.warehouse_id || null : null,
+      supplier_name: values.origin_type === "SUPPLIER" ? values.supplier_name || null : null,
+      supplier_address: values.origin_type === "SUPPLIER" ? values.supplier_address || null : null,
+      supplier_city: values.origin_type === "SUPPLIER" ? values.supplier_city || null : null,
       kategori_id: values.kategori_id || null,
       kondisi_id: values.kondisi_id || null,
       kondisi_paket_id: values.kondisi_paket_id || null,
       sumber_id: values.sumber_id || null,
       discrepancy_percentage: values.discrepancy_percentage || "0",
       merek_ids: values.merek_ids,
-      items: items.map((i) => ({ produk_id: i.produk_id, quantity: i.quantity })),
+      items: items.map((i) =>
+        i.source_type === "CATALOG"
+          ? { source_type: "CATALOG" as const, produk_id: i.produk_id, quantity: i.quantity }
+          : { source_type: "MANUAL" as const, nama: i.nama_snapshot, unit_price: i.unit_price, quantity: i.quantity },
+      ),
       panjang_cm: values.panjang_cm || "0",
       lebar_cm: values.lebar_cm || "0",
       tinggi_cm: values.tinggi_cm || "0",
@@ -355,10 +455,11 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
 
   return (
     <div className="flex flex-col gap-6 pt-4 pb-20">
+      <SaveProgressDialog stage={saveStage} isEdit={isEdit} />
       <div className="flex items-center gap-2">
         <Link href={batchId ? `/auctions/${batchId}` : "/auctions/list"}>
           <Button variant="ghost" size="icon-lg">
-            <ArrowLeft className="size-5" />
+            <Gavel className="size-5" />
           </Button>
         </Link>
         <ChevronRight className="size-4" />
@@ -367,48 +468,93 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
         </h1>
       </div>
       <Separator />
-
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <FieldGroup className="grid gap-6 w-full max-w-5xl mx-auto">
-          <div className="max-w-3xl mx-auto grid w-full gap-6">
-            <Controller
-              name="nama_id"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid} className="gap-1">
-                  <FieldLabel required>Nama ID</FieldLabel>
-                  <InputGroup>
-                    <InputGroupInput
-                      {...field}
-                      type="text"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Nama batch (ID)..."
-                      autoComplete="off"
-                    />
-                  </InputGroup>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-            <Controller
-              name="nama_en"
-              control={form.control}
-              render={({ field }) => (
-                <Field className="gap-1">
-                  <FieldLabel>Nama EN</FieldLabel>
-                  <InputGroup>
-                    <InputGroupInput
-                      {...field}
-                      type="text"
-                      placeholder="Nama batch (EN)..."
-                      autoComplete="off"
-                    />
-                  </InputGroup>
-                </Field>
-              )}
-            />
+          {images.length < 10 && (
+            <Field className="gap-1">
+              <FieldLabel>Gambar Batch ({images.length}/10)</FieldLabel>
+              <DropzoneList
+                onChange={handleImageChange}
+                value={imageFiles}
+                maxFiles={10 - images.length}
+                maxSize={5 * 1024 * 1024}
+                accept={{ "image/jpeg": [], "image/png": [], "image/webp": [] }}
+                isEdit={isEdit}
+              />
+            </Field>
+          )}
+
+          {images.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-medium">Daftar Gambar Batch</p>
+              <div className="grid grid-cols-2 gap-3 rounded-xl border border-gray-300 p-3 sm:grid-cols-4 xl:grid-cols-5 dark:border-gray-700">
+                {images.map((image, index) => (
+                  <div key={image.id} className="rounded-lg bg-gray-100 p-2 dark:bg-gray-800">
+                    <div className="relative aspect-square overflow-hidden rounded-md shadow">
+                      {image.url && <Image src={image.url} alt={image.original_name ?? `Gambar batch ${index + 1}`} fill sizes="(max-width: 640px) 45vw, (max-width: 1280px) 22vw, 180px" className="object-cover" />}
+                    </div>
+                    <div className="mt-2 flex items-center justify-end gap-1">
+                      <Button type="button" size="icon-sm" variant="ghost" disabled={index === 0} onClick={() => moveImage(index, "up")}><ArrowUp className="size-3.5" /></Button>
+                      <Button type="button" size="icon-sm" variant="ghost" disabled={index === images.length - 1} onClick={() => moveImage(index, "down")}><ArrowDown className="size-3.5" /></Button>
+                      <Button type="button" size="icon-sm" variant="ghost" className="hover:bg-red-200 dark:hover:bg-red-500/30" onClick={() => setImages((previous) => previous.filter((_, itemIndex) => itemIndex !== index))}><Trash2 className="size-3.5 text-red-500" /></Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mx-auto grid w-full gap-6">
+            <Field className="gap-1">
+              <FieldLabel>Dokumen PDF (Opsional)</FieldLabel>
+              <DropzonePDF
+                onChange={handlePdfChange}
+                value={pdfFiles}
+                oldValue={pdf?.url}
+                onRemoveOld={() => setPdf(null)}
+              />
+            </Field>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Controller
+                name="nama_id"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid} className="gap-1">
+                    <FieldLabel required>Nama ID</FieldLabel>
+                    <InputGroup>
+                      <InputGroupInput
+                        {...field}
+                        type="text"
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Nama batch (ID)..."
+                        autoComplete="off"
+                      />
+                    </InputGroup>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="nama_en"
+                control={form.control}
+                render={({ field }) => (
+                  <Field className="gap-1">
+                    <FieldLabel>Nama EN</FieldLabel>
+                    <InputGroup>
+                      <InputGroupInput
+                        {...field}
+                        type="text"
+                        placeholder="Nama batch (EN)..."
+                        autoComplete="off"
+                      />
+                    </InputGroup>
+                  </Field>
+                )}
+              />
+            </div>
             <Controller
               name="description"
               control={form.control}
@@ -424,8 +570,26 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
               )}
             />
 
+            <Controller
+              name="origin_type"
+              control={form.control}
+              render={({ field }) => (
+                <Field className="gap-2">
+                  <FieldLabel>Asal Pengiriman</FieldLabel>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Button type="button" variant={field.value === "BULKY_WAREHOUSE" ? "default" : "outline"} onClick={() => field.onChange("BULKY_WAREHOUSE")}>
+                      Gudang Bulky
+                    </Button>
+                    <Button type="button" variant={field.value === "SUPPLIER" ? "default" : "outline"} onClick={() => field.onChange("SUPPLIER")}>
+                      Gudang Supplier
+                    </Button>
+                  </div>
+                </Field>
+              )}
+            />
+
             <div className="grid gap-4 lg:grid-cols-2">
-              <Controller
+              {originType === "BULKY_WAREHOUSE" && <Controller
                 name="warehouse_id"
                 control={form.control}
                 render={({ field }) => (
@@ -451,7 +615,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                     </Combobox>
                   </Field>
                 )}
-              />
+              />}
               <Controller
                 name="kategori_id"
                 control={form.control}
@@ -580,6 +744,20 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
               />
             </div>
 
+            {originType === "SUPPLIER" && (
+              <div className="grid gap-4 rounded-lg border p-4 lg:grid-cols-2">
+                <Controller name="supplier_name" control={form.control} render={({ field }) => (
+                  <Field className="gap-1"><FieldLabel required>Nama Supplier / Gudang</FieldLabel><InputGroup><InputGroupInput {...field} placeholder="Nama gudang supplier..." /></InputGroup></Field>
+                )} />
+                <Controller name="supplier_city" control={form.control} render={({ field }) => (
+                  <Field className="gap-1"><FieldLabel required>Kota Asal</FieldLabel><InputGroup><InputGroupInput {...field} placeholder="Kota asal pengiriman..." /></InputGroup></Field>
+                )} />
+                <Controller name="supplier_address" control={form.control} render={({ field }) => (
+                  <Field className="gap-1 lg:col-span-2"><FieldLabel required>Alamat Gudang Supplier</FieldLabel><Textarea {...field} placeholder="Alamat lengkap untuk pengiriman..." /></Field>
+                )} />
+              </div>
+            )}
+
             <div className="grid gap-4 lg:grid-cols-4">
               <Controller
                 name="panjang_cm"
@@ -652,24 +830,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Field className="gap-1">
-              <FieldLabel>Gambar (1-10)</FieldLabel>
-              <DropzoneList
-                onChange={handleImageChange}
-                value={[]}
-                maxFiles={10}
-                maxSize={5 * 1024 * 1024}
-                accept={{ "image/jpeg": [], "image/png": [], "image/webp": [] }}
-              />
-            </Field>
-            <Field className="gap-1">
-              <FieldLabel>PDF (Opsional)</FieldLabel>
-              <DropzonePDF onChange={handlePdfChange} value={[]} />
-            </Field>
-          </div>
-
-          <ItemPicker items={items} setItems={setItems} />
+          <ItemPicker items={items} setItems={setItems} allowCatalog={originType === "BULKY_WAREHOUSE"} />
 
           <SummaryCards
             grandTotal={grandTotal}
@@ -719,9 +880,11 @@ const getSelectId = (value: any) => {
 const ItemPicker = ({
   items,
   setItems,
+  allowCatalog,
 }: {
   items: BatchItem[];
   setItems: React.Dispatch<React.SetStateAction<BatchItem[]>>;
+  allowCatalog: boolean;
 }) => {
   const [search, setSearch] = useState("");
   const { data: productData, isPending } = useGetAuctionProductOptions({
@@ -743,6 +906,7 @@ const ItemPicker = ({
       return [
         ...prev,
         {
+          source_type: "CATALOG",
           produk_id: product.id,
           nama_snapshot: product.nama_id,
           quantity: 1,
@@ -753,17 +917,42 @@ const ItemPicker = ({
     });
   };
 
+  const [manualName, setManualName] = useState("");
+  const [manualPrice, setManualPrice] = useState("");
+
+  const handleAddManual = () => {
+    const name = manualName.trim();
+    const price = Number(manualPrice);
+    if (!name || !Number.isInteger(price) || price <= 0) {
+      toast.error("Isi nama dan harga Rupiah bulat untuk item manual");
+      return;
+    }
+    setItems((prev) => [
+      ...prev,
+      {
+        source_type: "MANUAL",
+        produk_id: `manual-${Date.now()}`,
+        nama_snapshot: name,
+        quantity: 1,
+        unit_price: String(price),
+        stock_available: 0,
+      },
+    ]);
+    setManualName("");
+    setManualPrice("");
+  };
+
   return (
     <div className="border rounded-lg p-4 flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Produk</h3>
+        <h3 className="font-semibold">Item Batch</h3>
         <span className="text-xs text-muted-foreground">
           {items.length} item
         </span>
       </div>
 
-      <Field className="gap-1">
-        <FieldLabel>Cari Produk</FieldLabel>
+      {allowCatalog && <Field className="gap-1">
+        <FieldLabel>Cari Produk Katalog Bulky</FieldLabel>
         <InputGroup>
           <InputGroupInput
             type="text"
@@ -773,9 +962,24 @@ const ItemPicker = ({
             autoComplete="off"
           />
         </InputGroup>
-      </Field>
+      </Field>}
 
-      <div className="border rounded-md overflow-hidden">
+      <div className="grid gap-2 rounded-md border p-3 sm:grid-cols-[1fr_180px_auto]">
+        <InputGroup>
+          <InputGroupInput value={manualName} onChange={(e) => setManualName(e.target.value)} placeholder="Nama item manual / dari supplier..." />
+        </InputGroup>
+        <InputGroup>
+          <InputGroupInput value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} inputMode="numeric" placeholder="Harga satuan (Rp)" />
+        </InputGroup>
+        <Button type="button" variant="outline" onClick={handleAddManual}>
+          <Plus className="size-3.5" /> Tambah Manual
+        </Button>
+        <p className="text-xs text-muted-foreground sm:col-span-3">
+          Item manual tidak terhubung ke katalog atau stok Bulky. Pastikan ketersediaan supplier sebelum membuka lelang.
+        </p>
+      </div>
+
+      {allowCatalog && <div className="border rounded-md overflow-hidden">
         <table className="w-full text-xs">
           <thead className="bg-muted">
             <tr>
@@ -819,7 +1023,7 @@ const ItemPicker = ({
             )}
           </tbody>
         </table>
-      </div>
+      </div>}
 
       {items.length > 0 && (
         <div className="border rounded-md overflow-hidden">
@@ -835,8 +1039,8 @@ const ItemPicker = ({
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.produk_id} className="border-t">
-                  <td className="px-3 py-2">{item.nama_snapshot}</td>
+              <tr key={item.produk_id} className="border-t">
+                <td className="px-3 py-2"><div>{item.nama_snapshot}</div><span className="text-[10px] text-muted-foreground">{item.source_type === "MANUAL" ? "Input manual" : "Katalog Bulky"}</span></td>
                   <td className="px-3 py-2 text-right tabular-nums">
                     {formatRupiah(item.unit_price)}
                   </td>

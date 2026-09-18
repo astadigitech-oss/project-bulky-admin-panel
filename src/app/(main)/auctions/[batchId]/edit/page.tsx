@@ -3,6 +3,7 @@ import { auth } from "@/lib/action/auth";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BatchForm } from "../../create/_components/batch-form";
+import { BreadcrumbBatchName } from "../_components/breadcrumb-batch-name";
 
 const pathname = "auctions/[batchId]/edit";
 
@@ -25,8 +26,8 @@ const AuctionEditPage = async ({
       breadcrumbs={[
         { label: "Lelang" },
         { label: "Daftar", url: "/auctions/list" },
-        { label: batchId },
-        { label: "Edit" },
+        { label: <BreadcrumbBatchName batchId={batchId} />, key: "batch-name" },
+        { label: "Edit Batch" },
       ]}
     >
       <BatchForm batchId={batchId} />

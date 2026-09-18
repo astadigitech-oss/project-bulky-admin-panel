@@ -5,6 +5,8 @@ import { MetaPagination } from "@/lib/types";
 // ============================================================
 
 export type AuctionStatus = "DRAFT" | "OPEN" | "SOLD";
+export type AuctionOriginType = "BULKY_WAREHOUSE" | "SUPPLIER";
+export type AuctionItemSourceType = "CATALOG" | "MANUAL";
 export type AuctionPaymentStatus = "UNPAID" | "PAID";
 export type AuctionFulfillmentStatus = "PENDING" | "PROCESSING" | "COMPLETED";
 
@@ -43,7 +45,8 @@ export type AuctionBatchSummary = {
 };
 
 export type AuctionItemSnapshot = {
-  produk_id: string;
+  produk_id: string | null;
+  source_type: AuctionItemSourceType;
   nama_snapshot: string;
   quantity: number;
   unit_price_snapshot: string;
@@ -87,6 +90,10 @@ export type AuctionBatchDetail = {
   nama_en: string | null;
   description: string | null;
   warehouse_id: string | null;
+  origin_type: AuctionOriginType;
+  supplier_name: string | null;
+  supplier_address: string | null;
+  supplier_city: string | null;
   kategori_id: string | null;
   kondisi_id: string | null;
   kondisi_paket_id: string | null;
@@ -167,13 +174,23 @@ export type AuctionDraftInput = {
   nama_en?: string | null;
   description?: string | null;
   warehouse_id?: string | null;
+  origin_type?: AuctionOriginType;
+  supplier_name?: string | null;
+  supplier_address?: string | null;
+  supplier_city?: string | null;
   kategori_id?: string | null;
   kondisi_id?: string | null;
   kondisi_paket_id?: string | null;
   sumber_id?: string | null;
   discrepancy_percentage?: string;
   merek_ids?: string[];
-  items?: { produk_id: string; quantity: number }[];
+  items?: {
+    source_type: AuctionItemSourceType;
+    produk_id?: string;
+    nama?: string;
+    unit_price?: string;
+    quantity: number;
+  }[];
   panjang_cm?: string;
   lebar_cm?: string;
   tinggi_cm?: string;

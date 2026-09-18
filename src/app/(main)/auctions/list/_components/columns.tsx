@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { formatImageAlt, formatRupiah, sizesImage } from "@/lib/utils";
@@ -22,8 +22,14 @@ export const auctionStatusVariant: Record<
 
 export const auctionColumns = ({
   metaPage,
+  onDelete,
+  canManage,
+  disabled,
 }: {
   metaPage: MetaPagination;
+  onDelete: (batch: AuctionBatchSummary) => void;
+  canManage: boolean;
+  disabled: boolean;
 }): ColumnDef<AuctionBatchSummary>[] => [
   {
     id: "no",
@@ -58,8 +64,8 @@ export const auctionColumns = ({
                 className="object-cover"
               />
             ) : (
-              <div className="flex size-full items-center justify-center text-[10px] text-muted-foreground">
-                -
+              <div className="flex size-full flex-col items-center justify-center px-1 text-center text-[9px] leading-tight text-muted-foreground">
+                Tidak ada gambar
               </div>
             )}
           </div>
@@ -118,19 +124,37 @@ export const auctionColumns = ({
   },
   {
     id: "actions",
-    header: () => <div className="text-right">Aksi</div>,
+    header: "Aksi",
     cell: ({ row }) => (
-      <div className="flex justify-end">
+      <div className="flex gap-2">
         <TooltipText
           value="Lihat Detail"
           render={
             <Link href={`/auctions/${row.original.id}`}>
-              <Button variant="outline" size="icon" className="size-8">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                 <Eye className="size-3.5" />
+                Lihat
               </Button>
             </Link>
           }
         />
+        {canManage && row.original.status === "DRAFT" && (
+          <TooltipText
+            value="Hapus draft"
+            render={
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-1.5 text-xs"
+                disabled={disabled}
+                onClick={() => onDelete(row.original)}
+              >
+                <Trash2 className="size-3.5" />
+                Hapus
+              </Button>
+            }
+          />
+        )}
       </div>
     ),
   },

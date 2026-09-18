@@ -14,13 +14,13 @@ import {
 } from "../ui/breadcrumb";
 import { Action } from "./action";
 
-export type BreadcrumbProps = { label: string; url?: string }[];
+export type BreadcrumbProps = { label: React.ReactNode; url?: string; key?: string }[];
 
 export const MainContainer = ({
   breadcrumbs,
   children,
 }: {
-  breadcrumbs?: { label: string; url?: string }[];
+  breadcrumbs?: BreadcrumbProps;
   children: React.ReactNode;
 }) => {
   return (
@@ -46,8 +46,8 @@ export const MainContainer = ({
                   <BreadcrumbList>
                     {breadcrumbs
                       .slice(0, breadcrumbs.length - 1)
-                      .map((breadcrumb) => (
-                        <Fragment key={breadcrumb.label}>
+                      .map((breadcrumb, index) => (
+                        <Fragment key={breadcrumb.key ?? index}>
                           <BreadcrumbItem>
                             {breadcrumb.url ? (
                               <BreadcrumbLink href={breadcrumb.url}>

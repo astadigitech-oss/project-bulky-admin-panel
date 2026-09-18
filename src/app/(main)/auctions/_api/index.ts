@@ -186,6 +186,18 @@ export const useUpdateAuction = () => {
   });
 };
 
+export const useDeleteAuction = () => {
+  const queryClient = useQueryClient();
+  return useAuctionMutate<BaseResponse<null>, undefined, { id: string }>({
+    endpoint: "/auctions/:id",
+    method: "delete",
+    onError: { title: "DELETE_AUCTION" },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auction-list"] });
+    },
+  });
+};
+
 export const usePublishAuction = () => {
   const queryClient = useQueryClient();
   return useAuctionMutate<BaseResponse<AuctionBatchDetail>, AuctionPublishBody, { id: string }>({

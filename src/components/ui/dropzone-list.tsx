@@ -15,6 +15,7 @@ type DropzoneProps = {
   maxFiles?: number;
   maxSize?: number;
   oldValue?: string[];
+  onRemoveOld?: (index: number) => void;
   isEdit?: boolean;
 };
 
@@ -24,6 +25,7 @@ export const DropzoneList = ({
   disabled,
   error,
   oldValue,
+  onRemoveOld,
   accept = {
     "image/jpeg": [],
     "image/png": [],
@@ -142,9 +144,13 @@ export const DropzoneList = ({
                     className={cn(
                       "size-full absolute left-0 top-0 z-10 hidden group-hover:flex hover:from-black/5 hover:to-black/5 dark:hover:from-black/5 dark:hover:to-black/5 bg-black/5 backdrop-blur-sm border-none",
                     )}
-                    onClick={() =>
-                      onChange(value.filter((_, index) => index !== idx))
-                    }
+                    onClick={() => {
+                      if (value.length > 0) {
+                        onChange(value.filter((_, index) => index !== idx));
+                        return;
+                      }
+                      onRemoveOld?.(idx);
+                    }}
                   >
                     <div className="size-10 rounded-full flex items-center justify-center bg-red-500 text-white">
                       <X />

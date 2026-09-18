@@ -137,10 +137,10 @@ export const BidTab = ({
     },
     {
       id: "actions",
-      header: () => <div className="text-right">Aksi</div>,
+      header: "Aksi",
       cell: ({ row }) =>
         canManage && batch.status === "OPEN" ? (
-          <div className="flex justify-end">
+          <div className="flex">
             <Button
               variant="outline"
               size="sm"
