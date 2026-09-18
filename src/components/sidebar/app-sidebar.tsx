@@ -11,6 +11,7 @@ import {
 } from "../ui/sidebar";
 import {
   ChartNoAxesCombined,
+  Gavel,
   Headset,
   Megaphone,
   MonitorSmartphone,
@@ -120,6 +121,18 @@ const data = {
           title: "Kondisi Paket",
           url: "/products/conditions/package",
           permission: "kondisi:read",
+        },
+      ],
+    },
+    {
+      title: "Lelang",
+      url: "/auctions",
+      icon: Gavel,
+      permission: "auction:read",
+      items: [
+        {
+          title: "Daftar Batch",
+          url: "/auctions/list",
         },
       ],
     },
