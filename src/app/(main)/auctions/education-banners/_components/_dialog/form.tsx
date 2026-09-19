@@ -51,10 +51,6 @@ const schema = z
       .string()
       .min(3, "Nama minimal 3 karakter")
       .max(100, "Nama maksimal 100 karakter"),
-    urutan: z
-      .number()
-      .int("Urutan harus berupa bilangan bulat")
-      .min(0, "Urutan tidak boleh negatif"),
     gambar_id: z
       .array(
         z
@@ -152,7 +148,6 @@ export const DialogFormAuctionEducationBanner = ({
     resolver: zodResolver(schema),
     values: {
       nama: detail?.nama ?? "",
-      urutan: detail?.urutan ?? 0,
       gambar_id: [],
       gambar_en: [],
       tanggal_mulai: detail?.tanggal_mulai
@@ -198,7 +193,6 @@ export const DialogFormAuctionEducationBanner = ({
     }
     const body = new FormData();
     body.append("nama", values.nama);
-    body.append("urutan", String(values.urutan));
     if (values.gambar_id?.[0]) body.append("gambar_id", values.gambar_id[0]);
     if (values.gambar_en?.[0]) body.append("gambar_en", values.gambar_en[0]);
     if (values.tanggal_mulai)
@@ -331,35 +325,6 @@ export const DialogFormAuctionEducationBanner = ({
                         id={`${formId}-nama`}
                         placeholder="Nama banner..."
                         autoComplete="off"
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-                <Controller
-                  name="urutan"
-                  control={form.control}
-                  disabled={isLoading}
-                  render={({ field, fieldState }) => (
-                    <Field
-                      data-invalid={fieldState.invalid}
-                      className="col-span-full gap-1"
-                    >
-                      <FieldLabel required htmlFor={`${formId}-urutan`}>
-                        Urutan Tayang
-                      </FieldLabel>
-                      <Input
-                        {...field}
-                        id={`${formId}-urutan`}
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={field.value ?? 0}
-                        onChange={(event) =>
-                          field.onChange(Number(event.target.value))
-                        }
                       />
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />

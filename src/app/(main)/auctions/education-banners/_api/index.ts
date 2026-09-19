@@ -18,3 +18,5 @@ export const useUpdateAuctionEducationBanner = () =>
   useMutate(dataAPIAuctionEducationBanner.mutation(useQueryClient()).update);
 export const useDeleteAuctionEducationBanner = () =>
   useMutate(dataAPIAuctionEducationBanner.mutation(useQueryClient()).delete);
+export const useReorderAuctionEducationBanners = () =>
+  useMutate(dataAPIAuctionEducationBanner.mutation(useQueryClient()).reorder);

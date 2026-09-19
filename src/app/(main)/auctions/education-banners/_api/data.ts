@@ -10,6 +10,8 @@ import {
   AuctionEducationBannerMutationBody,
   AuctionEducationBannerMutationResponse,
   AuctionEducationBannerParams,
+  AuctionEducationBannerReorderBody,
+  AuctionEducationBanner,
 } from "./types";
 
 const key = [
@@ -89,6 +91,18 @@ export const dataAPIAuctionEducationBanner = {
       },
       onError: { title: "DELETE_AUCTION_EDUCATION_BANNER" },
     };
+    const reorder: UseMutateConfig<
+      { success: boolean; message: string; data: AuctionEducationBanner[] },
+      AuctionEducationBannerReorderBody
+    > = {
+      endpoint: "/auction-education-banners/reorder",
+      method: "put",
+      onSuccess: async ({ data }) => {
+        toast.success(data.message);
+        if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
+      },
+      onError: { title: "REORDER_AUCTION_EDUCATION_BANNERS" },
+    };
     return {
       create,
       update: action(
@@ -96,6 +110,7 @@ export const dataAPIAuctionEducationBanner = {
         "put",
         "UPDATE_AUCTION_EDUCATION_BANNER",
       ),
+      reorder,
       delete: remove,
     };
   },

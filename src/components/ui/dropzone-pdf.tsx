@@ -13,16 +13,9 @@ import {
   DialogTrigger,
 } from "./dialog";
 import dynamic from "next/dynamic";
-import { Spinner } from "./spinner";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
   ssr: false,
-  loading: () => (
-    <div className="flex items-center gap-2 justify-center w-full aspect-[1/1.414] border">
-      <Spinner className="size-3.5" />
-      <p>Loading PDF...</p>
-    </div>
-  ),
 });
 
 type DropzoneProps = {
@@ -35,7 +28,11 @@ type DropzoneProps = {
   onRemoveOld?: () => void;
 };
 
-export const DropzonePDF = ({
+export const DropzonePDF = (props: DropzoneProps) => (
+  <DropzonePDFContent key={props.oldValue ?? ""} {...props} />
+);
+
+const DropzonePDFContent = ({
   value = [] as File[],
   onChange,
   disabled,
@@ -43,11 +40,8 @@ export const DropzonePDF = ({
   oldValue,
   onRemoveOld,
 }: DropzoneProps) => {
-  const [preview, setPreview] = useState(oldValue ?? "");
-
-  useEffect(() => {
-    setPreview(oldValue ?? "");
-  }, [oldValue]);
+  const [removedOld, setRemovedOld] = useState(false);
+  const preview = removedOld ? "" : oldValue ?? "";
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     disabled,
     accept: { "application/pdf": [".pdf"] },
@@ -130,7 +124,7 @@ export const DropzonePDF = ({
               type="button"
               onClick={() => {
                 if (preview) {
-                  setPreview("");
+                  setRemovedOld(true);
                   onRemoveOld?.();
                 } else {
                   onChange([]);

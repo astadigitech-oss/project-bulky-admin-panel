@@ -21,6 +21,7 @@ export type AuctionEducationBannerListResponse = BaseResponse & {
 };
 export type AuctionEducationBannerParams = BaseParams;
 export type AuctionEducationBannerMutationBody = FormData;
+export type AuctionEducationBannerReorderBody = { ids: string[] };
 export type AuctionEducationBannerDetailResponse = BaseResponse & {
   data: AuctionEducationBanner;
 };

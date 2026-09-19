@@ -23,6 +23,7 @@ import {
   useDeleteAuctionEducationBanner,
   useGetAuctionEducationBannerDetail,
   useGetAuctionEducationBannerList,
+  useReorderAuctionEducationBanners,
 } from "../_api";
 import { columns } from "./columns";
 import { DialogFormAuctionEducationBanner } from "./_dialog/form";
@@ -119,7 +120,13 @@ export const AuctionEducationBannerClient = () => {
   const { data: detail } = useGetAuctionEducationBannerDetail({ id: bannerId });
   const { mutate: deleteBanner, isPending: isDeleting } =
     useDeleteAuctionEducationBanner();
-  const isDisabled = isDeleting;
+  const { data: completeList } = useGetAuctionEducationBannerList({
+    page: 1,
+    per_page: 100,
+  });
+  const { mutate: reorderBanners, isPending: isReordering } =
+    useReorderAuctionEducationBanners();
+  const isDisabled = isDeleting || isReordering;
 
   useEffect(() => {
     if (!list) return;
@@ -140,6 +147,17 @@ export const AuctionEducationBannerClient = () => {
       { params: { id: bannerToDelete.id } },
       { onSuccess: () => setBannerToDelete(null) },
     );
+  };
+
+  const handleMove = (id: string, direction: "up" | "down") => {
+    const ordered = completeList?.data ?? [];
+    if (completeList?.meta.total !== ordered.length) return;
+    const from = ordered.findIndex((item) => item.id === id);
+    const to = from + (direction === "up" ? -1 : 1);
+    if (from < 0 || to < 0 || to >= ordered.length) return;
+    const ids = ordered.map((item) => item.id);
+    [ids[from], ids[to]] = [ids[to], ids[from]];
+    reorderBanners({ body: { ids } });
   };
 
   return (
@@ -205,6 +223,9 @@ export const AuctionEducationBannerClient = () => {
             setOpen,
             setQuery,
             handleDelete,
+            handleMove,
+            orderedIds: completeList?.data.map((item) => item.id) ?? [],
+            canReorder: completeList?.meta.total === completeList?.data.length,
             disabled: isDisabled,
           })}
           data={list?.data ?? []}

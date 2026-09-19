@@ -8,6 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 import Image from "next/image";
 import { cn, formatImageAlt, formatRupiah, sizesImage } from "@/lib/utils";
 import { AuctionBatchDetail } from "../../_api/types";
@@ -233,14 +235,15 @@ export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
               <CardTitle>Dokumen PDF</CardTitle>
             </CardHeader>
             <CardContent>
-              <a
-                href={batch.pdf.url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm text-primary underline"
-              >
-                {batch.pdf.original_name}
-              </a>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="min-w-0 break-all text-sm text-muted-foreground">
+                  {batch.pdf.original_name}
+                </p>
+                <Button render={<a href={batch.pdf.url} target="_blank" rel="noreferrer" />} variant="outline" size="sm">
+                  <Eye className="size-4" />
+                  Lihat PDF
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

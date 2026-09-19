@@ -21,7 +21,7 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
-import { Clock, Edit, ImageOffIcon, MoreHorizontal, Trash } from "lucide-react";
+import { ArrowDown, ArrowUp, Clock, Edit, ImageOffIcon, MoreHorizontal, Trash } from "lucide-react";
 import Image from "next/image";
 import { Dispatch, SetStateAction } from "react";
 import { MetaPagination } from "@/lib/types";
@@ -32,12 +32,18 @@ export const columns = ({
   setOpen,
   setQuery,
   handleDelete,
+  handleMove,
+  orderedIds,
+  canReorder,
   disabled,
 }: {
   metaPage: MetaPagination;
   setOpen: Dispatch<SetStateAction<"create" | "edit" | null>>;
   setQuery: (values: { bannerId: string }) => void;
   handleDelete: (name: string, id: string) => Promise<void>;
+  handleMove: (id: string, direction: "up" | "down") => void;
+  orderedIds: string[];
+  canReorder: boolean;
   disabled: boolean;
 }): ColumnDef<AuctionEducationBanner>[] => [
   {
@@ -134,6 +140,22 @@ export const columns = ({
           <DropdownMenuContent>
             <DropdownMenuGroup>
               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+              <DropdownMenuItem
+                className="text-xs"
+                disabled={disabled || !canReorder || orderedIds.indexOf(row.original.id) <= 0}
+                onClick={() => handleMove(row.original.id, "up")}
+              >
+                <ArrowUp className="size-3.5" />
+                Naikkan urutan
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-xs"
+                disabled={disabled || !canReorder || orderedIds.indexOf(row.original.id) === orderedIds.length - 1}
+                onClick={() => handleMove(row.original.id, "down")}
+              >
+                <ArrowDown className="size-3.5" />
+                Turunkan urutan
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-xs"
                 onClick={() => {

@@ -156,8 +156,11 @@ const SaveProgressDialog = ({
   );
 };
 
-const getSelectLabel = (item: any) => {
-  if (typeof item === "string") return item;
+const getSelectLabel = (item: any, options: any[] = []): string => {
+  if (typeof item === "string") {
+    const match = options.find((option) => option?.id === item);
+    return match ? getSelectLabel(match) : "";
+  }
   if (item && typeof item === "object") {
     const o = item as {
       nama?: unknown;
@@ -166,8 +169,14 @@ const getSelectLabel = (item: any) => {
       id?: unknown;
     };
     if (typeof o.nama === "string" && o.nama.trim()) return o.nama;
+    if (o.nama && typeof o.nama === "object") {
+      const translated = o.nama as { id?: unknown; en?: unknown };
+      if (typeof translated.id === "string" && translated.id.trim()) return translated.id;
+      if (typeof translated.en === "string" && translated.en.trim()) return translated.en;
+    }
     if (typeof o.nama_id === "string" && o.nama_id.trim()) return o.nama_id;
     if (typeof o.nama_en === "string" && o.nama_en.trim()) return o.nama_en;
+    if (typeof o.id === "string") return o.id;
   }
   return "";
 };
@@ -638,7 +647,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                       items={warehouseOptions}
                       value={field.value}
                       onValueChange={(e) => field.onChange(getSelectId(e))}
-                      itemToStringLabel={(v: any) => getSelectLabel(v)}
+                      itemToStringLabel={(v: any) => getSelectLabel(v, warehouseOptions)}
                     >
                       <ComboboxInput placeholder="Pilih warehouse..." />
                       <ComboboxContent>
@@ -665,7 +674,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                       items={kategoriOptions}
                       value={field.value}
                       onValueChange={(e) => field.onChange(getSelectId(e))}
-                      itemToStringLabel={(v: any) => getSelectLabel(v)}
+                      itemToStringLabel={(v: any) => getSelectLabel(v, kategoriOptions)}
                     >
                       <ComboboxInput placeholder="Pilih kategori..." />
                       <ComboboxContent>
@@ -692,7 +701,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                       items={kondisiOptions}
                       value={field.value}
                       onValueChange={(e) => field.onChange(getSelectId(e))}
-                      itemToStringLabel={(v: any) => getSelectLabel(v)}
+                      itemToStringLabel={(v: any) => getSelectLabel(v, kondisiOptions)}
                     >
                       <ComboboxInput placeholder="Pilih kondisi..." />
                       <ComboboxContent>
@@ -719,7 +728,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                       items={kondisiPaketOptions}
                       value={field.value}
                       onValueChange={(e) => field.onChange(getSelectId(e))}
-                      itemToStringLabel={(v: any) => getSelectLabel(v)}
+                      itemToStringLabel={(v: any) => getSelectLabel(v, kondisiPaketOptions)}
                     >
                       <ComboboxInput placeholder="Pilih kondisi paket..." />
                       <ComboboxContent>
@@ -746,7 +755,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                       items={sumberOptions}
                       value={field.value}
                       onValueChange={(e) => field.onChange(getSelectId(e))}
-                      itemToStringLabel={(v: any) => getSelectLabel(v)}
+                      itemToStringLabel={(v: any) => getSelectLabel(v, sumberOptions)}
                     >
                       <ComboboxInput placeholder="Pilih sumber..." />
                       <ComboboxContent>
