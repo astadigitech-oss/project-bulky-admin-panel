@@ -169,7 +169,26 @@ export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
             <InfoRow label="Asal Pengiriman" value={batch.origin_type === "SUPPLIER" ? "Gudang Supplier" : "Gudang Bulky"} />
             {batch.origin_type === "SUPPLIER" && <>
               <InfoRow label="Supplier" value={batch.supplier_name ?? "-"} />
-              <InfoRow label="Kota Asal" value={batch.supplier_city ?? "-"} />
+              <InfoRow label="Alamat" value={batch.supplier_address ?? "-"} />
+              <InfoRow
+                label="Wilayah"
+                value={[batch.supplier_kecamatan, batch.supplier_kota, batch.supplier_provinsi].filter(Boolean).join(", ") || "-"}
+              />
+              {(batch.supplier_kelurahan || batch.supplier_kode_pos) && (
+                <InfoRow
+                  label="Kel. / Pos"
+                  value={[batch.supplier_kelurahan, batch.supplier_kode_pos].filter(Boolean).join(" - ") || "-"}
+                />
+              )}
+              <InfoRow
+                label="Koordinat"
+                value={
+                  batch.supplier_latitude && batch.supplier_longitude
+                    ? `${batch.supplier_latitude}, ${batch.supplier_longitude}`
+                    : "-"
+                }
+                mono
+              />
             </>}
           </CardContent>
         </Card>

@@ -22,7 +22,7 @@ import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowDown, ArrowUp, ChevronRight, Gavel, Plus, Save, Send, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Gavel, MapPin, Plus, Save, Send, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,7 +30,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import z from "zod";
 import { toast } from "sonner";
-import { cn, formatRupiah } from "@/lib/utils";
+import { cn, extractCoordsFromURL, formatRupiah } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
@@ -69,7 +69,13 @@ const formSchema = z.object({
   warehouse_id: z.string().optional(),
   supplier_name: z.string().optional(),
   supplier_address: z.string().optional(),
-  supplier_city: z.string().optional(),
+  supplier_provinsi: z.string().optional(),
+  supplier_kota: z.string().optional(),
+  supplier_kecamatan: z.string().optional(),
+  supplier_kelurahan: z.string().optional(),
+  supplier_kode_pos: z.string().optional(),
+  supplier_latitude: z.string().optional(),
+  supplier_longitude: z.string().optional(),
   kategori_id: z.string().optional(),
   kondisi_id: z.string().optional(),
   kondisi_paket_id: z.string().optional(),
@@ -193,6 +199,20 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   const [pdf, setPdf] = useState<UploadedAsset | null>(null);
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [gmapsUrl, setGmapsUrl] = useState("");
+
+  const handleGmapsUrlChange = (url: string) => {
+    setGmapsUrl(url);
+    if (!url.trim()) return;
+    const coords = extractCoordsFromURL(url);
+    if (coords) {
+      form.setValue("supplier_latitude", coords.lat, { shouldValidate: true });
+      form.setValue("supplier_longitude", coords.lng, { shouldValidate: true });
+      toast.success("Koordinat latitude & longitude berhasil diambil dari link Google Maps!");
+    } else {
+      toast.error("Format URL Google Maps tidak memuat pola koordinat @latitude,longitude.");
+    }
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -204,7 +224,13 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       warehouse_id: "",
       supplier_name: "",
       supplier_address: "",
-      supplier_city: "",
+      supplier_provinsi: "",
+      supplier_kota: "",
+      supplier_kecamatan: "",
+      supplier_kelurahan: "",
+      supplier_kode_pos: "",
+      supplier_latitude: "",
+      supplier_longitude: "",
       kategori_id: "",
       kondisi_id: "",
       kondisi_paket_id: "",
@@ -229,7 +255,13 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       warehouse_id: batch.warehouse_id ?? "",
       supplier_name: batch.supplier_name ?? "",
       supplier_address: batch.supplier_address ?? "",
-      supplier_city: batch.supplier_city ?? "",
+      supplier_provinsi: batch.supplier_provinsi ?? "",
+      supplier_kota: batch.supplier_kota ?? "",
+      supplier_kecamatan: batch.supplier_kecamatan ?? "",
+      supplier_kelurahan: batch.supplier_kelurahan ?? "",
+      supplier_kode_pos: batch.supplier_kode_pos ?? "",
+      supplier_latitude: batch.supplier_latitude ?? "",
+      supplier_longitude: batch.supplier_longitude ?? "",
       kategori_id: batch.kategori_id ?? "",
       kondisi_id: batch.kondisi_id ?? "",
       kondisi_paket_id: batch.kondisi_paket_id ?? "",
@@ -387,15 +419,22 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   };
 
   const handleSubmit = async (values: FormValues) => {
+    const isSupplier = values.origin_type === "SUPPLIER";
     const body: AuctionDraftInput = {
       nama_id: values.nama_id,
       nama_en: values.nama_en || null,
       description: values.description || null,
       origin_type: values.origin_type,
-      warehouse_id: values.origin_type === "BULKY_WAREHOUSE" ? values.warehouse_id || null : null,
-      supplier_name: values.origin_type === "SUPPLIER" ? values.supplier_name || null : null,
-      supplier_address: values.origin_type === "SUPPLIER" ? values.supplier_address || null : null,
-      supplier_city: values.origin_type === "SUPPLIER" ? values.supplier_city || null : null,
+      warehouse_id: !isSupplier ? values.warehouse_id || null : null,
+      supplier_name: isSupplier ? values.supplier_name || null : null,
+      supplier_address: isSupplier ? values.supplier_address || null : null,
+      supplier_provinsi: isSupplier ? values.supplier_provinsi || null : null,
+      supplier_kota: isSupplier ? values.supplier_kota || null : null,
+      supplier_kecamatan: isSupplier ? values.supplier_kecamatan || null : null,
+      supplier_kelurahan: isSupplier ? values.supplier_kelurahan || null : null,
+      supplier_kode_pos: isSupplier ? values.supplier_kode_pos || null : null,
+      supplier_latitude: isSupplier ? values.supplier_latitude || null : null,
+      supplier_longitude: isSupplier ? values.supplier_longitude || null : null,
       kategori_id: values.kategori_id || null,
       kondisi_id: values.kondisi_id || null,
       kondisi_paket_id: values.kondisi_paket_id || null,
@@ -745,16 +784,154 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
             </div>
 
             {originType === "SUPPLIER" && (
-              <div className="grid gap-4 rounded-lg border p-4 lg:grid-cols-2">
-                <Controller name="supplier_name" control={form.control} render={({ field }) => (
-                  <Field className="gap-1"><FieldLabel required>Nama Supplier / Gudang</FieldLabel><InputGroup><InputGroupInput {...field} placeholder="Nama gudang supplier..." /></InputGroup></Field>
-                )} />
-                <Controller name="supplier_city" control={form.control} render={({ field }) => (
-                  <Field className="gap-1"><FieldLabel required>Kota Asal</FieldLabel><InputGroup><InputGroupInput {...field} placeholder="Kota asal pengiriman..." /></InputGroup></Field>
-                )} />
-                <Controller name="supplier_address" control={form.control} render={({ field }) => (
-                  <Field className="gap-1 lg:col-span-2"><FieldLabel required>Alamat Gudang Supplier</FieldLabel><Textarea {...field} placeholder="Alamat lengkap untuk pengiriman..." /></Field>
-                )} />
+              <div className="grid gap-4 rounded-lg border p-4 bg-muted/20">
+                <div className="flex flex-col gap-1 lg:col-span-2">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="size-4 text-primary" />
+                    <h3 className="font-semibold text-sm">Alamat & Titik Pengiriman Gudang Supplier</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Diperlukan untuk estimasi ongkir Deliveree (koordinat pin map) dan Forwarder (hierarki wilayah) di Storefront.
+                  </p>
+                </div>
+
+                <Controller
+                  name="supplier_name"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Field className="gap-1 lg:col-span-2">
+                      <FieldLabel required>Nama Supplier / Gudang</FieldLabel>
+                      <InputGroup>
+                        <InputGroupInput {...field} placeholder="Contoh: PT Sumber Rezeki / Gudang Supplier Cakung" />
+                      </InputGroup>
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="supplier_address"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Field className="gap-1 lg:col-span-2">
+                      <FieldLabel required>Alamat Tampilan Lengkap</FieldLabel>
+                      <Textarea
+                        {...field}
+                        placeholder="Alamat lengkap (jalan, nomor, patokan) untuk tampilan dan penjemputan paket..."
+                        className="min-h-[70px]"
+                      />
+                    </Field>
+                  )}
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:col-span-2">
+                  <Controller
+                    name="supplier_provinsi"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Field className="gap-1">
+                        <FieldLabel required>Provinsi</FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput {...field} placeholder="Contoh: Jawa Barat" />
+                        </InputGroup>
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="supplier_kota"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Field className="gap-1">
+                        <FieldLabel required>Kota / Kabupaten</FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput {...field} placeholder="Contoh: Bogor" />
+                        </InputGroup>
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="supplier_kecamatan"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Field className="gap-1">
+                        <FieldLabel required>Kecamatan</FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput {...field} placeholder="Contoh: Cibinong" />
+                        </InputGroup>
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="supplier_kelurahan"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Field className="gap-1">
+                        <FieldLabel>Kelurahan (Opsional)</FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput {...field} placeholder="Contoh: Pakansari" />
+                        </InputGroup>
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="supplier_kode_pos"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Field className="gap-1">
+                        <FieldLabel>Kode Pos (Opsional)</FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput {...field} placeholder="Contoh: 16915" />
+                        </InputGroup>
+                      </Field>
+                    )}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-3 rounded-md border bg-background p-3 lg:col-span-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-semibold">Titik Koordinat GPS (Deliveree)</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      Masukkan koordinat desimal atau tempel tautan Google Maps untuk ekstraksi otomatis.
+                    </span>
+                  </div>
+
+                  <Field className="gap-1">
+                    <FieldLabel className="text-xs">Tempel Link Google Maps (Auto-fill)</FieldLabel>
+                    <InputGroup>
+                      <InputGroupInput
+                        value={gmapsUrl}
+                        onChange={(e) => handleGmapsUrlChange(e.target.value)}
+                        placeholder="https://maps.google.com/?q=@-6.4697743,106.859898..."
+                      />
+                    </InputGroup>
+                  </Field>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Controller
+                      name="supplier_latitude"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Field className="gap-1">
+                          <FieldLabel required>Latitude</FieldLabel>
+                          <InputGroup>
+                            <InputGroupInput {...field} type="text" inputMode="decimal" placeholder="-6.4697743" />
+                          </InputGroup>
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      name="supplier_longitude"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Field className="gap-1">
+                          <FieldLabel required>Longitude</FieldLabel>
+                          <InputGroup>
+                            <InputGroupInput {...field} type="text" inputMode="decimal" placeholder="106.859898" />
+                          </InputGroup>
+                        </Field>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
