@@ -38,6 +38,7 @@ export const column = ({
   onDelete,
   onPublish,
   onCancel,
+  canManage,
   disabled,
 }: {
   metaPage: MetaPagination;
@@ -45,30 +46,34 @@ export const column = ({
   onDelete: (campaign: SeasonalCampaign) => Promise<void>;
   onPublish: (campaign: SeasonalCampaign) => Promise<void>;
   onCancel: (campaign: SeasonalCampaign) => Promise<void>;
+  canManage: boolean;
   disabled: boolean;
-}): ColumnDef<SeasonalCampaign>[] => [
-  {
-    id: "no",
-    header: () => <div className="text-center">No</div>,
-    cell: ({ row }) => <div className="text-center tabular-nums">{(metaPage.from + row.index).toLocaleString()}</div>,
-  },
-  { accessorKey: "nama", header: "Nama" },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => <Badge variant={statusVariant[row.original.status]}>{statusLabel[row.original.status]}</Badge>,
-  },
-  {
-    id: "periode",
-    header: "Periode",
-    cell: ({ row }) => row.original.tanggal_mulai && row.original.tanggal_selesai ? (
-      <div className="flex items-center gap-1.5 text-xs whitespace-nowrap">
-        <CalendarClock className="size-3.5 text-muted-foreground" />
-        {format(new Date(row.original.tanggal_mulai), "d MMM yy", { locale: localeID })} – {format(new Date(row.original.tanggal_selesai), "d MMM yy", { locale: localeID })}
-      </div>
-    ) : <span className="text-muted-foreground">Belum diatur</span>,
-  },
-  {
+}): ColumnDef<SeasonalCampaign>[] => {
+  const columns: ColumnDef<SeasonalCampaign>[] = [
+    {
+      id: "no",
+      header: () => <div className="text-center">No</div>,
+      cell: ({ row }) => <div className="text-center tabular-nums">{(metaPage.from + row.index).toLocaleString()}</div>,
+    },
+    { accessorKey: "nama", header: "Nama" },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => <Badge variant={statusVariant[row.original.status]}>{statusLabel[row.original.status]}</Badge>,
+    },
+    {
+      id: "periode",
+      header: "Periode",
+      cell: ({ row }) => row.original.tanggal_mulai && row.original.tanggal_selesai ? (
+        <div className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+          <CalendarClock className="size-3.5 text-muted-foreground" />
+          {format(new Date(row.original.tanggal_mulai), "d MMM yy", { locale: localeID })} – {format(new Date(row.original.tanggal_selesai), "d MMM yy", { locale: localeID })}
+        </div>
+      ) : <span className="text-muted-foreground">Belum diatur</span>,
+    },
+  ];
+
+  if (canManage) columns.push({
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
@@ -92,5 +97,7 @@ export const column = ({
         </DropdownMenu>
       );
     },
-  },
-];
+  });
+
+  return columns;
+};

@@ -23,6 +23,9 @@ import {
   BaseResponse,
   MasterSelectItem,
   PaginatedResponse,
+  AuctionSupplierExcelPreview,
+  AuctionSupplierExcelImport,
+  AuctionWarehouseOrigin,
 } from "./types";
 
 // ============================================================
@@ -46,9 +49,10 @@ export const useGetAuctionBids = (id: string, req: AuctionBidsRequest) =>
 
 export const useGetAuctionProductOptions = (
   req: AuctionProductOptionsRequest,
+  enabled = true,
 ) =>
   useApiQuery<PaginatedResponse<AuctionProductOption>>(
-    dataAPIAuction.query(req).productOptions,
+    { ...dataAPIAuction.query(req).productOptions, enabled },
   );
 
 // ============================================================
@@ -59,6 +63,12 @@ export const useGetWarehouseSelect = () =>
   useApiQuery<BaseResponse<MasterSelectItem[]>>({
     key: ["auction-master", "warehouse"],
     endpoint: "/warehouse/dropdown",
+  });
+
+export const useGetAuctionWarehouseOrigin = () =>
+  useApiQuery<BaseResponse<AuctionWarehouseOrigin>>({
+    key: ["auction-master", "warehouse-origin"],
+    endpoint: "/warehouse",
   });
 
 export const useGetKategoriSelect = () =>
@@ -269,6 +279,50 @@ export const useUploadAuctionAsset = () => {
       });
     },
     onError: (err) => errorResponse({ err, title: "UPLOAD_ASSET" }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auction-detail"] });
+    },
+  });
+};
+
+export const usePreviewSupplierExcel = () =>
+  useMutation<AxiosResponse<BaseResponse<AuctionSupplierExcelPreview>>, AxiosError, File>({
+    mutationFn: async (file) => {
+      const form = new FormData();
+      form.append("file", file);
+      return axios.post(`${apiUrl}/auctions/supplier-items/preview`, form, {
+        headers: {
+          Authorization: `Bearer ${getCookie(cookiesKey)}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+    },
+    onError: (err) => errorResponse({ err, title: "PREVIEW_SUPPLIER_EXCEL" }),
+  });
+
+export const useImportSupplierExcel = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    AxiosResponse<BaseResponse<AuctionSupplierExcelImport>>,
+    AxiosError,
+    { file: File; nameColumn: number; priceColumn: number; quantityColumn: number; headerRow: number; title: string }
+  >({
+    mutationFn: async ({ file, nameColumn, priceColumn, quantityColumn, headerRow, title }) => {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("name_column", String(nameColumn));
+      form.append("price_column", String(priceColumn));
+      form.append("quantity_column", String(quantityColumn));
+      form.append("header_row", String(headerRow));
+      form.append("title", title);
+      return axios.post(`${apiUrl}/auctions/supplier-items/import`, form, {
+        headers: {
+          Authorization: `Bearer ${getCookie(cookiesKey)}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+    },
+    onError: (err) => errorResponse({ err, title: "IMPORT_SUPPLIER_EXCEL" }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["auction-detail"] });
     },

@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { SeasonalCampaignVisualPreview } from "../storefront-preview";
 import { AssetCrop, assetTargets, defaultAssetCrop, renderCroppedAsset } from "../asset-crop-editor";
 import { AssetOnboarding } from "../asset-onboarding";
+import { useMe } from "@/components/container/_api";
 
 const imageMimeTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const maxFileSize = 10 * 1024 * 1024;
@@ -102,6 +103,8 @@ export const SeasonalCampaignForm = ({
 }) => {
   const formID = useId();
   const router = useRouter();
+  const { data: meData, isLoading: isLoadingMe } = useMe();
+  const canManage = meData?.data?.permissions?.includes("marketing:manage") ?? false;
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { nama: "", tanggal_mulai: "", tanggal_selesai: "", web_logo: [], web_navbar_decoration: [], mobile_top_app_bar_ornament: [], remove_web_logo: false, remove_web_navbar_decoration: false, remove_mobile_top_app_bar_ornament: false },
@@ -126,6 +129,10 @@ export const SeasonalCampaignForm = ({
       remove_web_logo: false, remove_web_navbar_decoration: false, remove_mobile_top_app_bar_ornament: false,
     });
   }, [detail?.id, mode]);
+
+  useEffect(() => {
+    if (!isLoadingMe && !canManage) router.replace("/marketing/seasonal-campaigns");
+  }, [canManage, isLoadingMe, router]);
 
   const close = () => { form.reset(); router.push("/marketing/seasonal-campaigns"); };
   const onSubmit = async (values: FormValues) => {
@@ -172,6 +179,10 @@ export const SeasonalCampaignForm = ({
     { name: "mobile_top_app_bar_ornament", remove: "remove_mobile_top_app_bar_ornament", label: "Ornamen Top App Bar Mobile", description: "Background ornamen untuk top app bar aplikasi.", recommendation: "Rekomendasi: 1080 × 240 px (sekitar 4.5:1). Hindari teks; area tengah paling aman untuk perangkat berbeda.", oldValue: detail?.assets.mobile_top_app_bar_ornament_url, ratio: "hero" },
   ];
   const assetVisualPreviewFor = (assetName: keyof CropByAsset, file: File, nextCrop: AssetCrop) => <SeasonalCampaignVisualPreview previewTarget={assetName} webLogo={assetName === "web_logo" ? [file] : webLogo} mobileLoadingLogo={assetName === "web_logo" ? [file] : webLogo} webNavbarDecoration={assetName === "web_navbar_decoration" ? [file] : webNavbarDecoration} mobileTopAppBarOrnament={assetName === "mobile_top_app_bar_ornament" ? [file] : mobileTopAppBarOrnament} existing={{ webLogo: detail?.assets.web_logo_url, mobileLoadingLogo: detail?.assets.mobile_loading_logo_url, webNavbarDecoration: detail?.assets.web_navbar_decoration_url, mobileTopAppBarOrnament: detail?.assets.mobile_top_app_bar_ornament_url }} removed={{ webLogo: assetName === "web_logo" ? false : removeWebLogo, mobileLoadingLogo: assetName === "web_logo" ? false : removeWebLogo, webNavbarDecoration: assetName === "web_navbar_decoration" ? false : removeWebNavbarDecoration, mobileTopAppBarOrnament: assetName === "mobile_top_app_bar_ornament" ? false : removeMobileTopAppBarOrnament }} crops={{ webLogo: assetName === "web_logo" ? nextCrop : crops.web_logo, mobileLoadingLogo: assetName === "web_logo" ? nextCrop : crops.web_logo, webNavbarDecoration: assetName === "web_navbar_decoration" ? nextCrop : crops.web_navbar_decoration, mobileTopAppBarOrnament: assetName === "mobile_top_app_bar_ornament" ? nextCrop : crops.mobile_top_app_bar_ornament }} />;
+
+  if (isLoadingMe || !canManage) {
+    return <div className="mx-auto w-full max-w-4xl pt-4"><Skeleton className="h-10 w-72" /><Skeleton className="mt-6 h-[38rem] w-full" /></div>;
+  }
 
   return (
     <><SaveProgressDialog stage={saveStage} mode={mode} /><div className="mx-auto w-full max-w-4xl pb-8 pt-4">

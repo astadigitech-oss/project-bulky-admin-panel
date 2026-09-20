@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { InputSearch } from "@/components/ui/input-search";
 import { TooltipText } from "@/providers/tooltip-provider";
+import { useMe } from "@/components/container/_api";
 import { useConfirm } from "@/hooks/use-confirm";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSearchQuery } from "@/hooks/use-search";
@@ -54,6 +55,9 @@ const DeleteCampaignDialog = ({ campaign, isDeleting, onClose, onConfirm }: {
 );
 
 export const SeasonalCampaignClient = () => {
+  const { data: meData } = useMe();
+  const permissions = meData?.data?.permissions ?? [];
+  const canManage = permissions.includes("marketing:manage");
   const router = useRouter();
   const [{ sort, order }] = useQueryStates({
     sort: parseAsString.withDefault("created_at"),
@@ -107,10 +111,10 @@ export const SeasonalCampaignClient = () => {
         <div className="flex items-center gap-2">
           <InputSearch placeholder="Cari campaign..." classNameWrap="w-60" value={search} setValue={setSearch} />
           <TooltipText value="Perbarui data" render={<Button variant="outline" size="icon" disabled={disabled} onClick={() => refetch()}><RefreshCw className={cn("size-3.5", isRefetching && "animate-spin")} /></Button>} />
-          <Button className="text-xs" disabled={disabled} onClick={() => router.push("/marketing/seasonal-campaigns/create")}><Plus className="size-3.5" />Tambah Campaign</Button>
+          {canManage && <Button className="text-xs" disabled={disabled} onClick={() => router.push("/marketing/seasonal-campaigns/create")}><Plus className="size-3.5" />Tambah Campaign</Button>}
         </div>
       </div>
-      <DataTable columns={column({ metaPage, onEdit: (campaign) => router.push(`/marketing/seasonal-campaigns/${campaign.id}/edit`), onDelete: handleDelete, onPublish: (campaign) => confirmLifecycle(campaign, "publish"), onCancel: (campaign) => confirmLifecycle(campaign, "cancel"), disabled })} data={list?.data ?? []} isInitialLoading={isLoading} />
+      <DataTable columns={column({ metaPage, onEdit: (campaign) => router.push(`/marketing/seasonal-campaigns/${campaign.id}/edit`), onDelete: handleDelete, onPublish: (campaign) => confirmLifecycle(campaign, "publish"), onCancel: (campaign) => confirmLifecycle(campaign, "cancel"), canManage, disabled })} data={list?.data ?? []} isInitialLoading={isLoading} />
       <Pagination pagination={{ ...metaPage, current_page: page, per_page: limit }} setPage={setPage} setLimit={setLimit} disabled={disabled} />
     </div>
   );

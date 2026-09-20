@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
+    "@embedpdf/react-pdf-viewer": "^2.15.1",
     "@hookform/resolvers": "^5.9.1",
     "@lexical/code": "^0.39.0",
     "@lexical/html": "^0.39.0",
@@ -28,7 +29,6 @@
     "@ncdai/react-wheel-picker": "^1.2.2",
     "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-table": "^8.21.3",
-    "@wojtekmaj/react-hooks": "^2.2.0",
     "axios": "^1.19.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -49,7 +49,6 @@
     "react-dom": "^19.2.8",
     "react-dropzone": "^14.4.1",
     "react-hook-form": "^7.85.0",
-    "react-pdf": "10.4.1",
     "react-phone-number-input": "^3.4.17",
     "recharts": "2.15.4",
     "server-only": "^0.0.1",

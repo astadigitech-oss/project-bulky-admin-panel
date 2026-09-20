@@ -62,6 +62,34 @@ export type AuctionAsset = {
   size_bytes: number;
 };
 
+export type AuctionSupplierExcelColumn = {
+  index: number;
+  letter: string;
+  header: string;
+  samples: string[];
+};
+
+export type AuctionSupplierExcelPreview = {
+  sheet_name: string;
+  header_row: number;
+  columns: AuctionSupplierExcelColumn[];
+};
+
+export type AuctionSupplierExcelImport = {
+  items: { source_type: "MANUAL"; nama: string; unit_price: string; quantity: number }[];
+  pdf: AuctionAsset;
+};
+
+export type AuctionWarehouseOrigin = {
+  id: string;
+  nama: string;
+  alamat: string | null;
+  kota: string | null;
+  kode_pos: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
 export type AuctionBuyerSimple = {
   id: string;
   nama: string;
