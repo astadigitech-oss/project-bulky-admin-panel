@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -18,22 +17,15 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { id } from "date-fns/locale";
 import GB from "country-flag-icons/react/1x1/GB";
 import ID from "country-flag-icons/react/1x1/ID";
-import { CalendarIcon, Info, Send, X } from "lucide-react";
+import { Info, Send, X } from "lucide-react";
 import { Lottie } from "lottie-react";
 import { ComponentProps, useEffect, useId } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import {
   useCreateAuctionEducationBanner,
@@ -45,43 +37,30 @@ const imageRules = {
   mimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
   maxSize: 10 * 1024 * 1024,
 };
-const schema = z
-  .object({
-    nama: z
-      .string()
-      .min(3, "Nama minimal 3 karakter")
-      .max(100, "Nama maksimal 100 karakter"),
-    gambar_id: z
-      .array(
-        z
-          .file()
-          .max(imageRules.maxSize, "Ukuran maksimal 10MB")
-          .mime(imageRules.mimeTypes),
-      )
-      .max(1, "Hanya boleh 1 file")
-      .optional(),
-    gambar_en: z
-      .array(
-        z
-          .file()
-          .max(imageRules.maxSize, "Ukuran maksimal 10MB")
-          .mime(imageRules.mimeTypes),
-      )
-      .max(1, "Hanya boleh 1 file")
-      .optional(),
-    tanggal_mulai: z.date().optional(),
-    tanggal_selesai: z.date().optional(),
-  })
-  .refine(
-    (value) =>
-      !value.tanggal_mulai ||
-      !value.tanggal_selesai ||
-      value.tanggal_selesai > value.tanggal_mulai,
-    {
-      message: "Tanggal selesai harus setelah tanggal mulai",
-      path: ["tanggal_selesai"],
-    },
-  );
+const schema = z.object({
+  nama: z
+    .string()
+    .min(3, "Nama minimal 3 karakter")
+    .max(100, "Nama maksimal 100 karakter"),
+  gambar_id: z
+    .array(
+      z
+        .file()
+        .max(imageRules.maxSize, "Ukuran maksimal 10MB")
+        .mime(imageRules.mimeTypes),
+    )
+    .max(1, "Hanya boleh 1 file")
+    .optional(),
+  gambar_en: z
+    .array(
+      z
+        .file()
+        .max(imageRules.maxSize, "Ukuran maksimal 10MB")
+        .mime(imageRules.mimeTypes),
+    )
+    .max(1, "Hanya boleh 1 file")
+    .optional(),
+});
 type Values = z.infer<typeof schema>;
 type SaveStage = "uploading" | null;
 
@@ -150,12 +129,6 @@ export const DialogFormAuctionEducationBanner = ({
       nama: detail?.nama ?? "",
       gambar_id: [],
       gambar_en: [],
-      tanggal_mulai: detail?.tanggal_mulai
-        ? new Date(detail.tanggal_mulai)
-        : undefined,
-      tanggal_selesai: detail?.tanggal_selesai
-        ? new Date(detail.tanggal_selesai)
-        : undefined,
     },
   });
   const { mutate: createBanner, isPending: isCreating } =
@@ -164,10 +137,6 @@ export const DialogFormAuctionEducationBanner = ({
     useUpdateAuctionEducationBanner();
   const isLoading = isCreating || isUpdating || isDisabled;
   const saveStage: SaveStage = isCreating || isUpdating ? "uploading" : null;
-  const [startDate, endDate] = useWatch({
-    control: form.control,
-    name: ["tanggal_mulai", "tanggal_selesai"],
-  });
 
   const close = () => {
     form.reset();
@@ -195,10 +164,6 @@ export const DialogFormAuctionEducationBanner = ({
     body.append("nama", values.nama);
     if (values.gambar_id?.[0]) body.append("gambar_id", values.gambar_id[0]);
     if (values.gambar_en?.[0]) body.append("gambar_en", values.gambar_en[0]);
-    if (values.tanggal_mulai)
-      body.append("tanggal_mulai", values.tanggal_mulai.toISOString());
-    if (values.tanggal_selesai)
-      body.append("tanggal_selesai", values.tanggal_selesai.toISOString());
     if (mode === "create") createBanner({ body }, { onSuccess: close });
     if (mode === "edit" && detail)
       updateBanner({ body, params: { id: detail.id } }, { onSuccess: close });
@@ -332,45 +297,6 @@ export const DialogFormAuctionEducationBanner = ({
                     </Field>
                   )}
                 />
-                <Field className="col-span-full gap-1">
-                  <FieldLabel>
-                    Jadwal tayang{" "}
-                    <span className="font-normal text-muted-foreground">
-                      (opsional)
-                    </span>
-                  </FieldLabel>
-                  <Popover>
-                    <PopoverTrigger
-                      render={
-                        <Button
-                          variant="outline"
-                          className="justify-start text-xs"
-                        >
-                          <CalendarIcon className="size-3.5" />
-                          {startDate
-                            ? `${format(startDate, "PP", { locale: id })}${endDate ? ` — ${format(endDate, "PP", { locale: id })}` : ""}`
-                            : "Pilih rentang tanggal"}
-                        </Button>
-                      }
-                    />
-                    <PopoverContent className="w-auto">
-                      <Calendar
-                        mode="range"
-                        numberOfMonths={2}
-                        selected={{ from: startDate, to: endDate }}
-                        onSelect={(range) => {
-                          form.setValue("tanggal_mulai", range?.from);
-                          form.setValue("tanggal_selesai", range?.to);
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  {form.formState.errors.tanggal_selesai && (
-                    <FieldError
-                      errors={[form.formState.errors.tanggal_selesai]}
-                    />
-                  )}
-                </Field>
               </FieldGroup>
             )}
             <DialogFooter>

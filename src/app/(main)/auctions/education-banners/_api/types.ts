@@ -10,8 +10,7 @@ export type AuctionEducationBanner = {
   nama: string;
   gambar_url: { id: string; en?: string | null };
   urutan: number;
-  tanggal_mulai?: string | null;
-  tanggal_selesai?: string | null;
+  status: "draft" | "published";
   updated_at: string;
 };
 export type AuctionEducationBannerListRequest = BaseListParams;

@@ -13,6 +13,7 @@ import {
 import { InputSearch } from "@/components/ui/input-search";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSearchQuery } from "@/hooks/use-search";
+import { useConfirm } from "@/hooks/use-confirm";
 import { cn } from "@/lib/utils";
 import { TooltipText } from "@/providers/tooltip-provider";
 import { Plus, RefreshCw } from "lucide-react";
@@ -21,12 +22,15 @@ import { parseAsString, useQueryStates } from "nuqs";
 import { useEffect, useState } from "react";
 import {
   useDeleteAuctionEducationBanner,
+  useDraftAuctionEducationBanner,
   useGetAuctionEducationBannerDetail,
   useGetAuctionEducationBannerList,
   useReorderAuctionEducationBanners,
+  usePublishAuctionEducationBanner,
 } from "../_api";
 import { columns } from "./columns";
 import { DialogFormAuctionEducationBanner } from "./_dialog/form";
+import { AuctionEducationBanner } from "../_api/types";
 
 type BannerToDelete = { id: string; nama: string };
 
@@ -120,13 +124,26 @@ export const AuctionEducationBannerClient = () => {
   const { data: detail } = useGetAuctionEducationBannerDetail({ id: bannerId });
   const { mutate: deleteBanner, isPending: isDeleting } =
     useDeleteAuctionEducationBanner();
+  const { mutate: publishBanner, isPending: isPublishing } =
+    usePublishAuctionEducationBanner();
+  const { mutate: draftBanner, isPending: isDrafting } =
+    useDraftAuctionEducationBanner();
+  const [DialogPublish, confirmPublish] = useConfirm(
+    "Publish banner",
+    "Banner akan langsung ditayangkan di storefront.",
+  );
+  const [DialogDraft, confirmDraft] = useConfirm(
+    "Jadikan draft",
+    "Banner tidak akan lagi ditayangkan di storefront.",
+    "destructive",
+  );
   const { data: completeList } = useGetAuctionEducationBannerList({
     page: 1,
     per_page: 100,
   });
   const { mutate: reorderBanners, isPending: isReordering } =
     useReorderAuctionEducationBanners();
-  const isDisabled = isDeleting || isReordering;
+  const isDisabled = isDeleting || isReordering || isPublishing || isDrafting;
 
   useEffect(() => {
     if (!list) return;
@@ -159,6 +176,16 @@ export const AuctionEducationBannerClient = () => {
     [ids[from], ids[to]] = [ids[to], ids[from]];
     reorderBanners({ body: { ids } });
   };
+  const handleStatus = async (banner: AuctionEducationBanner) => {
+    const isPublished = banner.status === "published";
+    const confirmed = isPublished
+      ? await confirmDraft(banner.nama, "banner", "destructive")
+      : await confirmPublish(banner.nama, "banner");
+    if (!confirmed) return;
+    const variables = { body: undefined, params: { id: banner.id } };
+    if (isPublished) draftBanner(variables);
+    else publishBanner(variables);
+  };
 
   return (
     <div className="flex flex-col gap-6 pt-4">
@@ -168,6 +195,8 @@ export const AuctionEducationBannerClient = () => {
         onClose={() => setBannerToDelete(null)}
         onConfirm={deleteSelectedBanner}
       />
+      <DialogPublish />
+      <DialogDraft />
       <DialogFormAuctionEducationBanner
         open={!!open}
         mode={open}
@@ -224,6 +253,7 @@ export const AuctionEducationBannerClient = () => {
             setQuery,
             handleDelete,
             handleMove,
+            handleStatus,
             orderedIds: completeList?.data.map((item) => item.id) ?? [],
             canReorder: completeList?.meta.total === completeList?.data.length,
             disabled: isDisabled,

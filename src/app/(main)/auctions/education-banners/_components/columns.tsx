@@ -1,4 +1,5 @@
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogClose,
@@ -21,7 +22,17 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
-import { ArrowDown, ArrowUp, Clock, Edit, ImageOffIcon, MoreHorizontal, Trash } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Clock,
+  Edit,
+  ImageOffIcon,
+  MoreHorizontal,
+  Rocket,
+  Trash,
+  XCircle,
+} from "lucide-react";
 import Image from "next/image";
 import { Dispatch, SetStateAction } from "react";
 import { MetaPagination } from "@/lib/types";
@@ -33,6 +44,7 @@ export const columns = ({
   setQuery,
   handleDelete,
   handleMove,
+  handleStatus,
   orderedIds,
   canReorder,
   disabled,
@@ -42,6 +54,7 @@ export const columns = ({
   setQuery: (values: { bannerId: string }) => void;
   handleDelete: (name: string, id: string) => Promise<void>;
   handleMove: (id: string, direction: "up" | "down") => void;
+  handleStatus: (banner: AuctionEducationBanner) => void;
   orderedIds: string[];
   canReorder: boolean;
   disabled: boolean;
@@ -92,21 +105,15 @@ export const columns = ({
     ),
   },
   {
-    id: "schedule",
-    header: "Jadwal",
-    cell: ({ row }) => {
-      const { tanggal_mulai: start, tanggal_selesai: end } = row.original;
-      if (!start && !end)
-        return (
-          <span className="text-xs text-muted-foreground">Tanpa jadwal</span>
-        );
-      return (
-        <span className="text-xs">
-          {start ? format(start, "dd MMM yyyy", { locale: id }) : "-"} —{" "}
-          {end ? format(end, "dd MMM yyyy", { locale: id }) : "Seterusnya"}
-        </span>
-      );
-    },
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => (
+      <Badge
+        variant={row.original.status === "published" ? "default" : "secondary"}
+      >
+        {row.original.status === "published" ? "Published" : "Draft"}
+      </Badge>
+    ),
   },
   {
     id: "actions",
@@ -142,7 +149,11 @@ export const columns = ({
               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
               <DropdownMenuItem
                 className="text-xs"
-                disabled={disabled || !canReorder || orderedIds.indexOf(row.original.id) <= 0}
+                disabled={
+                  disabled ||
+                  !canReorder ||
+                  orderedIds.indexOf(row.original.id) <= 0
+                }
                 onClick={() => handleMove(row.original.id, "up")}
               >
                 <ArrowUp className="size-3.5" />
@@ -150,7 +161,11 @@ export const columns = ({
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-xs"
-                disabled={disabled || !canReorder || orderedIds.indexOf(row.original.id) === orderedIds.length - 1}
+                disabled={
+                  disabled ||
+                  !canReorder ||
+                  orderedIds.indexOf(row.original.id) === orderedIds.length - 1
+                }
                 onClick={() => handleMove(row.original.id, "down")}
               >
                 <ArrowDown className="size-3.5" />
@@ -165,6 +180,19 @@ export const columns = ({
               >
                 <Edit className="size-3.5" />
                 Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-xs"
+                onClick={() => handleStatus(row.original)}
+              >
+                {row.original.status === "published" ? (
+                  <XCircle className="size-3.5" />
+                ) : (
+                  <Rocket className="size-3.5" />
+                )}
+                {row.original.status === "published"
+                  ? "Jadikan draft"
+                  : "Publish"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-xs"

@@ -16,6 +16,10 @@ export const useCreateAuctionEducationBanner = () =>
   useMutate(dataAPIAuctionEducationBanner.mutation(useQueryClient()).create);
 export const useUpdateAuctionEducationBanner = () =>
   useMutate(dataAPIAuctionEducationBanner.mutation(useQueryClient()).update);
+export const usePublishAuctionEducationBanner = () =>
+  useMutate(dataAPIAuctionEducationBanner.mutation(useQueryClient()).publish);
+export const useDraftAuctionEducationBanner = () =>
+  useMutate(dataAPIAuctionEducationBanner.mutation(useQueryClient()).draft);
 export const useDeleteAuctionEducationBanner = () =>
   useMutate(dataAPIAuctionEducationBanner.mutation(useQueryClient()).delete);
 export const useReorderAuctionEducationBanners = () =>

@@ -43,11 +43,11 @@ export const dataAPIAuctionEducationBanner = {
   mutation: (queryClient?: QueryClient) => {
     const action = (
       endpoint: string,
-      method: "post" | "put",
+      method: "post" | "put" | "patch",
       title: string,
     ): UseMutateConfig<
       AuctionEducationBannerMutationResponse,
-      AuctionEducationBannerMutationBody,
+      AuctionEducationBannerMutationBody | undefined,
       AuctionEducationBannerParams
     > => ({
       endpoint,
@@ -109,6 +109,16 @@ export const dataAPIAuctionEducationBanner = {
         "/auction-education-banners/:id",
         "put",
         "UPDATE_AUCTION_EDUCATION_BANNER",
+      ),
+      publish: action(
+        "/auction-education-banners/:id/publish",
+        "patch",
+        "PUBLISH_AUCTION_EDUCATION_BANNER",
+      ),
+      draft: action(
+        "/auction-education-banners/:id/draft",
+        "patch",
+        "DRAFT_AUCTION_EDUCATION_BANNER",
       ),
       reorder,
       delete: remove,
