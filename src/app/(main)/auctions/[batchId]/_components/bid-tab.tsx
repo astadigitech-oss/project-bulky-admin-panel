@@ -103,18 +103,52 @@ export const BidTab = ({
       ),
     },
     {
-      accessorKey: "effective_percent",
-      header: "Persen",
+      id: "bid_breakdown",
+      header: "Rincian bid",
       cell: ({ row }) => (
-        <div className="tabular-nums">{row.original.effective_percent}%</div>
+        <div className="min-w-52 space-y-1.5 text-xs tabular-nums">
+          <div className="flex items-baseline justify-between gap-4">
+            <span className="text-muted-foreground">
+              {row.original.input_mode === "PERCENT" && row.original.input_percent
+                ? `Input persentase (${row.original.input_percent}%)`
+                : "Input nominal"}
+            </span>
+            <span className="font-medium">{formatRupiah(row.original.amount)}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-4">
+            <span className="text-muted-foreground">
+              Ongkir {row.original.shipping_provider_snapshot ? `(${row.original.shipping_provider_snapshot})` : ""}
+            </span>
+            <span className="font-medium">
+              {formatRupiah(row.original.shipping_amount_snapshot)}
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between gap-4">
+            <span className="text-muted-foreground">PPN ({row.original.ppn_rate_snapshot}%)</span>
+            <span className="font-medium">
+              {formatRupiah(row.original.ppn_amount_snapshot)}
+            </span>
+          </div>
+        </div>
       ),
     },
     {
-      accessorKey: "amount",
-      header: "Nominal",
+      accessorKey: "estimated_total_snapshot",
+      header: "Total estimasi",
       cell: ({ row }) => (
-        <div className="tabular-nums">{formatRupiah(row.original.amount)}</div>
+        <div className="font-medium tabular-nums">
+          {formatRupiah(row.original.estimated_total_snapshot)}
+        </div>
       ),
+    },
+    {
+      accessorKey: "note",
+      header: "Catatan buyer",
+      cell: ({ row }) => row.original.note ? (
+        <p className="max-w-48 whitespace-normal text-xs leading-5">
+          {row.original.note}
+        </p>
+      ) : <span className="text-muted-foreground">-</span>,
     },
     {
       accessorKey: "created_at",

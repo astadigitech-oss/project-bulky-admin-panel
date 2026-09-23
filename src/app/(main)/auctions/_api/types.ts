@@ -30,6 +30,8 @@ export type PaginatedResponse<T> = {
 export type AuctionBatchSummary = {
   id: string;
   code: string;
+  slug_id: string;
+  slug_en: string;
   nama_id: string;
   thumbnail_url: string | null;
   status: AuctionStatus;
@@ -114,6 +116,8 @@ export type AuctionWinner = {
 export type AuctionBatchDetail = {
   id: string;
   code: string;
+  slug_id: string;
+  slug_en: string;
   nama_id: string;
   nama_en: string | null;
   description: string | null;
@@ -175,6 +179,13 @@ export type AuctionBidDetail = {
   effective_percent: string;
   amount: string;
   grand_total_snapshot: string;
+  shipping_provider_snapshot: string;
+  shipping_service_snapshot: string;
+  shipping_amount_snapshot: string;
+  ppn_rate_snapshot: string;
+  ppn_amount_snapshot: string;
+  estimated_total_snapshot: string;
+  note: string;
   created_at: string;
   is_selected: boolean;
 };

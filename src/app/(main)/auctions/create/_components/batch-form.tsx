@@ -610,7 +610,11 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   const handlePublish = async () => {
     if (!batchId || !batch) return;
     publishAuction(
-      { body: { version: batch.version }, params: { id: batchId }, idempotencyKey: `publish-${batchId}` },
+      {
+        body: { version: batch.version },
+        params: { id: batchId },
+        idempotencyKey: `publish-${batchId}-${crypto.randomUUID()}`,
+      },
       {
         onSuccess: (data) => {
           toast.success(data.data.message);
