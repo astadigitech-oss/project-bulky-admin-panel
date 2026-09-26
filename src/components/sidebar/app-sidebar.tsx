@@ -132,6 +132,7 @@ const data = {
         "auction:read",
         "auction_education_banner:read",
         "syarat_ketentuan_lelang:read",
+        "system:read",
       ],
       items: [
         {
@@ -148,6 +149,11 @@ const data = {
           title: "Syarat & Ketentuan Lelang",
           url: "/policies/auction-terms",
           permission: "syarat_ketentuan_lelang:read",
+        },
+        {
+          title: "Persetujuan SK Lelang",
+          url: "/auctions/consents/list",
+          permission: "system:read",
         },
       ],
     },
