@@ -14,16 +14,17 @@ import { InputSearch } from "@/components/ui/input-search";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSearchQuery } from "@/hooks/use-search";
 import { useMe } from "@/components/container/_api";
-import { useDeleteAuction, useGetAuctionList } from "../../_api";
+import { exportAuctionBids, useDeleteAuction, useGetAuctionList } from "../../_api";
 import { cn } from "@/lib/utils";
 import { TooltipText } from "@/providers/tooltip-provider";
-import { Plus, RefreshCw } from "lucide-react";
+import { Download, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryStates } from "nuqs";
 import { Lottie } from "lottie-react";
 import React, { useEffect, useState } from "react";
 import { AuctionBatchSummary, AuctionStatus } from "../../_api/types";
 import { auctionColumns } from "./columns";
+import { toast } from "sonner";
 
 const statusOptions: { label: string; value: AuctionStatus | "all" }[] = [
   { label: "Semua Status", value: "all" },
@@ -93,6 +94,7 @@ const DeleteAuctionDialog = ({
 );
 
 export const AuctionListClient = () => {
+  const [isExportingBids, setIsExportingBids] = useState(false);
   const { data: meData } = useMe();
   const permissions = meData?.data?.permissions ?? [];
   const canManage = permissions.includes("auction:manage");
@@ -154,6 +156,26 @@ export const AuctionListClient = () => {
     );
   };
 
+  const handleExportBids = async () => {
+    setIsExportingBids(true);
+    try {
+      const blob = await exportAuctionBids({ search: searchValue });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "bid-lelang-bulky-" + new Date().toISOString().slice(0, 10) + ".xlsx";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Export bid berhasil diunduh");
+    } catch {
+      toast.error("Export bid gagal");
+    } finally {
+      setIsExportingBids(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 pt-4">
       <DeleteAuctionDialog
@@ -202,6 +224,16 @@ export const AuctionListClient = () => {
               </Button>
             }
           />
+          <Button
+            variant="outline"
+            size="sm"
+            className="hover:text-yellow-950 dark:hover:text-yellow-950"
+            onClick={handleExportBids}
+            disabled={isExportingBids || isPending}
+          >
+            <Download className="size-3.5" />
+            {isExportingBids ? "Menyiapkan..." : "Export Semua Bid"}
+          </Button>
           {canManage && (
             <Link href="/auctions/create">
               <Button className="text-xs" disabled={isPending}>

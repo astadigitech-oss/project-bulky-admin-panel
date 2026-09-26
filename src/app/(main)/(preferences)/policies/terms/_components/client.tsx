@@ -48,10 +48,16 @@ const formSchema = z.object({
   konten_en: z.string().min(1, "Konten harus diisi"),
 });
 
-export const TermsPolicyClient = () => {
+export const TermsPolicyClient = ({
+  slug = "syarat-ketentuan",
+  pageTitle = "Syarat & Ketentuan",
+}: {
+  slug?: string;
+  pageTitle?: string;
+}) => {
   const idFormTermPolicy = useId();
   const [contentState, setContentState] = useState("id");
-  const { data: detail, refetch, isRefetching } = useGetTermPoliciesDetail();
+  const { data: detail, refetch, isRefetching } = useGetTermPoliciesDetail(slug);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,7 +70,7 @@ export const TermsPolicyClient = () => {
   });
 
   const { mutate: updateTermPolicy, isPending: isUpdating } =
-    useUpdateTermPolicies();
+    useUpdateTermPolicies(slug);
 
   const handleClose = () => {
     form.reset();
@@ -80,7 +86,7 @@ export const TermsPolicyClient = () => {
     <div className="flex flex-col gap-6 pt-4">
       <div className="flex items-center justify-between">
         <h1 className="leading-none font-semibold text-2xl">
-          Syarat & Ketentuan
+          {pageTitle}
         </h1>
       </div>
       <div>

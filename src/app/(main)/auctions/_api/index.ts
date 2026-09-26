@@ -47,6 +47,19 @@ export const useGetAuctionBids = (id: string, req: AuctionBidsRequest) =>
     dataAPIAuction.query({ id, ...req }).bids,
   );
 
+export const exportAuctionBids = async (params: AuctionBidsRequest = {}) => {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  if (params.buyer_id) query.set("buyer_id", params.buyer_id);
+  if (params.sort_by) query.set("sort_by", params.sort_by);
+  const token = getCookie(cookiesKey);
+  const response = await axios.get(
+    apiUrl + "/auctions/bids/export" + (query.toString() ? "?" + query.toString() : ""),
+    { headers: { Authorization: "Bearer " + token }, responseType: "blob" },
+  );
+  return response.data as Blob;
+};
+
 export const useGetAuctionProductOptions = (
   req: AuctionProductOptionsRequest,
   enabled = true,

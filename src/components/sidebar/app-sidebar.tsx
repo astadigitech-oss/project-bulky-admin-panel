@@ -128,16 +128,26 @@ const data = {
       title: "Lelang",
       url: "/auctions",
       icon: Gavel,
-      permission: "auction:read",
+      permissionAny: [
+        "auction:read",
+        "auction_education_banner:read",
+        "syarat_ketentuan_lelang:read",
+      ],
       items: [
         {
           title: "Daftar Batch",
           url: "/auctions/list",
+          permission: "auction:read",
         },
         {
           title: "Banner Edukasi",
           url: "/auctions/education-banners",
-          permission: "auction:read",
+          permission: "auction_education_banner:read",
+        },
+        {
+          title: "Syarat & Ketentuan Lelang",
+          url: "/policies/auction-terms",
+          permission: "syarat_ketentuan_lelang:read",
         },
       ],
     },
@@ -331,9 +341,12 @@ export const AppSidebar = ({
 
   const canAccess = (item: {
     permission?: string;
+    permissionAny?: readonly string[];
     superAdminOnly?: boolean;
   }) =>
     (!item.permission || permissions.includes(item.permission)) &&
+    (!item.permissionAny ||
+      item.permissionAny.some((permission) => permissions.includes(permission))) &&
     (!item.superAdminOnly || isSuperAdmin);
 
   const filterNav = (nav: readonly NavValueProps[]) =>
