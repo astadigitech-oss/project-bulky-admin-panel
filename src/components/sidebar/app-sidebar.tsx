@@ -179,7 +179,7 @@ const data = {
           permission: "marketing:read",
         },
         {
-          title: "Tes Push Notification",
+          title: "Tes Notifikasi",
           url: "/marketing/push-test",
           permission: "marketing:manage",
         },

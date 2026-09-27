@@ -7,13 +7,13 @@ import { PushTestClient } from "./push-test-client";
 
 const pathname = "marketing/push-test";
 
-export const metadata: Metadata = { title: "Tes Push Notification" };
+export const metadata: Metadata = { title: "Tes Notifikasi" };
 
 export default async function PushTestPage() {
   if (!(await auth())) redirect(`/login?redirect=${encodeURIComponent(pathname)}`);
 
   return (
-    <MainContainer breadcrumbs={[{ label: "Pemasaran" }, { label: "Tes Push Notification" }]}>
+    <MainContainer breadcrumbs={[{ label: "Pemasaran" }, { label: "Tes Notifikasi" }]}>
       <PushTestClient />
     </MainContainer>
   );

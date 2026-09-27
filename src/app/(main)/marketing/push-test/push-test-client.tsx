@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Bell, Send } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -23,7 +24,7 @@ type SendResponse = ApiResponse<{ success_count: number; failure_count: number }
 
 export function PushTestClient() {
   const [search, setSearch] = useState("");
-  const [buyerID, setBuyerID] = useState("");
+  const [selectedBuyers, setSelectedBuyers] = useState<PushRecipient[]>([]);
   const [confirming, setConfirming] = useState(false);
   const [lastResult, setLastResult] = useState<{ success: number; failed: number } | null>(null);
   const queryClient = useQueryClient();
@@ -33,27 +34,48 @@ export function PushTestClient() {
     searchParams: search ? { search } : undefined,
   });
   const recipients = data?.data ?? [];
-  const selectedRecipient = recipients.find((recipient) => recipient.buyer_id === buyerID);
+  const selectedRecipients = selectedBuyers.map(
+    (selected) => recipients.find((recipient) => recipient.buyer_id === selected.buyer_id) ?? selected,
+  );
+  const selectedBuyerIDs = selectedRecipients.map((recipient) => recipient.buyer_id);
+  const selectedDeviceCount = selectedRecipients.reduce((total, recipient) => total + recipient.device_count, 0);
 
-  const sendTest = useMutate<SendResponse, { buyer_id: string }>({
+  const sendTest = useMutate<SendResponse, { buyer_ids: string[] }>({
     endpoint: "/marketing/push-test",
     method: "post",
     onSuccess: async ({ data: response }) => {
       setLastResult({ success: response.data.success_count, failed: response.data.failure_count });
-      toast.success(response.message, {
-        description: `${response.data.success_count} perangkat menerima permintaan, ${response.data.failure_count} gagal.`,
+      toast.success("Tes notifikasi selesai", {
+        description: response.data.success_count + " perangkat berhasil dikirimi pesan, " + response.data.failure_count + " gagal.",
       });
       await queryClient.invalidateQueries({ queryKey: ["push-test-recipients"] });
     },
     onError: { title: "PUSH_TEST" },
   });
 
+  const toggleBuyer = (recipient: PushRecipient, checked: boolean) => {
+    if (checked && selectedBuyers.length >= 100) {
+      toast.error("Maksimal 100 buyer untuk satu kali tes.");
+      return;
+    }
+    setSelectedBuyers((current) => {
+      if (checked) {
+        return current.some((buyer) => buyer.buyer_id === recipient.buyer_id)
+          ? current
+          : [...current, recipient];
+      }
+      return current.filter((buyer) => buyer.buyer_id !== recipient.buyer_id);
+    });
+    setConfirming(false);
+    setLastResult(null);
+  };
+
   return (
     <section className="flex max-w-3xl flex-col gap-6 pt-4">
       <header>
-        <h1 className="text-2xl font-semibold leading-none">Tes Push Notification</h1>
+        <h1 className="text-2xl font-semibold leading-none">Tes Notifikasi</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Pilih buyer yang sudah mendaftarkan perangkat. Pesan tes akan dikirim ke semua perangkat buyer tersebut.
+          Pilih satu atau beberapa buyer yang sudah mengaktifkan notifikasi. Pesan tes akan dikirim ke perangkat mereka.
         </p>
       </header>
 
@@ -63,13 +85,15 @@ export function PushTestClient() {
             <Bell className="size-5" />
           </span>
           <div>
-            <h2 className="font-medium">Pesan yang akan dikirim</h2>
-            <p className="text-sm text-muted-foreground">Isi pesan tetap untuk memastikan format FCM dasar.</p>
+            <h2 className="font-medium">Contoh pesan yang akan diterima</h2>
+            <p className="text-sm text-muted-foreground">Pesan ini hanya untuk mencoba notifikasi.</p>
           </div>
         </div>
         <div className="rounded-md bg-muted/60 p-4">
-          <p className="font-medium">Tes Notifikasi Bulky</p>
-          <p className="mt-1 text-sm text-muted-foreground">Notifikasi percobaan berhasil dikirim.</p>
+          <p className="font-medium">Tes notifikasi Bulky.id 👋</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Hai! Ini hanya tes notifikasi dari tim Bulky.id. Maaf kalau pesan ini mengganggu kenyamananmu—kamu bisa abaikan saja. Terima kasih sudah membantu!
+          </p>
         </div>
 
         <div className="mt-6 grid gap-4">
@@ -79,7 +103,6 @@ export function PushTestClient() {
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
-                setBuyerID("");
                 setConfirming(false);
                 setLastResult(null);
               }}
@@ -88,50 +111,70 @@ export function PushTestClient() {
             />
           </label>
 
-          <label className="grid gap-2 text-sm font-medium">
-            Buyer penerima
-            <select
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-              value={buyerID}
-              onChange={(event) => {
-                setBuyerID(event.target.value);
-                setConfirming(false);
-                setLastResult(null);
-              }}
-              disabled={isLoading || recipients.length === 0}
-            >
-              <option value="">
-                {isLoading ? "Memuat buyer..." : "Pilih buyer dengan perangkat aktif"}
-              </option>
-              {recipients.map((recipient) => (
-                <option key={recipient.buyer_id} value={recipient.buyer_id}>
-                  {recipient.buyer_name}{recipient.email ? ` — ${recipient.email}` : ""} ({recipient.device_count} perangkat)
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="grid gap-2">
+            <p className="text-sm font-medium">Pilih penerima</p>
+            <p className="text-xs text-muted-foreground">Pilih satu atau beberapa buyer, maksimal 100 untuk satu kali tes.</p>
+            {recipients.length > 0 ? (
+              <div className="grid max-h-72 gap-2 overflow-y-auto rounded-md border p-2" role="group" aria-label="Pilih buyer penerima">
+                {recipients.map((recipient) => {
+                  const checked = selectedBuyerIDs.includes(recipient.buyer_id);
+                  return (
+                    <div key={recipient.buyer_id} className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted/60">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(nextChecked) => toggleBuyer(recipient, nextChecked === true)}
+                        aria-label={"Pilih " + recipient.buyer_name}
+                        disabled={!checked && selectedRecipients.length >= 100}
+                      />
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 text-left"
+                        onClick={() => toggleBuyer(recipient, !checked)}
+                        aria-pressed={checked}
+                        disabled={!checked && selectedRecipients.length >= 100}
+                      >
+                        <span className="block truncate text-sm font-medium">{recipient.buyer_name}</span>
+                        {recipient.email && <span className="block truncate text-xs text-muted-foreground">{recipient.email}</span>}
+                      </button>
+                      <span className="shrink-0 text-xs text-muted-foreground">{recipient.device_count} perangkat</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="rounded-md border p-3 text-sm text-muted-foreground">
+                {isLoading
+                  ? "Mencari buyer..."
+                  : isError
+                    ? "Daftar buyer tidak dapat dimuat. Coba muat ulang halaman."
+                    : search
+                      ? "Tidak ada buyer yang cocok. Coba kata pencarian lain."
+                      : "Belum ada buyer yang mengaktifkan notifikasi."}
+              </p>
+            )}
+          </div>
 
-          {isError && <p role="alert" className="text-sm text-destructive">Daftar buyer gagal dimuat. Coba muat ulang halaman.</p>}
-          {!isLoading && !isError && recipients.length === 0 && (
-            <p className="text-sm text-muted-foreground">Belum ada buyer aktif yang memiliki perangkat push terdaftar.</p>
+          {isError && recipients.length > 0 && (
+            <p role="alert" className="text-sm text-destructive">Daftar buyer tidak dapat diperbarui. Coba muat ulang halaman.</p>
           )}
 
-          {selectedRecipient && (
-            <p className="text-sm text-muted-foreground">
-              Tes akan dikirim ke {selectedRecipient.device_count} perangkat milik {selectedRecipient.buyer_name}.
+          {selectedRecipients.length > 0 && (
+            <p className="rounded-md bg-muted/60 p-3 text-sm text-muted-foreground">
+              {selectedRecipients.length} buyer dipilih ({selectedDeviceCount} perangkat):{" "}
+              {selectedRecipients.map((recipient) => recipient.buyer_name).join(", ")}.
             </p>
           )}
 
           {lastResult && (
             <p role="status" className="text-sm text-muted-foreground">
-              Hasil pengiriman terakhir: {lastResult.success} berhasil, {lastResult.failed} gagal.
+              Hasil tes terakhir: {lastResult.success} perangkat berhasil, {lastResult.failed} gagal.
             </p>
           )}
 
-          {confirming && selectedRecipient && (
+          {confirming && selectedRecipients.length > 0 && (
             <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-4" role="alert">
               <p className="text-sm">
-                Kirim pesan tes ke semua {selectedRecipient.device_count} perangkat milik {selectedRecipient.buyer_name}?
+                Kirim pesan tes ke {selectedRecipients.length} buyer dan seluruh {selectedDeviceCount} perangkat mereka?
               </p>
               <div className="mt-3 flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setConfirming(false)} disabled={sendTest.isPending}>
@@ -140,7 +183,7 @@ export function PushTestClient() {
                 <Button
                   size="sm"
                   onClick={() => {
-                    sendTest.mutate({ body: { buyer_id: buyerID } });
+                    sendTest.mutate({ body: { buyer_ids: selectedBuyerIDs } });
                     setConfirming(false);
                   }}
                   disabled={sendTest.isPending}
@@ -154,7 +197,7 @@ export function PushTestClient() {
           <div>
             <Button
               onClick={() => setConfirming(true)}
-              disabled={!buyerID || sendTest.isPending || confirming}
+              disabled={selectedRecipients.length === 0 || sendTest.isPending || confirming}
             >
               <Send className="size-4" />
               Kirim tes
