@@ -7,6 +7,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useMutate } from "@/lib/query";
 import { useApiQuery } from "@/lib/query/use-query";
@@ -171,17 +179,22 @@ export function PushTestClient() {
             </p>
           )}
 
-          {confirming && selectedRecipients.length > 0 && (
-            <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-4" role="alert">
-              <p className="text-sm">
-                Kirim pesan tes ke {selectedRecipients.length} buyer dan seluruh {selectedDeviceCount} perangkat mereka?
-              </p>
-              <div className="mt-3 flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setConfirming(false)} disabled={sendTest.isPending}>
+          <Dialog open={confirming} onOpenChange={setConfirming}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Konfirmasi kirim tes</DialogTitle>
+                <DialogDescription>
+                  Kirim pesan tes ke {selectedRecipients.length} buyer dan seluruh {selectedDeviceCount} perangkat mereka?
+                </DialogDescription>
+              </DialogHeader>
+              <div className="max-h-32 overflow-y-auto rounded-md bg-muted/60 p-3 text-sm text-muted-foreground">
+                {selectedRecipients.map((recipient) => recipient.buyer_name).join(", ")}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setConfirming(false)} disabled={sendTest.isPending}>
                   Batal
                 </Button>
                 <Button
-                  size="sm"
                   onClick={() => {
                     sendTest.mutate({ body: { buyer_ids: selectedBuyerIDs } });
                     setConfirming(false);
@@ -190,9 +203,9 @@ export function PushTestClient() {
                 >
                   {sendTest.isPending ? "Mengirim..." : "Ya, kirim tes"}
                 </Button>
-              </div>
-            </div>
-          )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <div>
             <Button
