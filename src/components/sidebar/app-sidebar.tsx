@@ -179,6 +179,11 @@ const data = {
           permission: "marketing:read",
         },
         {
+          title: "Tes Push Notification",
+          url: "/marketing/push-test",
+          permission: "marketing:manage",
+        },
+        {
           title: "Formulir Grosir",
           url: "/marketing/wholesaler",
           permission: "system:read",
