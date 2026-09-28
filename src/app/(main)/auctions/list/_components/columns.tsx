@@ -92,6 +92,15 @@ export const auctionColumns = ({
     },
   },
   {
+    accessorKey: "is_displayed",
+    header: "Tampilan Store",
+    cell: ({ row }) => (
+      <Badge variant={row.original.is_displayed ? "default" : "secondary"}>
+        {row.original.is_displayed ? "Tampil" : "Disembunyikan"}
+      </Badge>
+    ),
+  },
+  {
     accessorKey: "bidder_count",
     header: "Bidder",
     cell: ({ row }) => (

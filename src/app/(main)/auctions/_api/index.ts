@@ -12,6 +12,7 @@ import {
   AuctionBidsRequest,
   AuctionBatchDetail,
   AuctionBatchSummary,
+  AuctionDisplayBody,
   AuctionBidDetail,
   AuctionDraftInput,
   AuctionListRequest,
@@ -227,6 +228,21 @@ export const usePublishAuction = () => {
     endpoint: "/auctions/:id/publish",
     method: "post",
     onError: { title: "PUBLISH_AUCTION" },
+    onSuccess: async (data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ["auction-list"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["auction-detail", { id: variables.params?.id }],
+      });
+    },
+  });
+};
+
+export const useUpdateAuctionDisplay = () => {
+  const queryClient = useQueryClient();
+  return useAuctionMutate<BaseResponse<AuctionBatchDetail>, AuctionDisplayBody, { id: string }>({
+    endpoint: "/auctions/:id/display",
+    method: "patch",
+    onError: { title: "UPDATE_AUCTION_DISPLAY" },
     onSuccess: async (data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ["auction-list"] });
       await queryClient.invalidateQueries({

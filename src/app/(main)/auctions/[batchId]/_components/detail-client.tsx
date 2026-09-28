@@ -16,6 +16,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { auctionStatusVariant } from "../../list/_components/columns";
 import { BidTab } from "./bid-tab";
 import { DetailTab } from "./detail-tab";
+import { AuctionDisplayControl } from "./auction-display-control";
 
 export const AuctionDetailClient = ({ batchId }: { batchId: string }) => {
   const { data: meData } = useMe();
@@ -62,6 +63,9 @@ export const AuctionDetailClient = ({ batchId }: { batchId: string }) => {
             {status.label}
           </Badge>
         </div>
+        {canManage && batch.status !== "DRAFT" && (
+          <AuctionDisplayControl batch={batch} onDone={refetch} />
+        )}
         {canManage && batch.status === "DRAFT" && (
           <Link href={`/auctions/${batchId}/edit`}>
             <Button variant="outline" className="text-xs">

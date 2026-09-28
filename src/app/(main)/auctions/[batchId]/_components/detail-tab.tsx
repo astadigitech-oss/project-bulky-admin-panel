@@ -150,6 +150,11 @@ export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
             <InfoRow label="Kode" value={batch.code} mono />
             <InfoRow label="Status" value={status.label} badge={status.variant} />
             <InfoRow
+              label="Tampilan di Store"
+              value={batch.is_displayed ? "Tampil" : "Disembunyikan"}
+              badge={batch.is_displayed ? "default" : "secondary"}
+            />
+            <InfoRow
               label="Grand Total"
               value={formatRupiah(batch.grand_total)}
             />

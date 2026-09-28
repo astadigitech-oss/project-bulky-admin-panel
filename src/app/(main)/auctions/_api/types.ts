@@ -35,6 +35,7 @@ export type AuctionBatchSummary = {
   nama_id: string;
   thumbnail_url: string | null;
   status: AuctionStatus;
+  is_displayed: boolean;
   grand_total: string;
   min_bid_amount: string;
   bidder_count: number;
@@ -138,6 +139,7 @@ export type AuctionBatchDetail = {
   sumber_id: string | null;
   discrepancy_percentage: string;
   status: AuctionStatus;
+  is_displayed: boolean;
   grand_total: string;
   min_bid_percent: string;
   min_bid_amount: string;
@@ -274,6 +276,11 @@ export type AuctionProductOptionsRequest = {
 };
 
 export type AuctionPublishBody = {
+  version: number;
+};
+
+export type AuctionDisplayBody = {
+  is_displayed: boolean;
   version: number;
 };
 
