@@ -17,7 +17,9 @@ export type UseMutateConfig<
   TParams = undefined,
   TSearchParams = undefined,
 > = {
-  endpoint: string;
+	/** Override the normal /api/panel base for APIs that use a versioned prefix. */
+	baseUrl?: string;
+	endpoint: string;
   method: "post" | "put" | "delete" | "patch" | "get";
   isPublic?: boolean;
   onSuccess?: (

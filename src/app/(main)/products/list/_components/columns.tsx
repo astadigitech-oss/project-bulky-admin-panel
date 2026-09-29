@@ -40,16 +40,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import dynamic from "next/dynamic";
-import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
   ssr: false,
-  loading: () => (
-    <div className="flex items-center gap-2 justify-center w-full aspect-[1/1.414] border">
-      <Spinner className="size-3.5" />
-      <p>Loading PDF...</p>
-    </div>
-  ),
 });
 
 export const column = ({

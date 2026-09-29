@@ -1,7 +1,7 @@
 import { cn, sizesImage } from "@/lib/utils";
 import { UploadCloud, XIcon } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "./button";
 
@@ -24,6 +24,16 @@ type DropzoneProps = {
   safeAreaRatio?: number;
   /** Label overlay safe area, default "Aman di mobile". */
   safeAreaLabel?: string;
+  /** Tambahan class untuk wrapper dropzone. */
+  className?: string;
+  /** Tambahan class untuk area pilih/drag file. */
+  dropAreaClassName?: string;
+  /** Teks tombol ketika file sudah dipilih. */
+  replaceLabel?: string;
+  /** Tampilan tombol ganti file. */
+  replaceButtonVariant?: "outline" | "destructive";
+  /** Cara gambar mengisi area preview. */
+  previewObjectFit?: "cover" | "contain";
 };
 
 // Nilai numerik (width / height) untuk tiap opsi `ratio`, dipakai untuk
@@ -45,6 +55,11 @@ export const Dropzone = ({
   ratio = "square",
   safeAreaRatio,
   safeAreaLabel,
+  className,
+  dropAreaClassName,
+  replaceLabel,
+  replaceButtonVariant = "destructive",
+  previewObjectFit = "cover",
   accept = {
     "image/jpeg": [],
     "image/png": [],
@@ -54,7 +69,7 @@ export const Dropzone = ({
   maxFiles = 1,
 }: DropzoneProps & { ratio?: "square" | "banner" | "hero" | "portrait" }) => {
   const [hiddenOldValue, setHiddenOldValue] = useState<string | null>(null);
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     disabled,
     accept,
     maxFiles,
@@ -87,27 +102,18 @@ export const Dropzone = ({
     },
   });
 
-  const resetLogo = () => {
-    setHiddenOldValue(oldValue ?? null);
-    onChange([]);
-  };
+  const chooseAnotherFile = () => open();
 
-  const filePreview = useMemo(() => {
-    if (!value?.length) return "";
-    return URL.createObjectURL(value[0]);
-  }, [value]);
-
-  useEffect(() => {
-    return () => {
-      if (filePreview) URL.revokeObjectURL(filePreview);
-    };
-  }, [filePreview]);
+  // Keep the object URL alive while a selected file moves through the onboarding
+  // steps. Revoking it during React's development lifecycle made valid images
+  // render as broken previews.
+  const filePreview = useMemo(() => value?.[0] ? URL.createObjectURL(value[0]) : "", [value?.[0]]);
 
   const preview =
     filePreview || (hiddenOldValue === oldValue ? "" : (oldValue ?? ""));
 
   return (
-    <div className={cn(ratio === "square" ? "h-32" : "w-full")}>
+    <div className={cn(ratio === "square" ? "h-32" : "w-full", className)}>
       {preview ? (
         <div
           className={cn(
@@ -115,6 +121,7 @@ export const Dropzone = ({
             ratio === "square" ? "flex-row" : "flex-col",
           )}
         >
+          <input {...getInputProps()} />
           <div
             className={cn(
               "h-full rounded-md overflow-hidden border shadow relative border-gray-300 dark:border-gray-300/50",
@@ -132,7 +139,7 @@ export const Dropzone = ({
               alt="preview_logo"
               fill
               sizes={sizesImage}
-              className="object-cover"
+              className={previewObjectFit === "contain" ? "object-contain" : "object-cover"}
               loading="eager"
             />
             {safeAreaRatio ? (
@@ -144,13 +151,13 @@ export const Dropzone = ({
             ) : null}
           </div>
           <Button
-            variant={"destructive"}
+            variant={replaceButtonVariant}
             size={"sm"}
-            onClick={resetLogo}
+            onClick={chooseAnotherFile}
             type="button"
           >
-            <XIcon />
-            Ganti {ratio === "square" ? "Logo" : ratio === "portrait" ? "Thumbnail" : "Banner"}
+            {replaceButtonVariant === "destructive" ? <XIcon /> : <UploadCloud />}
+            {replaceLabel ?? `Ganti ${ratio === "square" ? "Logo" : ratio === "portrait" ? "Thumbnail" : "Banner"}`}
           </Button>
         </div>
       ) : (
@@ -170,6 +177,7 @@ export const Dropzone = ({
               : "border-gray-300 dark:border-gray-300/50",
             error && "border-red-500",
             disabled && "opacity-50 cursor-not-allowed",
+            dropAreaClassName,
           )}
         >
           <input {...getInputProps()} />

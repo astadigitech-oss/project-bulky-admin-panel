@@ -2,13 +2,17 @@ import { apiUrl } from "@/config";
 import { QueryClient } from "@tanstack/react-query";
 
 // utils.ts
-export function buildUrl(endpoint: string, searchParams?: Record<string, any>) {
+export function buildUrl(
+  endpoint: string,
+  searchParams?: Record<string, any>,
+  apiBase: string = apiUrl,
+) {
   const fullPath = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  const base = apiUrl.startsWith("http")
-    ? `${apiUrl}${fullPath}`
+  const base = apiBase.startsWith("http")
+    ? `${apiBase}${fullPath}`
     : typeof window !== "undefined"
-      ? `${window.location.origin}${apiUrl}${fullPath}`
-      : `http://localhost:${process.env.PORT || 3001}${apiUrl}${fullPath}`;
+      ? `${window.location.origin}${apiBase}${fullPath}`
+      : `http://localhost:${process.env.PORT || 3001}${apiBase}${fullPath}`;
   const url = new URL(base);
   if (searchParams) {
     Object.entries(searchParams).forEach(([key, value]) => {

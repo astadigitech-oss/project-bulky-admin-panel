@@ -11,6 +11,7 @@ import {
 } from "../ui/sidebar";
 import {
   ChartNoAxesCombined,
+  Gavel,
   Headset,
   Megaphone,
   MonitorSmartphone,
@@ -124,6 +125,39 @@ const data = {
       ],
     },
     {
+      title: "Lelang",
+      url: "/auctions",
+      icon: Gavel,
+      permissionAny: [
+        "auction:read",
+        "auction_education_banner:read",
+        "syarat_ketentuan_lelang:read",
+        "system:read",
+      ],
+      items: [
+        {
+          title: "Daftar Batch",
+          url: "/auctions/list",
+          permission: "auction:read",
+        },
+        {
+          title: "Banner Edukasi",
+          url: "/auctions/education-banners",
+          permission: "auction_education_banner:read",
+        },
+        {
+          title: "Syarat & Ketentuan Lelang",
+          url: "/policies/auction-terms",
+          permission: "syarat_ketentuan_lelang:read",
+        },
+        {
+          title: "Persetujuan SK Lelang",
+          url: "/auctions/consents/list",
+          permission: "system:read",
+        },
+      ],
+    },
+    {
       title: "Pemasaran",
       url: "/marketing",
       icon: Megaphone,
@@ -138,6 +172,16 @@ const data = {
           title: "Banner Promosi",
           url: "/marketing/banners",
           permission: "marketing:read",
+        },
+        {
+          title: "Campaign Seasonal",
+          url: "/marketing/seasonal-campaigns",
+          permission: "marketing:read",
+        },
+        {
+          title: "Tes Notifikasi",
+          url: "/marketing/push-test",
+          permission: "marketing:manage",
         },
         {
           title: "Formulir Grosir",
@@ -308,9 +352,12 @@ export const AppSidebar = ({
 
   const canAccess = (item: {
     permission?: string;
+    permissionAny?: readonly string[];
     superAdminOnly?: boolean;
   }) =>
     (!item.permission || permissions.includes(item.permission)) &&
+    (!item.permissionAny ||
+      item.permissionAny.some((permission) => permissions.includes(permission))) &&
     (!item.superAdminOnly || isSuperAdmin);
 
   const filterNav = (nav: readonly NavValueProps[]) =>

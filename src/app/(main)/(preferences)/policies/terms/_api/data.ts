@@ -11,27 +11,32 @@ import {
 
 // query-key
 const key = ["term-policies-detail"];
+const endpointForSlug = (slug: string) =>
+  slug === "syarat-ketentuan-lelang"
+    ? "/dokumen-kebijakan-lelang"
+    : `/dokumen-kebijakan/${slug}`;
 
 // data
 export const dataAPITermPolicies = {
-  query: (): { show: UseApiQueryProps<TermPoliciesDetailResponse> } => ({
+  query: (slug = "syarat-ketentuan"): { show: UseApiQueryProps<TermPoliciesDetailResponse> } => ({
     show: {
-      key: [key[0]],
-      endpoint: `/dokumen-kebijakan/syarat-ketentuan`,
+      key: [key[0], slug],
+      endpoint: endpointForSlug(slug),
       placeholderData: keepPreviousData,
     },
   }),
   mutation: (
+    slug = "syarat-ketentuan",
     queryClient?: QueryClient,
   ): {
     update: UseMutateConfig<UpdateTermPoliciesResponse, UpdateTermPoliciesBody>;
   } => ({
     update: {
-      endpoint: "/dokumen-kebijakan/syarat-ketentuan",
+      endpoint: endpointForSlug(slug),
       method: "put",
       onSuccess: async ({ data }) => {
         toast.success(data.message);
-        if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
+        if (queryClient) await invalidateQuery(queryClient, [[key[0], slug]]);
       },
       onError: { title: "UPDATE_TERMS_CONDITIONS" },
     },

@@ -28,17 +28,10 @@ import {
 } from "@/components/ui/dialog";
 import { Flag } from "@/components/column";
 import dynamic from "next/dynamic";
-import { Spinner } from "@/components/ui/spinner";
 import { useConfirm } from "@/hooks/use-confirm";
 import { Skeleton } from "@/components/ui/skeleton";
 const PDFViewer = dynamic(() => import("@/components/ui/pdf-viewer"), {
   ssr: false,
-  loading: () => (
-    <div className="flex items-center gap-2 justify-center w-full aspect-[1/1.414] border">
-      <Spinner className="size-3.5" />
-      <p>Loading PDF...</p>
-    </div>
-  ),
 });
 
 export const ProductDetailClient = () => {

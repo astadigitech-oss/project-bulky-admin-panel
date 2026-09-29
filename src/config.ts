@@ -17,4 +17,3 @@ export const baseApiUrl = resolvedBaseUrl;
 export const apiUrl = resolvedBaseUrl ? `${resolvedBaseUrl}/api/panel` : "/api/panel";
 export const cookiesKey =
   process.env.NEXT_PUBLIC_COOKIES_KEY || "ACCESS_TOKEN";
-

@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, Users2 } from "lucide-react";
+import { Download, RefreshCw, Users2 } from "lucide-react";
 import { useSearchQuery } from "@/hooks/use-search";
 import { InputSearch } from "@/components/ui/input-search";
 import { SortTable } from "@/components/sort-table";
@@ -11,14 +11,16 @@ import DataTable from "@/components/ui/data-table";
 import { column } from "./columns";
 import Pagination from "@/components/pagination";
 import { usePagination } from "@/hooks/use-pagination";
-import { useDeleteBuyer, useGetBuyerList, useGetBuyerStat } from "../_api";
+import { exportBuyerList, useDeleteBuyer, useGetBuyerList, useGetBuyerStat } from "../_api";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/hooks/use-confirm";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { StatisticSection } from "./_section/stat";
 import { ChartBuyer } from "./_section/chart";
 
 export const CustomersClient = () => {
+  const [isExporting, setIsExporting] = useState(false);
   const [{ sort, order }, setQuery] = useQueryStates({
     sort: parseAsString.withDefault("created_at"),
     order: parseAsString.withDefault("desc"),
@@ -58,6 +60,30 @@ export const CustomersClient = () => {
     const ok = await confirmDelete(user, "user");
     if (!ok) return;
     deleteBuyer({ params: { id: userId } });
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await exportBuyerList({
+        search,
+        sort_by: sort,
+        order: order as "asc" | "desc",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "buyer-bulky-" + new Date().toISOString().slice(0, 10) + ".xlsx";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Export buyer berhasil diunduh");
+    } catch {
+      toast.error("Export buyer gagal");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   useEffect(() => {
@@ -128,6 +154,16 @@ export const CustomersClient = () => {
             </Button>
           }
         />
+        <Button
+          variant="outline"
+          size="sm"
+          className="hover:text-yellow-950 dark:hover:text-yellow-950"
+          onClick={handleExport}
+          disabled={isExporting || isLoadList}
+        >
+          <Download className="size-3.5" />
+          {isExporting ? "Menyiapkan..." : "Export Excel"}
+        </Button>
         <SortTable
           disabled={isDisabled}
           data={[]}
