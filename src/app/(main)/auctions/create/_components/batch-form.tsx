@@ -648,6 +648,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                 onChange={handleImageChange}
                 value={imageFiles}
                 maxFiles={10 - images.length}
+                maxTotalFiles={10}
                 maxSize={5 * 1024 * 1024}
                 accept={{ "image/jpeg": [], "image/png": [], "image/webp": [] }}
                 isEdit={isEdit}
@@ -695,19 +696,19 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                 {excelFile && <p className="text-xs text-muted-foreground">File: {excelFile.name}</p>}
                 {isPreviewingExcel && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Spinner className="size-3.5" /> Membaca kolom Excel...</div>}
                 {excelPreview && (
-                  <div className="grid gap-3 rounded-md bg-muted/30 p-3 sm:grid-cols-3">
+                  <div className="grid min-w-0 gap-3 rounded-md bg-muted/30 p-3 md:grid-cols-3">
                     {([
                       ["name", "Kolom Nama Item", nameColumn, setNameColumn],
                       ["price", "Kolom Harga", priceColumn, setPriceColumn],
                       ["quantity", "Kolom Qty", quantityColumn, setQuantityColumn],
                     ] as const).map(([key, label, value, setValue]) => (
-                      <label key={key} className="grid gap-1 text-xs font-medium">
+                      <label key={key} className="grid min-w-0 gap-1 text-xs font-medium">
                         {label}
                         <select
                           value={value}
                           onChange={(event) => setValue(event.target.value)}
                           disabled={isDisabled}
-                          className="h-9 rounded-md border bg-background px-2 text-xs font-normal"
+                          className="h-9 w-full min-w-0 max-w-full truncate rounded-md border bg-background px-2 text-xs font-normal"
                         >
                           <option value="">Pilih kolom...</option>
                           {excelPreview.columns.map((column) => (

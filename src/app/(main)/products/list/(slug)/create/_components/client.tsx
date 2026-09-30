@@ -585,6 +585,7 @@ export const ProductIdClient = () => {
                   )}
                   maxSize={FILE_RULES.maxSize}
                   maxFiles={10}
+                  maxTotalFiles={10}
                 />
               </Field>
             )}

@@ -94,7 +94,7 @@ export const Dropzone = ({
           onError?.("Format file tidak didukung");
           break;
         case "too-many-files":
-          onError?.(`Hanya boleh ${maxFiles} file`);
+          onError?.(`Maksimal ${maxFiles} gambar pada kolom ini`);
           break;
         default:
           onError?.("File tidak valid");
@@ -192,6 +192,7 @@ export const Dropzone = ({
                 {ratio === "square" ? "1:1" : ratio === "hero" ? "2:1" : ratio === "portrait" ? "9:16" : "4:1"}{" "}
                 ({Object.keys(accept).map((m) => `.${m.split("/")[1].replace("svg+xml", "svg")}`).join(", ")})
               </p>
+              <p className="text-xs text-gray-400">Maksimal {maxFiles} gambar pada kolom ini.</p>
             </div>
           )}
         </div>
