@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
-import { Bell, LogOut, UserCircle, UserCog } from "lucide-react";
+import { LogOut, UserCircle, UserCog } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,13 +23,8 @@ import { useMounted } from "@/hooks/use-mounted";
 import { deleteCookie } from "cookies-next/client";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { Spinner } from "../ui/spinner";
-import {
-  Popover,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "../ui/popover";
+import { NotificationCenter } from "./notification-center";
+import { unregisterCurrentAdminWebPush } from "@/lib/firebase/push-client";
 
 const ToggleTheme = dynamic(() => import("../toggle-theme"), {
   ssr: false,
@@ -46,8 +41,9 @@ export const Action = () => {
   const user = data?.data;
   const isLoading = !mounted || isLogouting || isMePending || isTransition;
 
-  const handleLogout = (e: MouseEvent) => {
+  const handleLogout = async (e: MouseEvent) => {
     e.preventDefault();
+    await unregisterCurrentAdminWebPush();
     logout(
       {},
       {
@@ -84,27 +80,7 @@ export const Action = () => {
         </DialogContent>
       </Dialog>
       <ToggleTheme />
-      <Popover>
-        <PopoverTrigger
-          disabled={isLoading}
-          render={
-            <Button size={"icon"} variant={"outline"} className="rounded-full">
-              {isLoading ? <Spinner /> : <Bell />}
-              <span className="sr-only">Toggle Notification</span>
-            </Button>
-          }
-        />
-        <PopoverContent
-          sideOffset={27}
-          align="end"
-          alignOffset={-45}
-          className={"w-auto min-w-75 h-[calc(100vh-16px-16px-86px)]"}
-        >
-          <PopoverHeader>
-            <PopoverTitle>Pemberitahuan</PopoverTitle>
-          </PopoverHeader>
-        </PopoverContent>
-      </Popover>
+      <NotificationCenter canReadOrders={Boolean(user?.permissions?.includes("pesanan:read"))} />
       <DropdownMenu>
         <DropdownMenuTrigger
           disabled={isLoading}
