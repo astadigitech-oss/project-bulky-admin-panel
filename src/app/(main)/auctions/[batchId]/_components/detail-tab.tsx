@@ -271,7 +271,14 @@ export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
                 <p className="min-w-0 break-all text-sm text-muted-foreground">
                   {batch.pdf.original_name}
                 </p>
-                <Button render={<a href={batch.pdf.url} target="_blank" rel="noreferrer" />} variant="outline" size="sm">
+                <Button
+                  render={
+                    <a href={batch.pdf.url} target="_blank" rel="noreferrer" />
+                  }
+                  nativeButton={false}
+                  variant="outline"
+                  size="sm"
+                >
                   <Eye className="size-4" />
                   Lihat PDF
                 </Button>

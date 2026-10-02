@@ -203,7 +203,9 @@ export const BidTab = ({
         onDone={onChanged}
       />
 
-      {batch.winner && <OperationsCard batch={batch} onDone={onChanged} />}
+      {batch.winner && (
+        <OperationsCard batch={batch} onDone={onChanged} />
+      )}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

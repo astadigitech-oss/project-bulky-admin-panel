@@ -107,6 +107,9 @@ export const OperationsCard = ({
             placeholder="Catatan pembayaran / serah-terima..."
             maxLength={1000}
           />
+          <p className="text-xs text-muted-foreground">
+            Catatan wajib diisi untuk pembayaran atau serah-terima.
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-2">

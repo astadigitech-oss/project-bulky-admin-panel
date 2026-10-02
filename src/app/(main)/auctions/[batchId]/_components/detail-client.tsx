@@ -17,6 +17,7 @@ import { auctionStatusVariant } from "../../list/_components/columns";
 import { BidTab } from "./bid-tab";
 import { DetailTab } from "./detail-tab";
 import { AuctionDisplayControl } from "./auction-display-control";
+import { AuctionStatusControl } from "./auction-status-control";
 
 export const AuctionDetailClient = ({ batchId }: { batchId: string }) => {
   const { data: meData } = useMe();
@@ -49,7 +50,7 @@ export const AuctionDetailClient = ({ batchId }: { batchId: string }) => {
 
   return (
     <div className="flex flex-col gap-6 pt-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Link href="/auctions/list">
           <Button variant="ghost" size="icon-lg">
             <ArrowLeft className="size-5" />
@@ -64,7 +65,12 @@ export const AuctionDetailClient = ({ batchId }: { batchId: string }) => {
           </Badge>
         </div>
         {canManage && batch.status !== "DRAFT" && (
-          <AuctionDisplayControl batch={batch} onDone={refetch} />
+          <div className="ml-auto flex items-center gap-2">
+            {batch.winner && (
+              <AuctionStatusControl batch={batch} onDone={refetch} />
+            )}
+            <AuctionDisplayControl batch={batch} onDone={refetch} />
+          </div>
         )}
         {canManage && batch.status === "DRAFT" && (
           <Link href={`/auctions/${batchId}/edit`}>
