@@ -216,7 +216,7 @@ export const BidTab = ({
             setValue={setSearch}
           />
           <select
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            className="native-select h-9 rounded-md border border-input bg-background py-1 text-sm shadow-sm"
             value={sort}
             onChange={(e) => setQuery({ sort: e.target.value as any })}
             disabled={isPending}

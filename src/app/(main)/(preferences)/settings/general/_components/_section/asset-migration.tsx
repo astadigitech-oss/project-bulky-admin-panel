@@ -785,7 +785,7 @@ export const AssetMigrationSection = () => {
                     setOptimizeScope(e.target.value);
                     setOptimizeToken(null);
                   }}
-                  className="h-7 rounded-md border border-input bg-background px-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="native-select h-7 rounded-md border border-input bg-background text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   <option value="all">Semua Media (All)</option>
                   <option value="products">Produk</option>

@@ -161,7 +161,7 @@ const data = {
       title: "Pemasaran",
       url: "/marketing",
       icon: Megaphone,
-      permission: "marketing:read",
+      permissionAny: ["marketing:read", "marketing:manage"],
       items: [
         {
           title: "Diskon",
@@ -179,8 +179,8 @@ const data = {
           permission: "marketing:read",
         },
         {
-          title: "Tes Notifikasi",
-          url: "/marketing/push-test",
+          title: "Notifikasi In-App",
+          url: "/marketing/push-promotions",
           permission: "marketing:manage",
         },
         {

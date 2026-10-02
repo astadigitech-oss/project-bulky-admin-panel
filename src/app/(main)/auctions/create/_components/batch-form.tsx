@@ -714,7 +714,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                           value={value}
                           onChange={(event) => setValue(event.target.value)}
                           disabled={isDisabled}
-                          className="h-9 w-full min-w-0 max-w-full truncate rounded-md border bg-background px-2 text-xs font-normal"
+                          className="native-select h-9 w-full min-w-0 max-w-full truncate rounded-md border bg-background text-xs font-normal"
                         >
                           <option value="">Pilih kolom...</option>
                           {excelPreview.columns.map((column) => (
