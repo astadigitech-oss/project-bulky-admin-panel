@@ -32,7 +32,16 @@ export const WinnerDialog = ({
   onDone?: () => void;
 }) => {
   const [note, setNote] = useState("");
+  const [status, setStatus] = useState<"OPEN" | "SOLD">("OPEN");
   const { mutate, isPending } = useSelectWinner();
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setNote("");
+      setStatus("OPEN");
+    }
+    onOpenChange(nextOpen);
+  };
 
   const handleConfirm = () => {
     if (!bid) return;
@@ -41,16 +50,16 @@ export const WinnerDialog = ({
         body: {
           bid_id: bid.id,
           version: batch.version,
+          status,
           note: note || null,
         },
         params: { id: batch.id },
-        idempotencyKey: `winner-${batch.id}-${bid.id}`,
+        idempotencyKey: `winner-${batch.id}-${bid.id}-${status.toLowerCase()}`,
       },
       {
         onSuccess: (data) => {
           toast.success(data.data.message);
-          onOpenChange(false);
-          setNote("");
+          handleOpenChange(false);
           onDone?.();
         },
       },
@@ -58,7 +67,7 @@ export const WinnerDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Konfirmasi Pemenang</DialogTitle>
@@ -78,12 +87,30 @@ export const WinnerDialog = ({
               value={`${bid.effective_percent}%`}
             />
             <Row label="Harga Deal" value={formatRupiah(bid.amount)} />
-            <p className="text-xs text-muted-foreground">
-              Batch akan berstatus Terjual (SOLD) dan tidak menerima bid baru.
-              Pembayaran tetap dicatat manual.
-            </p>
           </div>
         )}
+
+        <div className="grid gap-2">
+          <Label htmlFor="winner-status">Status batch setelah pemenang dipilih</Label>
+          <select
+            id="winner-status"
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            value={status}
+            onChange={(event) => setStatus(event.target.value as "OPEN" | "SOLD")}
+            disabled={isPending}
+          >
+            <option value="OPEN">Buka (default)</option>
+            <option value="SOLD">Terjual</option>
+          </select>
+          <p className="text-xs text-muted-foreground">
+            {status === "OPEN"
+              ? "Batch tetap tampil dan dapat menerima bid tambahan sebagai pencatatan. Pemenang tidak berubah."
+              : "Batch ditampilkan sebagai terjual dan tidak menerima bid baru."}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Pembayaran dan fulfillment pemenang tetap dicatat manual.
+          </p>
+        </div>
 
         <div className="grid gap-2">
           <Label htmlFor="winner-note">Catatan (Opsional)</Label>

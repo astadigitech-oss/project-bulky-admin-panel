@@ -4,11 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
   ComboboxContent,
   ComboboxEmpty,
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
 } from "@/components/ui/combobox";
 import { DropzoneList } from "@/components/ui/dropzone-list";
 import { DropzonePDF } from "@/components/ui/dropzone-pdf";
@@ -226,6 +231,7 @@ const getSelectLabel = (item: any, options: any[] = []): string => {
 export const BatchForm = ({ batchId }: { batchId?: string }) => {
   const router = useRouter();
   const isEdit = !!batchId;
+  const merekAnchor = useComboboxAnchor();
 
   const { data: detail } = useGetAuctionDetail(batchId ?? "");
   const batch = detail?.data;
@@ -860,6 +866,56 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                 )}
               />
               <Controller
+                name="merek_ids"
+                control={form.control}
+                render={({ field }) => (
+                  <Field className="gap-1">
+                    <FieldLabel>Merek</FieldLabel>
+                    <Combobox
+                      multiple
+                      autoHighlight
+                      items={merekOptions}
+                      value={field.value}
+                      onValueChange={(selected) =>
+                        field.onChange(getSelectIds(selected))
+                      }
+                      isItemEqualToValue={(item: any, selected: any) =>
+                        item.id === getSelectId(selected)
+                      }
+                    >
+                      <ComboboxChips ref={merekAnchor} className="w-full">
+                        <ComboboxValue>
+                          {(values) => (
+                            <>
+                              {values.map((value: any, index: number) => {
+                                const id = getSelectId(value);
+                                return (
+                                  <ComboboxChip key={id || `merek-${index}`}>
+                                    {getSelectLabel(value, merekOptions) ||
+                                      "Merek tidak tersedia"}
+                                  </ComboboxChip>
+                                );
+                              })}
+                              <ComboboxChipsInput placeholder="Pilih merek..." />
+                            </>
+                          )}
+                        </ComboboxValue>
+                      </ComboboxChips>
+                      <ComboboxContent anchor={merekAnchor}>
+                        <ComboboxEmpty>Merek tidak ditemukan.</ComboboxEmpty>
+                        <ComboboxList>
+                          {(item: any) => (
+                            <ComboboxItem key={item.id} value={item.id}>
+                              {getSelectLabel(item)}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                  </Field>
+                )}
+              />
+              <Controller
                 name="kondisi_id"
                 control={form.control}
                 render={({ field }) => (
@@ -1078,6 +1134,9 @@ const getSelectId = (value: any) => {
     return value.id;
   return "";
 };
+
+const getSelectIds = (values: unknown[]) =>
+  values.map(getSelectId).filter((value) => value.trim().length > 0);
 
 const ItemPicker = ({ items }: { items: BatchItem[] }) => (
   <div className="flex flex-col gap-4 rounded-lg border p-4">
