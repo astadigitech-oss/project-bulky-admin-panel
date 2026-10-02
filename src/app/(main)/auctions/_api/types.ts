@@ -35,6 +35,7 @@ export type AuctionBatchSummary = {
   nama_id: string;
   thumbnail_url: string | null;
   status: AuctionStatus;
+  has_winner: boolean;
   is_displayed: boolean;
   grand_total: string;
   min_bid_amount: string;

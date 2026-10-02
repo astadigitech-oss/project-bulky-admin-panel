@@ -41,13 +41,6 @@ export const auctionColumns = ({
     ),
   },
   {
-    accessorKey: "code",
-    header: "Kode",
-    cell: ({ row }) => (
-      <span className="font-mono text-xs">{row.original.code}</span>
-    ),
-  },
-  {
     accessorKey: "nama_id",
     header: "Nama Batch",
     cell: ({ row }) => {
@@ -71,9 +64,6 @@ export const auctionColumns = ({
           </div>
           <div className="flex min-w-0 flex-col">
             <span className="truncate font-medium">{b.nama_id}</span>
-            <span className="truncate text-xs text-muted-foreground">
-              {b.code}
-            </span>
           </div>
         </div>
       );
@@ -90,6 +80,15 @@ export const auctionColumns = ({
         </Badge>
       );
     },
+  },
+  {
+    accessorKey: "has_winner",
+    header: "Ada Pemenang",
+    cell: ({ row }) => (
+      <Badge variant={row.original.has_winner ? "default" : "secondary"}>
+        {row.original.has_winner ? "Ya" : "Tidak"}
+      </Badge>
+    ),
   },
   {
     accessorKey: "is_displayed",
