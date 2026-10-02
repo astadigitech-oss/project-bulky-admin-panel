@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, Send } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import Pagination from "@/components/pagination";
+import { usePagination } from "@/hooks/use-pagination";
+import type { MetaPagination } from "@/lib/types";
 import { useMutate } from "@/lib/query";
 import { useApiQuery } from "@/lib/query/use-query";
 
@@ -27,7 +30,7 @@ type PushRecipient = {
 };
 
 type ApiResponse<T> = { success: boolean; message: string; data: T };
-type RecipientResponse = ApiResponse<PushRecipient[]>;
+type RecipientResponse = ApiResponse<{ data: PushRecipient[]; meta: MetaPagination }>;
 type SendResponse = ApiResponse<{ success_count: number; failure_count: number }>;
 
 export function PushTestClient() {
@@ -35,18 +38,29 @@ export function PushTestClient() {
   const [selectedBuyers, setSelectedBuyers] = useState<PushRecipient[]>([]);
   const [confirming, setConfirming] = useState(false);
   const [lastResult, setLastResult] = useState<{ success: number; failed: number } | null>(null);
+  const { page, limit, metaPage, setPage, setLimit, setPaginationData } = usePagination();
   const queryClient = useQueryClient();
-  const { data, isLoading, isError } = useApiQuery<RecipientResponse>({
-    key: ["push-test-recipients", search],
+  const { data, isLoading, isRefetching, isError } = useApiQuery<RecipientResponse>({
+    key: ["push-test-recipients", search, page, limit],
     endpoint: "/marketing/push-test/recipients",
-    searchParams: search ? { search } : undefined,
+    searchParams: { search: search || undefined, page, per_page: limit },
   });
-  const recipients = data?.data ?? [];
+  const recipients = data?.data.data ?? [];
   const selectedRecipients = selectedBuyers.map(
     (selected) => recipients.find((recipient) => recipient.buyer_id === selected.buyer_id) ?? selected,
   );
   const selectedBuyerIDs = selectedRecipients.map((recipient) => recipient.buyer_id);
   const selectedDeviceCount = selectedRecipients.reduce((total, recipient) => total + recipient.device_count, 0);
+
+  useEffect(() => {
+    const meta = data?.data.meta;
+    if (!meta) return;
+    if (page > meta.last_page) {
+      void setPage(meta.last_page);
+      return;
+    }
+    setPaginationData(meta);
+  }, [data, page]);
 
   const sendTest = useMutate<SendResponse, { buyer_ids: string[] }>({
     endpoint: "/marketing/push-test",
@@ -81,7 +95,7 @@ export function PushTestClient() {
   return (
     <section className="flex max-w-3xl flex-col gap-6 pt-4">
       <header>
-        <h1 className="text-2xl font-semibold leading-none">Tes Notifikasi</h1>
+        <h2 className="text-xl font-semibold leading-none">Tes Notifikasi</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Pilih satu atau beberapa buyer yang sudah mengaktifkan notifikasi. Pesan tes akan dikirim ke perangkat mereka.
         </p>
@@ -97,11 +111,21 @@ export function PushTestClient() {
             <p className="text-sm text-muted-foreground">Pesan ini hanya untuk mencoba notifikasi.</p>
           </div>
         </div>
-        <div className="rounded-md bg-muted/60 p-4">
-          <p className="font-medium">Tes notifikasi Bulky.id 👋</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Hai! Ini hanya tes notifikasi dari tim Bulky.id. Maaf kalau pesan ini mengganggu kenyamananmu—kamu bisa abaikan saja. Terima kasih sudah membantu!
-          </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-md bg-muted/60 p-4">
+            <p className="mb-1 text-xs font-semibold text-muted-foreground">Bahasa Indonesia</p>
+            <p className="font-medium">Tes notifikasi Bulky.id 👋</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Hai! Ini hanya tes notifikasi dari tim Bulky.id. Maaf kalau pesan ini mengganggu kenyamananmu—kamu bisa abaikan saja. Terima kasih sudah membantu!
+            </p>
+          </div>
+          <div className="rounded-md bg-muted/60 p-4">
+            <p className="mb-1 text-xs font-semibold text-muted-foreground">English</p>
+            <p className="font-medium">Bulky.id notification test 👋</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Hi! This is just a notification test from the Bulky.id team. Sorry for the interruption—feel free to ignore it. Thanks for helping us!
+            </p>
+          </div>
         </div>
 
         <div className="mt-6 grid gap-4">
@@ -111,6 +135,7 @@ export function PushTestClient() {
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
+                void setPage(1);
                 setConfirming(false);
                 setLastResult(null);
               }}
@@ -159,6 +184,16 @@ export function PushTestClient() {
                       ? "Tidak ada buyer yang cocok. Coba kata pencarian lain."
                       : "Belum ada buyer yang mengaktifkan notifikasi."}
               </p>
+            )}
+            {data?.data.meta && data.data.meta.total > 0 && (
+              <div className="mt-3">
+                <Pagination
+                  pagination={{ ...metaPage, current_page: page, per_page: limit }}
+                  setPage={setPage}
+                  setLimit={setLimit}
+                  disabled={isLoading || isRefetching || sendTest.isPending}
+                />
+              </div>
             )}
           </div>
 
