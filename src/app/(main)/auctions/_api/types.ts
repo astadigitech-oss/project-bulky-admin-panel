@@ -293,6 +293,7 @@ export type AuctionWinnerBody = {
 
 export type AuctionOperationBody = {
   version: number;
+  batch_status?: "OPEN" | "SOLD";
   payment_status?: AuctionPaymentStatus;
   fulfillment_status?: AuctionFulfillmentStatus;
   note?: string | null;
