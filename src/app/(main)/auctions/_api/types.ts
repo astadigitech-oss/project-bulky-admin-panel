@@ -287,6 +287,7 @@ export type AuctionDisplayBody = {
 export type AuctionWinnerBody = {
   bid_id: string;
   version: number;
+  status: "OPEN" | "SOLD";
   note?: string | null;
 };
 

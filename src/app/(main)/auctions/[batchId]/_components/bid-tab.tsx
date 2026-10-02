@@ -173,7 +173,7 @@ export const BidTab = ({
       id: "actions",
       header: "Aksi",
       cell: ({ row }) =>
-        canManage && batch.status === "OPEN" ? (
+        canManage && batch.status === "OPEN" && !batch.winner ? (
           <div className="flex">
             <Button
               variant="outline"
@@ -203,7 +203,7 @@ export const BidTab = ({
         onDone={onChanged}
       />
 
-      {batch.status === "SOLD" && <OperationsCard batch={batch} onDone={onChanged} />}
+      {batch.winner && <OperationsCard batch={batch} onDone={onChanged} />}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
