@@ -434,7 +434,7 @@ export const DialogFormVideo = ({
                   >
                     <FieldLabel required>Kategori</FieldLabel>
                     <select
-                      className="h-8 rounded-md border bg-background px-2 text-sm"
+                      className="native-select h-8 rounded-md border bg-background text-sm"
                       value={field.value}
                       onChange={field.onChange}
                       disabled={field.disabled}
