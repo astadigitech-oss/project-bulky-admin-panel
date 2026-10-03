@@ -647,6 +647,21 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       <Separator />
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <FieldGroup className="grid gap-6 w-full max-w-5xl mx-auto">
+          {batch && (batch.bid_count > 0 || batch.winner) && (
+            <div
+              role="alert"
+              className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm"
+            >
+              <p className="font-semibold">
+                {batch.winner
+                  ? `Winner sudah dipilih (${batch.winner.fulfillment_status.toLowerCase()})`
+                  : `Batch ini sudah memiliki ${batch.bid_count} bid`}
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Bid lama tetap menyimpan nominal dan estimasi biaya saat diajukan. Jika batch masih OPEN tanpa winner, reservasi stok akan disesuaikan dengan item baru; setelah winner dipilih, pergerakan stok yang sudah tercatat tetap. Riwayat winner, pembayaran, dan fulfillment juga tidak ditulis ulang. Admin perlu mengonfirmasi perubahan kepada buyer di luar platform.
+              </p>
+            </div>
+          )}
           {images.length < 10 && (
             <Field className="gap-1">
               <FieldLabel>Gambar Batch ({images.length}/10)</FieldLabel>
@@ -1119,7 +1134,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
               ) : (
                 <Save className="size-3.5" />
               )}
-              Simpan Draft
+              {isEdit ? "Simpan Perubahan" : "Simpan Draft"}
             </Button>
           </div>
         </FieldGroup>

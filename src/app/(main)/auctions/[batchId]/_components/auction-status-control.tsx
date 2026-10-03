@@ -68,7 +68,7 @@ export const AuctionStatusControl = ({
 
   return (
     <>
-      <div className="flex items-center gap-2 rounded-md border px-3 py-1.5">
+      <div className="flex h-12 items-center gap-2 rounded-md border px-3 py-1.5">
         <div className="text-right">
           <p className="text-xs font-medium">Status Batch</p>
           <p className="text-xs text-muted-foreground">

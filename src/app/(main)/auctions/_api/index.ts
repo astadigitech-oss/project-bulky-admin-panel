@@ -195,6 +195,22 @@ export const useCreateAuction = () => {
   });
 };
 
+export const useDuplicateAuction = () => {
+  const queryClient = useQueryClient();
+  return useAuctionMutate<
+    BaseResponse<AuctionBatchDetail>,
+    undefined,
+    { id: string }
+  >({
+    endpoint: "/auctions/:id/duplicate",
+    method: "post",
+    onError: { title: "DUPLICATE_AUCTION" },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auction-list"] });
+    },
+  });
+};
+
 export const useUpdateAuction = () => {
   const queryClient = useQueryClient();
   return useAuctionMutate<BaseResponse<AuctionBatchDetail>, AuctionDraftInput, { id: string }>({
