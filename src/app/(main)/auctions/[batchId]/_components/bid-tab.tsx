@@ -173,7 +173,7 @@ export const BidTab = ({
       id: "actions",
       header: "Aksi",
       cell: ({ row }) =>
-        canManage && batch.status === "OPEN" ? (
+        canManage && batch.status === "OPEN" && !batch.winner ? (
           <div className="flex">
             <Button
               variant="outline"
@@ -203,7 +203,9 @@ export const BidTab = ({
         onDone={onChanged}
       />
 
-      {batch.status === "SOLD" && <OperationsCard batch={batch} onDone={onChanged} />}
+      {batch.winner && (
+        <OperationsCard batch={batch} onDone={onChanged} />
+      )}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -214,7 +216,7 @@ export const BidTab = ({
             setValue={setSearch}
           />
           <select
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            className="native-select h-9 rounded-md border border-input bg-background py-1 text-sm shadow-sm"
             value={sort}
             onChange={(e) => setQuery({ sort: e.target.value as any })}
             disabled={isPending}

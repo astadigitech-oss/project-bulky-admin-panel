@@ -175,7 +175,7 @@ export const ProductClient = () => {
             setValue={setSearch}
           />
           <select
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            className="native-select h-9 rounded-md border border-input bg-background py-1 text-sm shadow-sm"
             value={status}
             onChange={(e) =>
               setQuery({

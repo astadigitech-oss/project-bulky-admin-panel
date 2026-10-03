@@ -4,11 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
   ComboboxContent,
   ComboboxEmpty,
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
 } from "@/components/ui/combobox";
 import { DropzoneList } from "@/components/ui/dropzone-list";
 import { DropzonePDF } from "@/components/ui/dropzone-pdf";
@@ -226,6 +231,7 @@ const getSelectLabel = (item: any, options: any[] = []): string => {
 export const BatchForm = ({ batchId }: { batchId?: string }) => {
   const router = useRouter();
   const isEdit = !!batchId;
+  const merekAnchor = useComboboxAnchor();
 
   const { data: detail } = useGetAuctionDetail(batchId ?? "");
   const batch = detail?.data;
@@ -641,6 +647,21 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       <Separator />
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <FieldGroup className="grid gap-6 w-full max-w-5xl mx-auto">
+          {batch && (batch.bid_count > 0 || batch.winner) && (
+            <div
+              role="alert"
+              className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm"
+            >
+              <p className="font-semibold">
+                {batch.winner
+                  ? `Winner sudah dipilih (${batch.winner.fulfillment_status.toLowerCase()})`
+                  : `Batch ini sudah memiliki ${batch.bid_count} bid`}
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Bid lama tetap menyimpan nominal dan estimasi biaya saat diajukan. Jika batch masih OPEN tanpa winner, reservasi stok akan disesuaikan dengan item baru; setelah winner dipilih, pergerakan stok yang sudah tercatat tetap. Riwayat winner, pembayaran, dan fulfillment juga tidak ditulis ulang. Admin perlu mengonfirmasi perubahan kepada buyer di luar platform.
+              </p>
+            </div>
+          )}
           {images.length < 10 && (
             <Field className="gap-1">
               <FieldLabel>Gambar Batch ({images.length}/10)</FieldLabel>
@@ -648,6 +669,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                 onChange={handleImageChange}
                 value={imageFiles}
                 maxFiles={10 - images.length}
+                maxTotalFiles={10}
                 maxSize={5 * 1024 * 1024}
                 accept={{ "image/jpeg": [], "image/png": [], "image/webp": [] }}
                 isEdit={isEdit}
@@ -695,19 +717,19 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                 {excelFile && <p className="text-xs text-muted-foreground">File: {excelFile.name}</p>}
                 {isPreviewingExcel && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Spinner className="size-3.5" /> Membaca kolom Excel...</div>}
                 {excelPreview && (
-                  <div className="grid gap-3 rounded-md bg-muted/30 p-3 sm:grid-cols-3">
+                  <div className="grid min-w-0 gap-3 rounded-md bg-muted/30 p-3 md:grid-cols-3">
                     {([
                       ["name", "Kolom Nama Item", nameColumn, setNameColumn],
                       ["price", "Kolom Harga", priceColumn, setPriceColumn],
                       ["quantity", "Kolom Qty", quantityColumn, setQuantityColumn],
                     ] as const).map(([key, label, value, setValue]) => (
-                      <label key={key} className="grid gap-1 text-xs font-medium">
+                      <label key={key} className="grid min-w-0 gap-1 text-xs font-medium">
                         {label}
                         <select
                           value={value}
                           onChange={(event) => setValue(event.target.value)}
                           disabled={isDisabled}
-                          className="h-9 rounded-md border bg-background px-2 text-xs font-normal"
+                          className="native-select h-9 w-full min-w-0 max-w-full truncate rounded-md border bg-background text-xs font-normal"
                         >
                           <option value="">Pilih kolom...</option>
                           {excelPreview.columns.map((column) => (
@@ -846,6 +868,56 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                       <ComboboxInput placeholder="Pilih kategori..." />
                       <ComboboxContent>
                         <ComboboxEmpty>Kosong</ComboboxEmpty>
+                        <ComboboxList>
+                          {(item: any) => (
+                            <ComboboxItem key={item.id} value={item.id}>
+                              {getSelectLabel(item)}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                  </Field>
+                )}
+              />
+              <Controller
+                name="merek_ids"
+                control={form.control}
+                render={({ field }) => (
+                  <Field className="gap-1">
+                    <FieldLabel>Merek</FieldLabel>
+                    <Combobox
+                      multiple
+                      autoHighlight
+                      items={merekOptions}
+                      value={field.value}
+                      onValueChange={(selected) =>
+                        field.onChange(getSelectIds(selected))
+                      }
+                      isItemEqualToValue={(item: any, selected: any) =>
+                        item.id === getSelectId(selected)
+                      }
+                    >
+                      <ComboboxChips ref={merekAnchor} className="w-full">
+                        <ComboboxValue>
+                          {(values) => (
+                            <>
+                              {values.map((value: any, index: number) => {
+                                const id = getSelectId(value);
+                                return (
+                                  <ComboboxChip key={id || `merek-${index}`}>
+                                    {getSelectLabel(value, merekOptions) ||
+                                      "Merek tidak tersedia"}
+                                  </ComboboxChip>
+                                );
+                              })}
+                              <ComboboxChipsInput placeholder="Pilih merek..." />
+                            </>
+                          )}
+                        </ComboboxValue>
+                      </ComboboxChips>
+                      <ComboboxContent anchor={merekAnchor}>
+                        <ComboboxEmpty>Merek tidak ditemukan.</ComboboxEmpty>
                         <ComboboxList>
                           {(item: any) => (
                             <ComboboxItem key={item.id} value={item.id}>
@@ -1062,7 +1134,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
               ) : (
                 <Save className="size-3.5" />
               )}
-              Simpan Draft
+              {isEdit ? "Simpan Perubahan" : "Simpan Draft"}
             </Button>
           </div>
         </FieldGroup>
@@ -1077,6 +1149,9 @@ const getSelectId = (value: any) => {
     return value.id;
   return "";
 };
+
+const getSelectIds = (values: unknown[]) =>
+  values.map(getSelectId).filter((value) => value.trim().length > 0);
 
 const ItemPicker = ({ items }: { items: BatchItem[] }) => (
   <div className="flex flex-col gap-4 rounded-lg border p-4">

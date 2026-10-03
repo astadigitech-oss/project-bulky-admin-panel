@@ -35,6 +35,7 @@ export type AuctionBatchSummary = {
   nama_id: string;
   thumbnail_url: string | null;
   status: AuctionStatus;
+  has_winner: boolean;
   is_displayed: boolean;
   grand_total: string;
   min_bid_amount: string;
@@ -287,11 +288,13 @@ export type AuctionDisplayBody = {
 export type AuctionWinnerBody = {
   bid_id: string;
   version: number;
+  status: "OPEN" | "SOLD";
   note?: string | null;
 };
 
 export type AuctionOperationBody = {
   version: number;
+  batch_status?: "OPEN" | "SOLD";
   payment_status?: AuctionPaymentStatus;
   fulfillment_status?: AuctionFulfillmentStatus;
   note?: string | null;

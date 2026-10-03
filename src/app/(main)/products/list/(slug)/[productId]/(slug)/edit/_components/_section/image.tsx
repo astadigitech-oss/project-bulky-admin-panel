@@ -171,6 +171,7 @@ export const ImageSection = ({
                       )}
                       maxSize={FILE_RULES.maxSize}
                       maxFiles={10 - (detail?.gambar.length ?? 0)}
+                      maxTotalFiles={10}
                       isEdit
                     />
                     {fieldState.invalid && (

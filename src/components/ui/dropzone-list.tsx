@@ -13,6 +13,7 @@ type DropzoneProps = {
   error?: boolean;
   accept?: Record<string, string[]>;
   maxFiles?: number;
+  maxTotalFiles?: number;
   maxSize?: number;
   oldValue?: string[];
   onRemoveOld?: (index: number) => void;
@@ -33,9 +34,14 @@ export const DropzoneList = ({
   },
   maxSize = 10 * 1024 * 1024,
   maxFiles = 1,
+  maxTotalFiles = maxFiles,
   isEdit = false,
 }: DropzoneProps) => {
   const [preview, setPreview] = useState<string[]>([]);
+  const remainingSlots = Math.max(0, maxFiles - value.length);
+  const uploadLimitMessage = remainingSlots < maxTotalFiles
+    ? `Maksimal ${maxTotalFiles} gambar total. Sisa slot upload: ${remainingSlots}.`
+    : `Maksimal ${maxTotalFiles} gambar total.`;
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     disabled,
     accept,
@@ -68,7 +74,7 @@ export const DropzoneList = ({
 
       if (selectedFiles.length > maxFiles) {
         console.log(selectedFiles.length, maxFiles);
-        toast.error(`Hanya boleh ${maxFiles} file`);
+        toast.error(uploadLimitMessage);
         const availableFiles = selectedFiles.slice(0, maxFiles);
         onChange(availableFiles);
       } else {
@@ -219,6 +225,9 @@ export const DropzoneList = ({
           </Button>
         )}
       </div>
+      <p className="mt-2 text-xs text-muted-foreground" aria-live="polite">
+        {uploadLimitMessage}
+      </p>
     </div>
   );
 };

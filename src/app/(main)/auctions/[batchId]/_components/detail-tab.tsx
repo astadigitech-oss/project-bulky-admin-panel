@@ -14,9 +14,35 @@ import Image from "next/image";
 import { cn, formatImageAlt, formatRupiah, sizesImage } from "@/lib/utils";
 import { AuctionBatchDetail } from "../../_api/types";
 import { auctionStatusVariant } from "../../list/_components/columns";
+import { useGetMerekSelect } from "../../_api";
 
 export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
   const status = auctionStatusVariant[batch.status];
+  const { data: merekData, isLoading: isLoadingMerek } = useGetMerekSelect();
+  const merekOptions = merekData?.data ?? [];
+  const merekIds = batch.merek_ids ?? [];
+  const merekNames = merekIds
+    .map((id) => {
+      const merek = merekOptions.find((option) => option.id === id);
+      return (
+        merek?.nama?.trim() ||
+        merek?.nama_id?.trim() ||
+        merek?.nama_en?.trim()
+      );
+    })
+    .filter((name): name is string => Boolean(name));
+  const unavailableMerekCount = merekIds.length - merekNames.length;
+  const merekValue =
+    merekIds.length === 0
+      ? "-"
+      : isLoadingMerek && !merekData
+        ? "Memuat merek..."
+      : [
+          ...merekNames,
+          ...(unavailableMerekCount > 0
+            ? [`${unavailableMerekCount} merek tidak tersedia`]
+            : []),
+        ].join(", ");
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
@@ -173,6 +199,7 @@ export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
               label="Discrepancy"
               value={`${batch.discrepancy_percentage}%`}
             />
+            <InfoRow label="Merek" value={merekValue} />
             <InfoRow label="Asal Pengiriman" value={batch.origin_type === "SUPPLIER" ? "Gudang Supplier" : "Gudang Bulky"} />
             {batch.origin_type === "SUPPLIER" && <>
               <InfoRow label="Supplier" value={batch.supplier_name ?? "-"} />
@@ -244,7 +271,14 @@ export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
                 <p className="min-w-0 break-all text-sm text-muted-foreground">
                   {batch.pdf.original_name}
                 </p>
-                <Button render={<a href={batch.pdf.url} target="_blank" rel="noreferrer" />} variant="outline" size="sm">
+                <Button
+                  render={
+                    <a href={batch.pdf.url} target="_blank" rel="noreferrer" />
+                  }
+                  nativeButton={false}
+                  variant="outline"
+                  size="sm"
+                >
                   <Eye className="size-4" />
                   Lihat PDF
                 </Button>
