@@ -185,7 +185,7 @@ export const DetailTab = ({ batch }: { batch: AuctionBatchDetail }) => {
               value={formatRupiah(batch.grand_total)}
             />
             <InfoRow
-              label="Min Bid (0.1%)"
+              label={"Min Bid (" + Number(batch.min_bid_percent).toLocaleString("id-ID", { maximumFractionDigits: 4 }) + "%"}
               value={formatRupiah(batch.min_bid_amount)}
             />
             <InfoRow label="Total Qty" value={String(batch.total_quantity)} />
