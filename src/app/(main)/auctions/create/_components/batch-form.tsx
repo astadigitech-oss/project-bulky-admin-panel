@@ -379,7 +379,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   }, [panjangCm, lebarCm, tinggiCm]);
 
   const minBidAmount = useMemo(
-    () => Math.ceil(grandTotal * 0.001),
+    () => Math.ceil(grandTotal * 0.05),
     [grandTotal],
   );
 
@@ -1226,7 +1226,7 @@ const SummaryCards = ({
       </p>
     </div>
     <div className="rounded-lg border p-4">
-      <p className="text-xs text-muted-foreground">Min Bid (0.1%)</p>
+      <p className="text-xs text-muted-foreground">Min Bid (5%)</p>
       <p className="mt-1 text-lg font-semibold tabular-nums">
         {formatRupiah(minBidAmount)}
       </p>
