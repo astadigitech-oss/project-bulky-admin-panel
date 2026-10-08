@@ -128,6 +128,14 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+type BatchPhysicalValues = {
+  panjang_cm: string;
+  lebar_cm: string;
+  tinggi_cm: string;
+  volume_m3: string;
+  berat_kg: string;
+};
+
 type BatchItem = {
   source_type: AuctionItemSourceType;
   produk_id?: string;
@@ -135,6 +143,11 @@ type BatchItem = {
   quantity: number;
   unit_price: string;
   stock_available: number;
+  panjang_cm?: string;
+  lebar_cm?: string;
+  tinggi_cm?: string;
+  volume_m3?: string;
+  berat_kg?: string;
 };
 
 type UploadedAsset = {
@@ -249,6 +262,8 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   const merekOptions = merekData?.data ?? [];
 
   const [items, setItems] = useState<BatchItem[]>([]);
+  const [physicalSource, setPhysicalSource] = useState<"MANUAL" | "ITEM_AGGREGATE">("MANUAL");
+  const [estimatedPhysical, setEstimatedPhysical] = useState<BatchPhysicalValues | null>(null);
   const [images, setImages] = useState<UploadedAsset[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [pdf, setPdf] = useState<UploadedAsset | null>(null);
@@ -259,6 +274,11 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   const [nameColumn, setNameColumn] = useState("");
   const [priceColumn, setPriceColumn] = useState("");
   const [quantityColumn, setQuantityColumn] = useState("");
+  const [lengthColumn, setLengthColumn] = useState("");
+  const [widthColumn, setWidthColumn] = useState("");
+  const [heightColumn, setHeightColumn] = useState("");
+  const [volumeColumn, setVolumeColumn] = useState("");
+  const [weightColumn, setWeightColumn] = useState("");
   const [uploading, setUploading] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -292,6 +312,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   // Sinkronkan form & state saat batch detail dimuat (mode edit).
   useEffect(() => {
     if (!batch) return;
+    const hasAggregatePhysical = batch.physical_source === "ITEM_AGGREGATE";
     form.reset({
       nama_id: batch.nama_id,
       nama_en: batch.nama_en ?? "",
@@ -312,11 +333,23 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       sumber_id: batch.sumber_id ?? "",
       discrepancy_percentage: batch.discrepancy_percentage ?? "0",
       merek_ids: batch.merek_ids ?? [],
-      panjang_cm: batch.panjang_cm ?? "",
-      lebar_cm: batch.lebar_cm ?? "",
-      tinggi_cm: batch.tinggi_cm ?? "",
-      berat_kg: batch.berat_kg ?? "",
+      panjang_cm: hasAggregatePhysical ? "" : batch.panjang_cm ?? "",
+      lebar_cm: hasAggregatePhysical ? "" : batch.lebar_cm ?? "",
+      tinggi_cm: hasAggregatePhysical ? "" : batch.tinggi_cm ?? "",
+      berat_kg: hasAggregatePhysical ? "" : batch.berat_kg ?? "",
     });
+    setPhysicalSource(batch.physical_source ?? "MANUAL");
+    setEstimatedPhysical(
+      hasAggregatePhysical
+        ? {
+            panjang_cm: batch.panjang_cm ?? "0",
+            lebar_cm: batch.lebar_cm ?? "0",
+            tinggi_cm: batch.tinggi_cm ?? "0",
+            volume_m3: batch.volume_m3 ?? "0",
+            berat_kg: batch.berat_kg ?? "0",
+          }
+        : null,
+    );
     setItems(
       (batch.items ?? []).map((i) => ({
         source_type: i.source_type,
@@ -325,6 +358,11 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
         quantity: i.quantity,
         unit_price: i.unit_price_snapshot,
         stock_available: 0,
+        panjang_cm: i.panjang_cm ?? undefined,
+        lebar_cm: i.lebar_cm ?? undefined,
+        tinggi_cm: i.tinggi_cm ?? undefined,
+        volume_m3: i.volume_m3 ?? undefined,
+        berat_kg: i.berat_kg ?? undefined,
       })),
     );
     setImages(
@@ -372,11 +410,17 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   );
 
   const volumeM3 = useMemo(() => {
+    if (physicalSource === "ITEM_AGGREGATE") {
+      return items.reduce(
+        (total, item) => total + (Number(item.volume_m3) || 0) * item.quantity,
+        0,
+      );
+    }
     const p = Number(panjangCm) || 0;
     const l = Number(lebarCm) || 0;
     const t = Number(tinggiCm) || 0;
     return (p * l * t) / 1000000;
-  }, [panjangCm, lebarCm, tinggiCm]);
+  }, [physicalSource, items, panjangCm, lebarCm, tinggiCm]);
 
   const minBidAmount = useMemo(
     () => Math.ceil(grandTotal * 0.05),
@@ -457,19 +501,41 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
     setNameColumn("");
     setPriceColumn("");
     setQuantityColumn("");
+    setLengthColumn("");
+    setWidthColumn("");
+    setHeightColumn("");
+    setVolumeColumn("");
+    setWeightColumn("");
     if (!file) return;
     previewSupplierExcel(file, {
       onSuccess: (response) => {
         const preview = response.data.data;
         setExcelPreview(preview);
         const findColumn = (pattern: RegExp) =>
-          preview.columns.find((column) => pattern.test(column.header.trim().toLowerCase()));
+          preview.columns.find((column) =>
+            pattern.test(
+              column.header
+                .trim()
+                .toLowerCase()
+                .replace(/\s*\([^)]*\)\s*$/, ""),
+            ),
+          );
         const name = findColumn(/^(nama|nama item|nama produk|item|product|product name)$/);
         const price = findColumn(/^(price|harga|harga satuan|unit price)$/);
         const quantity = findColumn(/^(qty|quantity|jumlah)$/);
+        const length = findColumn(/^(panjang|length)$/);
+        const width = findColumn(/^(lebar|width)$/);
+        const height = findColumn(/^(tinggi|height)$/);
+        const volume = findColumn(/^(kubikasi|volume|cbm|m3)$/);
+        const weight = findColumn(/^(berat|weight)$/);
         if (name) setNameColumn(String(name.index));
         if (price) setPriceColumn(String(price.index));
         if (quantity) setQuantityColumn(String(quantity.index));
+        if (length) setLengthColumn(String(length.index));
+        if (width) setWidthColumn(String(width.index));
+        if (height) setHeightColumn(String(height.index));
+        if (volume) setVolumeColumn(String(volume.index));
+        if (weight) setWeightColumn(String(weight.index));
       },
     });
   };
@@ -479,8 +545,15 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       toast.error("Pilih kolom nama, harga, dan qty terlebih dahulu");
       return;
     }
-    if (new Set([nameColumn, priceColumn, quantityColumn]).size !== 3) {
-      toast.error("Kolom nama, harga, dan qty harus berbeda");
+    const physicalColumns = [lengthColumn, widthColumn, heightColumn, volumeColumn, weightColumn];
+    const selectedPhysicalColumns = physicalColumns.filter((column) => column !== "");
+    if (selectedPhysicalColumns.length !== 0 && selectedPhysicalColumns.length !== physicalColumns.length) {
+      toast.error("Pilih semua kolom panjang, lebar, tinggi, kubikasi, dan berat atau kosongkan semuanya");
+      return;
+    }
+    const selectedColumns = [nameColumn, priceColumn, quantityColumn, ...selectedPhysicalColumns];
+    if (new Set(selectedColumns).size !== selectedColumns.length) {
+      toast.error("Setiap data harus menggunakan kolom Excel yang berbeda");
       return;
     }
     const title = form.getValues("nama_en")?.trim() ?? "";
@@ -498,6 +571,11 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
         quantityColumn: Number(quantityColumn),
         headerRow: excelPreview.header_row,
         title,
+        lengthColumn: lengthColumn === "" ? undefined : Number(lengthColumn),
+        widthColumn: widthColumn === "" ? undefined : Number(widthColumn),
+        heightColumn: heightColumn === "" ? undefined : Number(heightColumn),
+        volumeColumn: volumeColumn === "" ? undefined : Number(volumeColumn),
+        weightColumn: weightColumn === "" ? undefined : Number(weightColumn),
       },
       {
         onSuccess: (response) => {
@@ -509,7 +587,23 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
             quantity: item.quantity,
             unit_price: item.unit_price ?? "0",
             stock_available: 0,
+            panjang_cm: item.panjang_cm,
+            lebar_cm: item.lebar_cm,
+            tinggi_cm: item.tinggi_cm,
+            volume_m3: item.volume_m3,
+            berat_kg: item.berat_kg,
           })));
+          if (result.batch_physical) {
+            setPhysicalSource("ITEM_AGGREGATE");
+            setEstimatedPhysical(result.batch_physical);
+            form.setValue("panjang_cm", "", { shouldDirty: true });
+            form.setValue("lebar_cm", "", { shouldDirty: true });
+            form.setValue("tinggi_cm", "", { shouldDirty: true });
+            form.setValue("berat_kg", "", { shouldDirty: true });
+          } else {
+            setPhysicalSource("MANUAL");
+            setEstimatedPhysical(null);
+          }
           setPdf({
             id: result.pdf.id,
             url: result.pdf.url,
@@ -522,6 +616,11 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
           setNameColumn("");
           setPriceColumn("");
           setQuantityColumn("");
+          setLengthColumn("");
+          setWidthColumn("");
+          setHeightColumn("");
+          setVolumeColumn("");
+          setWeightColumn("");
           toast.success("Item berhasil diimpor dan PDF daftar item disimpan");
         },
       },
@@ -549,6 +648,25 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
   };
 
   const handleSubmit = async (values: FormValues) => {
+    if (physicalSource === "MANUAL") {
+      const physicalInputs = [
+        values.panjang_cm?.trim() ?? "",
+        values.lebar_cm?.trim() ?? "",
+        values.tinggi_cm?.trim() ?? "",
+        values.berat_kg?.trim() ?? "",
+      ];
+      const hasAnyPhysicalInput = physicalInputs.some((value) => value !== "");
+      const hasAllPositivePhysicalInputs = physicalInputs.every(
+        (value) => value !== "" && Number(value) > 0,
+      );
+      if (
+        (estimatedPhysical && !hasAnyPhysicalInput) ||
+        (hasAnyPhysicalInput && !hasAllPositivePhysicalInputs)
+      ) {
+        toast.error("Pakai kembali estimasi Excel atau lengkapi keempat kolom dimensi dan berat dengan angka lebih dari nol");
+        return;
+      }
+    }
     const isSupplier = values.origin_type === "SUPPLIER";
     if (isSupplier && generatedPdfTitle && generatedPdfTitle !== (values.nama_en?.trim() ?? "")) {
       toast.error("Nama EN berubah setelah PDF dibuat. Impor ulang Excel agar judul PDF sesuai.");
@@ -575,10 +693,30 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
       sumber_id: values.sumber_id || null,
       discrepancy_percentage: values.discrepancy_percentage || "0",
       merek_ids: values.merek_ids,
+      physical_source: physicalSource,
       items: items.map((i) =>
         i.source_type === "CATALOG"
-          ? { source_type: "CATALOG" as const, produk_id: i.produk_id, quantity: i.quantity }
-          : { source_type: "MANUAL" as const, nama: i.nama_snapshot, unit_price: i.unit_price, quantity: i.quantity },
+          ? {
+              source_type: "CATALOG" as const,
+              produk_id: i.produk_id,
+              quantity: i.quantity,
+              panjang_cm: i.panjang_cm,
+              lebar_cm: i.lebar_cm,
+              tinggi_cm: i.tinggi_cm,
+              volume_m3: i.volume_m3,
+              berat_kg: i.berat_kg,
+            }
+          : {
+              source_type: "MANUAL" as const,
+              nama: i.nama_snapshot,
+              unit_price: i.unit_price,
+              quantity: i.quantity,
+              panjang_cm: i.panjang_cm,
+              lebar_cm: i.lebar_cm,
+              tinggi_cm: i.tinggi_cm,
+              volume_m3: i.volume_m3,
+              berat_kg: i.berat_kg,
+            },
       ),
       panjang_cm: values.panjang_cm || "0",
       lebar_cm: values.lebar_cm || "0",
@@ -703,7 +841,7 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                 <div>
                   <FieldLabel htmlFor="supplier-items-excel">Impor item supplier dari Excel (.xlsx)</FieldLabel>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Pilih sheet pertama. Tentukan kolom nama item, harga, dan qty; hasil impor mengganti daftar item dan membuat PDF berjudul sesuai Nama ID batch.
+                    Pilih kolom nama, harga, dan qty. Untuk mengisi fisik batch otomatis, pilih juga seluruh kolom panjang, lebar, tinggi, kubikasi per unit, dan berat per unit.
                   </p>
                 </div>
                 <input
@@ -717,11 +855,16 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                 {excelFile && <p className="text-xs text-muted-foreground">File: {excelFile.name}</p>}
                 {isPreviewingExcel && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Spinner className="size-3.5" /> Membaca kolom Excel...</div>}
                 {excelPreview && (
-                  <div className="grid min-w-0 gap-3 rounded-md bg-muted/30 p-3 md:grid-cols-3">
+                  <div className="grid min-w-0 gap-3 rounded-md bg-muted/30 p-3 sm:grid-cols-2 lg:grid-cols-4">
                     {([
                       ["name", "Kolom Nama Item", nameColumn, setNameColumn],
                       ["price", "Kolom Harga", priceColumn, setPriceColumn],
                       ["quantity", "Kolom Qty", quantityColumn, setQuantityColumn],
+                      ["length", "Kolom Panjang (cm)", lengthColumn, setLengthColumn],
+                      ["width", "Kolom Lebar (cm)", widthColumn, setWidthColumn],
+                      ["height", "Kolom Tinggi (cm)", heightColumn, setHeightColumn],
+                      ["volume", "Kolom Kubikasi / unit (m³)", volumeColumn, setVolumeColumn],
+                      ["weight", "Kolom Berat / unit (kg)", weightColumn, setWeightColumn],
                     ] as const).map(([key, label, value, setValue]) => (
                       <label key={key} className="grid min-w-0 gap-1 text-xs font-medium">
                         {label}
@@ -740,12 +883,12 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                         </select>
                       </label>
                     ))}
-                    <p className="text-xs text-muted-foreground sm:col-span-3">
-                      Sheet: {excelPreview.sheet_name}. PDF berisi tabel nama item, harga satuan, qty, dan subtotal.
+                    <p className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">
+                      Sheet: {excelPreview.sheet_name}. Kolom fisik boleh dikosongkan seluruhnya untuk memakai input manual pada batch.
                     </p>
                     <Button
                       type="button"
-                      className="sm:col-span-3 sm:justify-self-end"
+                      className="sm:col-span-2 sm:justify-self-end lg:col-span-4"
                       disabled={isDisabled || !nameColumn || !priceColumn || !quantityColumn}
                       onClick={handleImportExcel}
                     >
@@ -1031,6 +1174,55 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
               />
             </div>
 
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <FieldLabel>Dimensi dan berat batch</FieldLabel>
+              <Badge variant="outline">
+                {physicalSource === "ITEM_AGGREGATE" ? "Estimasi dari Excel" : "Input manual"}
+              </Badge>
+              <p className="basis-full text-xs text-muted-foreground">
+                {physicalSource === "ITEM_AGGREGATE"
+                  ? "Kubikasi Excel per unit dijumlahkan berdasarkan qty. Hasil estimasi ini akan disimpan; isi kolom di bawah hanya jika perlu koreksi manual."
+                  : estimatedPhysical
+                    ? "Estimasi Excel tetap tersedia sebagai acuan. Koreksi manual akan mengganti hasil estimasi dan harus mengisi keempat kolom."
+                    : "Isi dimensi dan berat batch secara manual jika datanya tersedia."}
+              </p>
+            </div>
+            {estimatedPhysical && (
+              <div className="grid gap-3 rounded-lg border bg-muted/30 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Dimensi kubus ekuivalen</p>
+                    <p className="mt-1 font-medium tabular-nums">
+                      {estimatedPhysical.panjang_cm} × {estimatedPhysical.lebar_cm} × {estimatedPhysical.tinggi_cm} cm
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Kubikasi total</p>
+                    <p className="mt-1 font-medium tabular-nums">{estimatedPhysical.volume_m3} m³</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Berat total</p>
+                    <p className="mt-1 font-medium tabular-nums">{estimatedPhysical.berat_kg} kg</p>
+                  </div>
+                </div>
+                {physicalSource === "MANUAL" && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setPhysicalSource("ITEM_AGGREGATE");
+                      form.setValue("panjang_cm", "");
+                      form.setValue("lebar_cm", "");
+                      form.setValue("tinggi_cm", "");
+                      form.setValue("berat_kg", "");
+                    }}
+                  >
+                    Pakai estimasi Excel
+                  </Button>
+                )}
+              </div>
+            )}
             <div className="grid gap-4 lg:grid-cols-4">
               <Controller
                 name="panjang_cm"
@@ -1041,9 +1233,13 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                     <InputGroup>
                       <InputGroupInput
                         {...field}
+                        onChange={(event) => {
+                          field.onChange(event);
+                          setPhysicalSource("MANUAL");
+                        }}
                         type="text"
                         inputMode="decimal"
-                        placeholder="0"
+                        placeholder={physicalSource === "ITEM_AGGREGATE" ? "Koreksi manual" : "Masukkan panjang"}
                       />
                     </InputGroup>
                   </Field>
@@ -1058,9 +1254,13 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                     <InputGroup>
                       <InputGroupInput
                         {...field}
+                        onChange={(event) => {
+                          field.onChange(event);
+                          setPhysicalSource("MANUAL");
+                        }}
                         type="text"
                         inputMode="decimal"
-                        placeholder="0"
+                        placeholder={physicalSource === "ITEM_AGGREGATE" ? "Koreksi manual" : "Masukkan lebar"}
                       />
                     </InputGroup>
                   </Field>
@@ -1075,9 +1275,13 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                     <InputGroup>
                       <InputGroupInput
                         {...field}
+                        onChange={(event) => {
+                          field.onChange(event);
+                          setPhysicalSource("MANUAL");
+                        }}
                         type="text"
                         inputMode="decimal"
-                        placeholder="0"
+                        placeholder={physicalSource === "ITEM_AGGREGATE" ? "Koreksi manual" : "Masukkan tinggi"}
                       />
                     </InputGroup>
                   </Field>
@@ -1092,9 +1296,13 @@ export const BatchForm = ({ batchId }: { batchId?: string }) => {
                     <InputGroup>
                       <InputGroupInput
                         {...field}
+                        onChange={(event) => {
+                          field.onChange(event);
+                          setPhysicalSource("MANUAL");
+                        }}
                         type="text"
                         inputMode="decimal"
-                        placeholder="0"
+                        placeholder={physicalSource === "ITEM_AGGREGATE" ? "Koreksi manual" : "Masukkan berat"}
                       />
                     </InputGroup>
                   </Field>
@@ -1163,20 +1371,30 @@ const ItemPicker = ({ items }: { items: BatchItem[] }) => (
       Daftar item berasal dari file Excel. Upload dan impor ulang file untuk memperbarui item sekaligus PDF.
     </p>
     {items.length > 0 ? (
-      <div className="overflow-hidden rounded-md border">
-        <table className="w-full text-xs">
+      <div className="overflow-x-auto rounded-md border">
+        <table className="min-w-[820px] w-full text-xs">
           <thead className="bg-muted">
             <tr>
               <th className="px-3 py-2 text-left">Nama Item</th>
+              <th className="px-3 py-2 text-right">Dimensi/unit (cm)</th>
+              <th className="px-3 py-2 text-right">Kubikasi/unit</th>
+              <th className="px-3 py-2 text-right">Berat/unit (kg)</th>
               <th className="px-3 py-2 text-right">Harga</th>
               <th className="px-3 py-2 text-right">Qty</th>
               <th className="px-3 py-2 text-right">Subtotal</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => (
-              <tr key={item.produk_id} className="border-t">
+            {items.map((item, index) => (
+              <tr key={item.produk_id ?? item.nama_snapshot + "-" + index} className="border-t">
                 <td className="px-3 py-2">{item.nama_snapshot}</td>
+                <td className="px-3 py-2 text-right tabular-nums">
+                  {item.panjang_cm && item.lebar_cm && item.tinggi_cm
+                    ? [item.panjang_cm, item.lebar_cm, item.tinggi_cm].join(" × ")
+                    : "—"}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums">{item.volume_m3 ?? "—"}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{item.berat_kg ?? "—"}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{formatRupiah(item.unit_price)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{item.quantity}</td>
                 <td className="px-3 py-2 text-right tabular-nums">

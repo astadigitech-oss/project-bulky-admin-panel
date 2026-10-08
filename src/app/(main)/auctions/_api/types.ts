@@ -55,6 +55,11 @@ export type AuctionItemSnapshot = {
   quantity: number;
   unit_price_snapshot: string;
   subtotal_snapshot: string;
+  panjang_cm?: string | null;
+  lebar_cm?: string | null;
+  tinggi_cm?: string | null;
+  volume_m3?: string | null;
+  berat_kg?: string | null;
 };
 
 export type AuctionAsset = {
@@ -80,7 +85,24 @@ export type AuctionSupplierExcelPreview = {
 };
 
 export type AuctionSupplierExcelImport = {
-  items: { source_type: "MANUAL"; nama: string; unit_price: string; quantity: number }[];
+  items: {
+    source_type: "MANUAL";
+    nama: string;
+    unit_price: string;
+    quantity: number;
+    panjang_cm?: string;
+    lebar_cm?: string;
+    tinggi_cm?: string;
+    volume_m3?: string;
+    berat_kg?: string;
+  }[];
+  batch_physical?: {
+    panjang_cm: string;
+    lebar_cm: string;
+    tinggi_cm: string;
+    volume_m3: string;
+    berat_kg: string;
+  };
   pdf: AuctionAsset;
 };
 
@@ -145,6 +167,7 @@ export type AuctionBatchDetail = {
   min_bid_percent: string;
   min_bid_amount: string;
   total_quantity: number;
+  physical_source?: "MANUAL" | "ITEM_AGGREGATE";
   panjang_cm: string;
   lebar_cm: string;
   tinggi_cm: string;
@@ -244,7 +267,13 @@ export type AuctionDraftInput = {
     nama?: string;
     unit_price?: string;
     quantity: number;
+    panjang_cm?: string;
+    lebar_cm?: string;
+    tinggi_cm?: string;
+    volume_m3?: string;
+    berat_kg?: string;
   }[];
+  physical_source?: "MANUAL" | "ITEM_AGGREGATE";
   panjang_cm?: string;
   lebar_cm?: string;
   tinggi_cm?: string;

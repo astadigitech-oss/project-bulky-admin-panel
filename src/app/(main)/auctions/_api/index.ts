@@ -350,9 +350,33 @@ export const useImportSupplierExcel = () => {
   return useMutation<
     AxiosResponse<BaseResponse<AuctionSupplierExcelImport>>,
     AxiosError,
-    { file: File; nameColumn: number; priceColumn: number; quantityColumn: number; headerRow: number; title: string }
+    {
+      file: File;
+      nameColumn: number;
+      priceColumn: number;
+      quantityColumn: number;
+      headerRow: number;
+      title: string;
+      lengthColumn?: number;
+      widthColumn?: number;
+      heightColumn?: number;
+      volumeColumn?: number;
+      weightColumn?: number;
+    }
   >({
-    mutationFn: async ({ file, nameColumn, priceColumn, quantityColumn, headerRow, title }) => {
+    mutationFn: async ({
+      file,
+      nameColumn,
+      priceColumn,
+      quantityColumn,
+      headerRow,
+      title,
+      lengthColumn,
+      widthColumn,
+      heightColumn,
+      volumeColumn,
+      weightColumn,
+    }) => {
       const form = new FormData();
       form.append("file", file);
       form.append("name_column", String(nameColumn));
@@ -360,6 +384,11 @@ export const useImportSupplierExcel = () => {
       form.append("quantity_column", String(quantityColumn));
       form.append("header_row", String(headerRow));
       form.append("title", title);
+      if (lengthColumn !== undefined) form.append("length_column", String(lengthColumn));
+      if (widthColumn !== undefined) form.append("width_column", String(widthColumn));
+      if (heightColumn !== undefined) form.append("height_column", String(heightColumn));
+      if (volumeColumn !== undefined) form.append("volume_column", String(volumeColumn));
+      if (weightColumn !== undefined) form.append("weight_column", String(weightColumn));
       return axios.post(`${apiUrl}/auctions/supplier-items/import`, form, {
         headers: {
           Authorization: `Bearer ${getCookie(cookiesKey)}`,
