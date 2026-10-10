@@ -62,6 +62,14 @@ export const useCountWmsCargoReadyToPrice = ({
     enabled,
   });
 
+export const usePreviewWmsCargoIDSync = ({
+  enabled,
+}: { enabled?: boolean } = {}) =>
+  useApiQuery({
+    ...dataAPIProduct.query({}).previewWmsCargoIDSync,
+    enabled,
+  });
+
 // mutation
 export const useCreateProduct = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).create);
@@ -91,6 +99,9 @@ export const useDeleteProductImage = () =>
 
 export const useTestWmsConnection = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).testWmsConnection);
+
+export const useSyncWmsCargoIDs = () =>
+  useMutate(dataAPIProduct.mutation(useQueryClient()).syncWmsCargoIDs);
 
 export const useSetWmsCargoPrice = () =>
   useMutate(dataAPIProduct.mutation(useQueryClient()).setWmsCargoPrice);

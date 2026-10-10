@@ -22,18 +22,22 @@ import {
   useCountWmsCargoReadyToPrice,
   useDeleteProduct,
   useGetProductList,
+  useSyncWmsCargoIDs,
 } from "@api/product/list";
 import { useConfirm } from "@/hooks/use-confirm";
 import { DialogSyncWmsProduct } from "./_dialog/sync-wms-form";
+import { DialogResyncWmsCargoIDs } from "./_dialog/resync-wms-cargo-ids";
 import { useMe } from "@/components/container/_api";
 
 export const ProductClient = () => {
   const [isOpenSyncWms, setIsOpenSyncWms] = useState(false);
+  const [isOpenResyncWmsCargoIDs, setIsOpenResyncWmsCargoIDs] = useState(false);
   const { data: meData } = useMe();
   const permissions = meData?.data?.permissions ?? [];
   const canManageWmsSync =
     permissions.includes("produk:create") ||
     permissions.includes("produk:update");
+  const canResyncWmsCargoIDs = permissions.includes("wms_integration:manage");
   const { data: countWmsCargoReady } = useCountWmsCargoReadyToPrice({
     enabled: canManageWmsSync,
   });
@@ -68,6 +72,8 @@ export const ProductClient = () => {
     useChangeSaleProduct();
   const { mutate: changeQcPassProduct, isPending: isUpdatingQcPass } =
     useChangeQcPassProduct();
+  const { mutateAsync: syncWmsCargoIDs, isPending: isSyncingWmsCargoIDs } =
+    useSyncWmsCargoIDs();
 
   const { search, searchValue, setSearch } = useSearchQuery();
   const { page, limit, metaPage, setPage, setLimit, setPaginationData } =
@@ -94,6 +100,7 @@ export const ProductClient = () => {
     isUpdating ||
     isUpdatingSale ||
     isUpdatingQcPass ||
+    isSyncingWmsCargoIDs ||
     isPending;
 
   const handleDelete = async (id: string, value: string) => {
@@ -144,6 +151,18 @@ export const ProductClient = () => {
     changeQcPassProduct({ params: { id } });
   };
 
+  const handleApplyResyncWmsCargoIDs = async (
+    previewToken: string,
+    selectedProductIDs: string[],
+  ) => {
+    await syncWmsCargoIDs({
+      body: {
+        preview_token: previewToken,
+        selected_product_ids: selectedProductIDs,
+      },
+    });
+  };
+
   useEffect(() => {
     if (list) {
       if (page > list.meta.last_page) {
@@ -160,6 +179,12 @@ export const ProductClient = () => {
       <DialogChangeStatus />
       <DialogChangeSale />
       <DialogChangeQcPass />
+      <DialogResyncWmsCargoIDs
+        open={isOpenResyncWmsCargoIDs}
+        onOpenChange={setIsOpenResyncWmsCargoIDs}
+        isSyncing={isSyncingWmsCargoIDs}
+        onApply={handleApplyResyncWmsCargoIDs}
+      />
       <DialogSyncWmsProduct
         open={isOpenSyncWms}
         onOpenChange={setIsOpenSyncWms}
@@ -224,12 +249,33 @@ export const ProductClient = () => {
                 onClick={() => setIsOpenSyncWms(true)}
               >
                 <PackageSearch className="size-3.5" />
-                Sync Palet WMS
+                Sync Palet
                 {canManageWmsSync && readyToPriceCount > 0 && (
                   <Badge className="bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900">
                     {readyToPriceCount}
                   </Badge>
                 )}
+              </Button>
+            }
+          />
+          <TooltipText
+            value={
+              canResyncWmsCargoIDs
+                ? "Ambil ulang pemetaan ID Cargo dari WMS"
+                : "Perlu izin wms_integration:manage untuk re-sync ID Cargo"
+            }
+            render={
+              <Button
+                variant={"outline"}
+                className={"text-xs"}
+                disabled={isDisabled || !canResyncWmsCargoIDs}
+                onClick={() => setIsOpenResyncWmsCargoIDs(true)}
+                aria-label="Re-sync Palet"
+              >
+                <RefreshCw
+                  className={cn("size-3.5", isSyncingWmsCargoIDs && "animate-spin")}
+                />
+                {isSyncingWmsCargoIDs ? "Menyinkronkan..." : "Re-sync Palet"}
               </Button>
             }
           />
