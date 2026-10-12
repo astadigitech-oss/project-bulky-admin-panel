@@ -29,12 +29,15 @@ import {
   ProductDetailResponse,
   ProductListRequest,
   ProductListResponse,
+  PreviewWmsCargoIDSyncResponse,
   ReorderProductImageBody,
   ReorderProductImageParams,
   ReorderProductImageResponse,
   SetWmsCargoPriceBody,
   SetWmsCargoPriceParams,
   SetWmsCargoPriceResponse,
+  SyncWmsCargoIDsRequestBody,
+  SyncWmsCargoIDsResponse,
   TestWmsConnectionResponse,
   UpdateProductBody,
   UpdateProductParams,
@@ -54,6 +57,7 @@ const key = [
   "wms-cargo-ready-to-price",
   "wms-cargo-already-priced",
   "wms-cargo-ready-to-price-count",
+  "wms-cargo-id-sync-preview",
 ];
 
 export const dataAPIProduct = {
@@ -75,6 +79,7 @@ export const dataAPIProduct = {
     listWmsCargo: UseApiQueryProps<ListWmsCargoResponse>;
     listWmsCargoPriced: UseApiQueryProps<ListWmsCargoPricedResponse>;
     countWmsCargoReadyToPrice: UseApiQueryProps<CountWmsCargoReadyToPriceResponse>;
+    previewWmsCargoIDSync: UseApiQueryProps<PreviewWmsCargoIDSyncResponse>;
   } => ({
     list: {
       key: [key[0], { page, per_page, search, sort_by, order, status }],
@@ -106,6 +111,13 @@ export const dataAPIProduct = {
     countWmsCargoReadyToPrice: {
       key: [key[4]],
       endpoint: `/wms/cargos/ready-to-price/count`,
+      staleTime: 0,
+      refetchOnWindowFocus: false,
+    },
+    previewWmsCargoIDSync: {
+      key: [key[5]],
+      endpoint: `/wms/cargos/sync-ids/preview`,
+      enabled: false,
       staleTime: 0,
       refetchOnWindowFocus: false,
     },
@@ -155,6 +167,10 @@ export const dataAPIProduct = {
       DeleteProductImageParams
     >;
     testWmsConnection: UseMutateConfig<TestWmsConnectionResponse>;
+    syncWmsCargoIDs: UseMutateConfig<
+      SyncWmsCargoIDsResponse,
+      SyncWmsCargoIDsRequestBody
+    >;
     setWmsCargoPrice: UseMutateConfig<
       SetWmsCargoPriceResponse,
       SetWmsCargoPriceBody,
@@ -277,6 +293,21 @@ export const dataAPIProduct = {
       endpoint: "/wms/test-connection",
       method: "post",
       onError: { title: "TEST_WMS_CONNECTION" },
+    },
+    syncWmsCargoIDs: {
+      endpoint: "/wms/cargos/sync-ids",
+      method: "post",
+      onSuccess: async ({ data }) => {
+        const result = data.data;
+        const summary = data.message + ": " + result.updated + " diperbarui dari " + result.selected + " dipilih, " + result.not_selected + " dilewati, " + result.failed + " gagal.";
+        if (result.not_found > 0 || result.failed > 0) {
+          toast.warning(summary);
+        } else {
+          toast.success(summary);
+        }
+        if (queryClient) await invalidateQuery(queryClient, [[key[0]]]);
+      },
+      onError: { title: "SYNC_WMS_CARGO_IDS" },
     },
     setWmsCargoPrice: {
       endpoint: "/wms/cargos/:id/price",

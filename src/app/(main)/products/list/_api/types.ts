@@ -149,6 +149,61 @@ export type TestWmsConnectionResponse = BaseResponse & {
   };
 };
 
+export type WmsCargoIDSyncFailure = {
+  legacy_id: number;
+  code?: string;
+  reason: string;
+};
+
+export type WmsCargoIDSyncCandidate = {
+  product_id: string;
+  product_name: string;
+  legacy_id: number;
+  current_id_cargo: string | null;
+  current_reference_code: string | null;
+  wms_id: string;
+  wms_code: string;
+};
+
+export type PreviewWmsCargoIDSyncResponse = BaseResponse & {
+  data: {
+    preview_token: string;
+    total_from_wms: number;
+    matched: number;
+    legacy_id_cargo_matches: number;
+    will_update: number;
+    already_current: number;
+    skipped_no_legacy_id: number;
+    not_found: number;
+    unmatched_legacy_ids?: number[];
+    failed: number;
+    failures?: WmsCargoIDSyncFailure[];
+    candidates: WmsCargoIDSyncCandidate[];
+  };
+};
+
+export type SyncWmsCargoIDsRequestBody = {
+  preview_token: string;
+  selected_product_ids: string[];
+};
+
+export type SyncWmsCargoIDsResponse = BaseResponse & {
+  data: {
+    total_from_wms: number;
+    matched: number;
+    legacy_id_cargo_matches: number;
+    already_current: number;
+    selected: number;
+    not_selected: number;
+    updated: number;
+    skipped_no_legacy_id: number;
+    not_found: number;
+    unmatched_legacy_ids?: number[];
+    failed: number;
+    failures?: WmsCargoIDSyncFailure[];
+  };
+};
+
 // Sync produk palet dari WMS — daftar cargo yang siap diberi harga.
 // `bulky_id` = ID master data lokal Bulky yang kompatibel (dipakai untuk
 // auto-fill form), `id` = ID milik WMS sendiri (bukan ID lokal Bulky).
