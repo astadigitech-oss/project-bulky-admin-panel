@@ -54,8 +54,13 @@ import {
 } from "@api/product/list";
 import { WmsCargoPricingType } from "../../_api/types";
 
-const formatCargoLabel = (item: WmsCargoPricingType) =>
-  `${item.code} — ${item.length_cm}×${item.width_cm}×${item.height_cm} cm, ${item.weight_kg} kg`;
+const formatCargoLabel = (item: WmsCargoPricingType) => {
+  const name = item.name?.trim();
+  const dimensions = `${item.length_cm}×${item.width_cm}×${item.height_cm} cm`;
+  return [item.code, name, `${dimensions}, ${item.weight_kg} kg`]
+    .filter(Boolean)
+    .join(" — ");
+};
 
 const formSchema = z
   .object({
@@ -228,7 +233,7 @@ export const DialogSyncWmsProduct = ({
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col flex-1 min-h-0"
         >
-          <DialogBody>
+          <DialogBody className="pb-4">
           <div className="flex flex-col gap-5 sm:flex-row">
             <FieldGroup className="sm:w-1/2">
               <Controller
@@ -288,6 +293,11 @@ export const DialogSyncWmsProduct = ({
                             <SelectItem key={item.id} value={item.id}>
                               <div className="flex flex-col">
                                 <span>{item.code}</span>
+                                {item.name?.trim() && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {item.name}
+                                  </span>
+                                )}
                                 <span className="text-xs text-muted-foreground">
                                   {item.length_cm}×{item.width_cm}×
                                   {item.height_cm} cm, {item.weight_kg} kg —{" "}
@@ -309,6 +319,10 @@ export const DialogSyncWmsProduct = ({
               {selectedPalet ? (
                 <div className="flex flex-col border rounded-lg border-gray-300 dark:border-gray-300/50 text-xs overflow-hidden">
                   <InfoPaletRow label="Kode Palet" value={selectedPalet.code} />
+                  <InfoPaletRow
+                    label="Nama Palet WMS"
+                    value={selectedPalet.name?.trim() || "-"}
+                  />
                   <InfoPaletRow
                     label="Dimensi"
                     value={`${selectedPalet.length_cm}×${selectedPalet.width_cm}×${selectedPalet.height_cm} cm`}

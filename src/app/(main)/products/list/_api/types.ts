@@ -212,6 +212,7 @@ export type WmsCargoRefType = { id: string; name: string; bulky_id?: string };
 export type WmsCargoPricingType = {
   id: string;
   code: string;
+  name?: string;
   length_cm: number;
   width_cm: number;
   height_cm: number;
@@ -271,6 +272,7 @@ export type SetWmsCargoPriceResponse = BaseResponse & {
 export type WmsCargoPricedItemType = {
   id: string;
   code: string;
+  name?: string;
   length_cm: number;
   width_cm: number;
   height_cm: number;

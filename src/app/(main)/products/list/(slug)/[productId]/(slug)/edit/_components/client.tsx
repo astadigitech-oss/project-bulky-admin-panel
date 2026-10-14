@@ -722,6 +722,13 @@ export const ProductIdClient = () => {
                         setSelectedCargoId(cargo?.id ?? null);
                         if (cargo) {
                           form.setValue("reference_code", cargo.code);
+                          const cargoName = cargo.name?.trim();
+                          if (cargoName) {
+                            form.setValue("nama_id", cargoName, {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            });
+                          }
                         }
                       }}
                     />

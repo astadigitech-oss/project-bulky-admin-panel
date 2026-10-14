@@ -170,6 +170,8 @@ export const ProductIdClient = () => {
   // (disable) field harga supaya tidak menyimpang dari harga yang sudah
   // ditetapkan di WMS.
   const [isCargoFromWms, setIsCargoFromWms] = useState(false);
+  const isCargoNameLocked =
+    isCargoFromWms && Boolean(selectedCargo?.name?.trim());
   const [isDownloadingCargoPdf, setIsDownloadingCargoPdf] = useState(false);
   // Combobox base-ui tidak sinkron menampilkan label saat value di-set
   // programatik (bukan lewat interaksi user) — remount paksa via key saat
@@ -362,6 +364,13 @@ export const ProductIdClient = () => {
     }
 
     form.setValue("reference_code", cargo.code);
+    const cargoName = cargo.name?.trim();
+    if (cargoName) {
+      form.setValue("nama_id", cargoName, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
 
     // Helper untuk mencari ID yang cocok di master data Bulky (cocokkan ID dulu, lalu Nama)
     const findMatchingId = <T extends { id?: unknown; nama?: unknown }>(
@@ -689,11 +698,17 @@ export const ProductIdClient = () => {
                     >
                       Nama
                     </FieldLabel>
-                    <InputGroup>
+                    <InputGroup
+                      className={cn(
+                        isCargoNameLocked &&
+                          "pointer-events-none opacity-60 cursor-not-allowed bg-muted/40",
+                      )}
+                    >
                       <InputGroupInput
                         {...field}
                         id={`${idFormProduct}_${field.name}`}
                         type="text"
+                        readOnly={isCargoNameLocked}
                         aria-invalid={fieldState.invalid}
                         placeholder="Nama produk..."
                         autoComplete="off"
