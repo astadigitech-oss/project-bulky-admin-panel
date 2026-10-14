@@ -242,7 +242,7 @@ export const column = ({
           />
           <DialogContent
             showCloseButton={false}
-            className={"sm:min-w-lg w-full"}
+            className="w-[min(96vw,88rem)] max-w-none sm:max-w-[88rem]"
           >
             <DialogHeader>
               <DialogTitle>PDF Preview</DialogTitle>

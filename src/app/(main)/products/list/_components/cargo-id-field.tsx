@@ -19,7 +19,11 @@ import { formatRupiah } from "@/lib/utils";
 
 const formatCargoLabel = (code: string, item?: WmsCargoPricedItemType) => {
   if (!item) return code;
-  return `${code} — ${item.length_cm}×${item.width_cm}×${item.height_cm} cm, ${item.weight_kg} kg`;
+  const name = item.name?.trim();
+  const dimensions = `${item.length_cm}×${item.width_cm}×${item.height_cm} cm`;
+  return [code, name, `${dimensions}, ${item.weight_kg} kg`]
+    .filter(Boolean)
+    .join(" — ");
 };
 
 /**
@@ -163,6 +167,11 @@ export const CargoIdField = ({
                 <SelectItem key={item.id} value={item.id}>
                   <div className="flex flex-col">
                     <span>{item.code}</span>
+                    {item.name?.trim() && (
+                      <span className="text-xs text-muted-foreground">
+                        {item.name}
+                      </span>
+                    )}
                     <span className="text-xs text-muted-foreground">
                       {item.length_cm}×{item.width_cm}×{item.height_cm} cm,{" "}
                       {item.weight_kg} kg — {formatRupiah(item.sale_price)}
