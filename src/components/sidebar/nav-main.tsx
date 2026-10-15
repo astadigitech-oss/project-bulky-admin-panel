@@ -46,6 +46,11 @@ export function NavMain({
 }: Readonly<{
   nav: {
     navMain: NavValueProps[];
+    navWarehouseVisits: {
+      title: string;
+      url: string;
+      icon: LucideIcon;
+    }[];
     navInfo: NavValueProps[];
     navPreferences: NavValueProps[];
   };
@@ -152,6 +157,27 @@ export function NavMain({
           </SidebarMenu>
         </Suspense>
       </SidebarGroup>
+      {nav.navWarehouseVisits.length > 0 && (
+        <SidebarGroup>
+          <SidebarGroupLabel>Kunjungan Gudang</SidebarGroupLabel>
+          <SidebarMenu>
+            {nav.navWarehouseVisits.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  isActive={pathname.includes(item.url)}
+                  render={
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  }
+                />
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+      )}
       {nav.navInfo.length > 0 && (
         <SidebarGroup>
           <SidebarGroupLabel>Sumber Daya</SidebarGroupLabel>

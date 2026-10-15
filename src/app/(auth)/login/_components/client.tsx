@@ -20,6 +20,18 @@ import { cookiesKey } from "@/config";
 import { LogInIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
+const getInternalRedirect = (value: string) => {
+  if (!value) return "/";
+
+  try {
+    const target = new URL(value, window.location.origin);
+    if (target.origin !== window.location.origin) return "/";
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return "/";
+  }
+};
+
 const formSchema = z.object({
   email: z.email().min(1, "Email is required"),
   password: z.string().min(1, "Password is required"),
@@ -47,9 +59,7 @@ export const ClientLogin = () => {
       { body: values },
       {
         onSuccess: () => {
-          startTransition(() =>
-            router.push(redirect.length > 0 ? redirect : "/"),
-          );
+          startTransition(() => router.push(getInternalRedirect(redirect)));
         },
       },
     );

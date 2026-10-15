@@ -10,7 +10,9 @@ import {
   SidebarMenuItem,
 } from "../ui/sidebar";
 import {
+  CalendarDays,
   ChartNoAxesCombined,
+  ClipboardList,
   Gavel,
   Headset,
   Megaphone,
@@ -191,6 +193,20 @@ const data = {
       ],
     },
   ],
+  navWarehouseVisits: [
+    {
+      title: "Jadwal Kunjungan",
+      url: "/operationals/warehouse-visits/schedules",
+      icon: CalendarDays,
+      permission: "warehouse_visit:read",
+    },
+    {
+      title: "Reservasi",
+      url: "/operationals/warehouse-visits/bookings",
+      icon: ClipboardList,
+      permission: "warehouse_visit:read",
+    },
+  ],
   navInfo: [
     {
       title: "Berita",
@@ -275,11 +291,12 @@ const data = {
       title: "Operasional",
       url: "/operationals",
       icon: MonitorSmartphone,
-      permission: "system:read",
+      permissionAny: ["system:read", "operasional:read"],
       items: [
         {
           title: "Maintenance",
           url: "/operationals/maintenance",
+          permission: "system:read",
         },
         {
           title: "Force Update",
@@ -371,6 +388,7 @@ export const AppSidebar = ({
 
   const filteredData = {
     navMain: filterNav(data.navMain),
+    navWarehouseVisits: data.navWarehouseVisits.filter(canAccess),
     navInfo: filterNav(data.navInfo),
     navPreferences: filterNav(data.navPreferences),
   };
