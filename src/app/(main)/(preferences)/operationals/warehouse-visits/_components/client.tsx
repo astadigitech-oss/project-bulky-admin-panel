@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Trash2,
   Users,
+  XCircle,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -386,25 +387,31 @@ export const WarehouseVisitsClient = ({
           "—"
         ) : item.status === "CONFIRMED" ? (
           <div className="flex items-center gap-2">
-            <select
-              className="h-8 min-w-44 rounded-lg border border-gray-300 bg-background px-2 text-xs"
-              value={targetDateByBooking[item.id] ?? ""}
-              onChange={(event) =>
+            <Select
+              value={targetDateByBooking[item.id] || null}
+              onValueChange={(value) =>
                 setTargetDateByBooking((current) => ({
                   ...current,
-                  [item.id]: event.target.value,
+                  [item.id]: value ?? "",
                 }))
               }
             >
-              <option value="">Pilih tanggal tujuan</option>
-              {openDatesWithCapacity
-                .filter((date) => date.id !== item.visit_date_id)
-                .map((date) => (
-                  <option key={date.id} value={date.id}>
-                    {formatDate(date.visit_date)} · {date.remaining_capacity} sisa
-                  </option>
-                ))}
-            </select>
+              <SelectTrigger
+                className="w-44 min-w-44 text-xs"
+                aria-label={`Pilih tanggal tujuan untuk ${item.buyer_name}`}
+              >
+                <SelectValue placeholder="Pilih tanggal tujuan" />
+              </SelectTrigger>
+              <SelectContent>
+                {openDatesWithCapacity
+                  .filter((date) => date.id !== item.visit_date_id)
+                  .map((date) => (
+                    <SelectItem key={date.id} value={date.id}>
+                      {formatDate(date.visit_date)} · {date.remaining_capacity} sisa
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
             <Button
               size="sm"
               variant="outline"
@@ -461,6 +468,7 @@ export const WarehouseVisitsClient = ({
                     disabled={isChangingBooking}
                     onClick={() => void cancelBooking(item)}
                   >
+                    <XCircle className="size-3.5" />
                     Batalkan
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
